@@ -1344,7 +1344,7 @@ export default async function getBaseWebpackConfig(
       runtimeChunk: isClient
         ? { name: CLIENT_STATIC_FILES_RUNTIME_WEBPACK }
         : undefined,
-      minimize: !dev && isClient,
+      minimize: !dev && (isClient || isEdgeServer),
       minimizer: [
         // Minify JavaScript
         (compiler: webpack.Compiler) => {
@@ -1824,6 +1824,29 @@ export default async function getBaseWebpackConfig(
             ].filter<[Feature, boolean]>(Boolean as any)
           )
         ),
+      // isEdgeServer &&
+      //   new webpack.NormalModuleReplacementPlugin(
+      //     /\..*\/(server|build|shared|lib)\/.*/,
+      //     (resource: any) => {
+      //       const folder = /.*\/(server|build|shared)\/.*/.exec(
+      //         resource.request
+      //       )![1]
+
+      //       resource.request = resource.request.replace(folder, `${folder}-esm`)
+      //       // resource.request = (resource.request as string).replace(
+      //       //   /.*\/(server|build|shared|lib)\/.*/,
+      //       //   (match: string) => {
+      //       //     console.log(match, resource.request)
+      //       //     return match
+      //       //   }
+      //       // )
+      //       // return resource
+      //     }
+      //   ),
+      // isEdgeServer && (...[new webpack.NormalModuleReplacementPlugin(
+      //   /next[\\/]dist[\\/]shared[\\/]lib[\\/]router[\\/]router/,
+      //  () => {}
+      // )
     ].filter(Boolean as any as ExcludesFalse),
   }
 
