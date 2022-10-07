@@ -122,6 +122,7 @@ import { RemotePattern } from '../shared/lib/image-config'
 import { eventSwcPlugins } from '../telemetry/events/swc-plugins'
 import { normalizeAppPath } from '../shared/lib/router/utils/app-paths'
 import { AppBuildManifest } from './webpack/plugins/app-build-manifest-plugin'
+import { postProcessWebpackResults } from './post-process-webpack-results'
 
 export type SsgRoute = {
   initialRevalidateSeconds: number | false
@@ -978,6 +979,12 @@ export default async function build(
 
               clientResult = await runCompiler(clientConfig, {
                 runWebpackSpan,
+              })
+
+              postProcessWebpackResults({
+                clientResult,
+                serverResult,
+                edgeServerResult,
               })
             }
           }
