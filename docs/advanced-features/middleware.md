@@ -135,6 +135,38 @@ export function middleware(request: NextRequest) {
 }
 ```
 
+### Rewriting Based on Query Parameters
+
+You can use query parameters to conditionally rewrite to different routes. This is useful when you want to trigger [Intercepting Routes](/docs/app/building-your-application/routing/intercepting-routes) only for specific links, such as a "Quick View" modal.
+
+For example, to show an intercepted product modal only when `?quick=1` is present:
+
+```typescript
+// middleware.ts
+
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+
+export function middleware(request: NextRequest) {
+  const { pathname, searchParams } = request.nextUrl
+
+  // Rewrite /products/[slug]?quick=1 to /products/[slug]/quick
+  // This allows the /products/[slug]/quick route to be intercepted
+  if (pathname.startsWith('/products/') && searchParams.get('quick') === '1') {
+    const newUrl = new URL(`${pathname}/quick`, request.url)
+    // Remove the query parameter from the rewritten URL
+    newUrl.searchParams.delete('quick')
+    return NextResponse.rewrite(newUrl)
+  }
+}
+
+export const config = {
+  matcher: '/products/:path*',
+}
+```
+
+With this middleware, linking to `/products/foo?quick=1` will render the intercepted route at `(.)/products/[slug]/quick`, while linking to `/products/foo` will render the full product page normally.
+
 ## NextResponse
 
 The [`NextResponse`](#nextresponse) API allows you to:
