@@ -299,7 +299,6 @@
   "298": "A required parameter (%s) was not provided as %s received %s in %s for %s",
   "299": "You cannot use both an required and optional catch-all route at the same level (\"[...%s]\" and \"%s\" ).",
   "300": "You cannot use both an optional and required catch-all route at the same level (\"[[...%s]]\" and \"%s\").",
-  "301": "export const dynamic = \"force-static\"/export const revalidate not configured on route \"%s\" with \"output: export\". See more info here: https://nextjs.org/docs/advanced-features/static-html-export",
   "302": "Expected span to be ended",
   "303": "Route name should start with a \"/\", got \"%s\"",
   "304": "Route %s used \"headers\" inside \"use cache\". Accessing Dynamic data sources inside a cache scope is not supported. If you need this data inside a cached function use \"headers\" outside of the cached function and pass the required dynamic data in as an argument. See more info here: https://nextjs.org/docs/messages/next-request-in-use-cache",
@@ -1454,6 +1453,5 @@
   "1455": "Page \"%s\" returned incomplete params from \"generateStaticParams()\". With \"output: export\", every params object must include all dynamic route parameters. Missing: %s. See more info here: https://nextjs.org/docs/messages/generate-static-params",
   "1456": "Expected an HTML size for prerendered app route \"%s\"",
   "1457": "Expected prerender classification data for PPR route \"%s\"",
-  "1458": "Expected complete prerender classification for route \"%s\"",
-  "1459": "Route \"%s\" must export revalidate or generateStaticParams with \"output: export\". See more info here: https://nextjs.org/docs/advanced-features/static-html-export"
+  "1458": "Expected complete prerender classification for route \"%s\""
 }

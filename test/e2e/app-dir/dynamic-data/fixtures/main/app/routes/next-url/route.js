@@ -1,5 +1,3 @@
-export const revalidate = 1
-
 export const GET = async (request) => {
   try {
     const body = JSON.stringify({ pathname: request.nextUrl.toString() })

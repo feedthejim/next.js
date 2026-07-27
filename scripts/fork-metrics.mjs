@@ -216,6 +216,17 @@ const appFetchCacheConfigFiles = [
     ].filter(existsSync)
   ),
 ]
+const appRevalidateModeFiles = [
+  ...new Set(
+    [
+      ...appRouteConfigFiles,
+      'packages/next/src/build/index.ts',
+      'packages/next/src/build/utils.ts',
+      'packages/next/src/server/app-render/create-component-tree.tsx',
+      'packages/next/src/server/route-modules/app-route/helpers/is-static-gen-enabled.ts',
+    ].filter(existsSync)
+  ),
+]
 const appEntryFiles = [
   'crates/next-api/src/app.rs',
   'crates/next-core/src/next_app/app_page_entry.rs',
@@ -243,6 +254,9 @@ const testFiles = worktreeFiles('test').filter((file) =>
   /\.(test|spec)\.[cm]?[jt]sx?$/.test(file)
 )
 const testSourceFiles = worktreeFiles('test').filter(isSourceFile)
+const appRouterTestSourceFiles = testSourceFiles.filter(
+  (file) => !file.includes('/pages/')
+)
 
 const nextPackage = JSON.parse(
   readFileSync('packages/next/package.json', 'utf8')
@@ -351,6 +365,18 @@ const metrics = {
     appFetchCacheTestModeReferences: countMatches(
       testSourceFiles,
       /\b(?:force-no-store|only-no-store|only-cache|default-no-store|default-cache)\b/g
+    ),
+    appRevalidateModeReferences: countMatches(
+      appRevalidateModeFiles,
+      /\bNextRevalidate\b|\bRevalidateRange\b|\b(?:appConfig|layoutOrPageMod|userland|liveUserland|segmentConfig)\??\.revalidate\b|\brevalidate\?:\s*(?:number|RevalidateRange)|^\s{2}revalidate:\s*\{/gm
+    ),
+    appRevalidateFixtureExports: countMatches(
+      appRouterTestSourceFiles,
+      /\bexport\s+const\s+revalidate\s*=\s*(?:false|\d[\d_]*)/g
+    ),
+    appRevalidateTestModeReferences: countMatches(
+      appRouterTestSourceFiles,
+      /\bexport\s+const\s+revalidate\s*=|\b(?:segment|config|variable)-revalidate\b|\brevalidate-(?:0|[1-9]\d*)\b/g
     ),
   },
   packageDependencies: {

@@ -1,5 +1,3 @@
-export const revalidate = 3
-
 export default async function Page() {
   const data = await fetch(
     'https://next-data-api-endpoint.vercel.app/api/random',

@@ -20,5 +20,3 @@ export default function og() {
     )
   )
 }
-
-export const revalidate = 5

@@ -1,15 +1,9 @@
 import stripAnsi from 'strip-ansi'
 import { nextTestSetup } from 'e2e-utils'
-import {
-  waitForNoRedbox,
-  waitForNoErrorToast,
-  hasErrorToast,
-  retry,
-} from 'next-test-utils'
-import { outdent } from 'outdent'
+import { waitForNoErrorToast, hasErrorToast, retry } from 'next-test-utils'
 
 describe('Cache Components Dev Errors', () => {
-  const { isTurbopack, next, isRspack } = nextTestSetup({
+  const { next } = nextTestSetup({
     files: __dirname,
   })
 
@@ -118,76 +112,5 @@ describe('Cache Components Dev Errors', () => {
        ],
      }
     `)
-  })
-
-  it('should clear segment errors after correcting them', async () => {
-    let browser: any
-    await next.patchFile(
-      'app/page.tsx',
-      outdent`
-      export const revalidate = 10
-      export default function Page() {
-        return (
-          <div>Hello World</div>
-        );
-      }
-    `,
-      async () => {
-        browser = await next.browser('/')
-        if (isTurbopack) {
-          await expect(browser).toDisplayRedbox(`
-           {
-             "description": "Route segment config "revalidate" is not compatible with \`nextConfig.cacheComponents\`. Please remove it.",
-             "environmentLabel": null,
-             "label": "Build Error",
-             "source": "./app/page.tsx (1:14)
-           Error: Route segment config "revalidate" is not compatible with \`nextConfig.cacheComponents\`. Please remove it.
-           > 1 | export const revalidate = 10
-               |              ^^^^^^^^^^",
-             "stack": [],
-           }
-          `)
-        } else if (isRspack) {
-          await expect(browser).toDisplayRedbox(`
-           {
-             "description": "  ╰─▶   × Error:   x Route segment config "revalidate" is not compatible with \`nextConfig.cacheComponents\`. Please remove it.",
-             "environmentLabel": null,
-             "label": "Build Error",
-             "source": "./app/page.tsx
-             ╰─▶   × Error:   x Route segment config "revalidate" is not compatible with \`nextConfig.cacheComponents\`. Please remove it.
-                   │    ,-[1:1]
-                   │  1 | export const revalidate = 10
-                   │    :              ^^^^^^^^^^
-                   │  2 | export default function Page() {
-                   │  3 |   return (
-                   │  4 |     <div>Hello World</div>
-                   │    \`----
-                   │",
-             "stack": [],
-           }
-          `)
-        } else {
-          await expect(browser).toDisplayRedbox(`
-           {
-             "description": "  x Route segment config "revalidate" is not compatible with \`nextConfig.cacheComponents\`. Please remove it.",
-             "environmentLabel": null,
-             "label": "Build Error",
-             "source": "./app/page.tsx
-           Error:   x Route segment config "revalidate" is not compatible with \`nextConfig.cacheComponents\`. Please remove it.
-              ,-[1:1]
-            1 | export const revalidate = 10
-              :              ^^^^^^^^^^
-            2 | export default function Page() {
-            3 |   return (
-            4 |     <div>Hello World</div>
-              \`----",
-             "stack": [],
-           }
-          `)
-        }
-      }
-    )
-
-    await waitForNoRedbox(browser)
   })
 })

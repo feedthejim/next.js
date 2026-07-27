@@ -1,8 +1,6 @@
 import fs from 'fs'
 import path from 'path'
 
-export const revalidate = 3
-
 export default async function Page() {
   const shouldError = (
     await fs.promises.readFile(

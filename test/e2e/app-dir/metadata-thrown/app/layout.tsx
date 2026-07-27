@@ -3,8 +3,6 @@ process.on('unhandledRejection', (rej) => {
   process.exit(1)
 })
 
-export const revalidate = 0
-
 export default function Layout({ children }) {
   return (
     <>

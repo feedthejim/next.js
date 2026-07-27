@@ -104,10 +104,6 @@ import { nextTestSetup } from 'e2e-utils'
         expect(errors).toContain(`"foo" is not a valid Page export field.`)
 
         expect(errors).toMatch(
-          /Invalid configuration "revalidate":\s+Expected "false | number \(>= 0\)", got "-1"/
-        )
-
-        expect(errors).toMatch(
           /Page "src\/app\/type-checks\/config\/page\.tsx" has an invalid "default" export:\s+Type "{ foo: string; }" is not valid/
         )
         expect(errors).toMatch(
@@ -122,10 +118,6 @@ import { nextTestSetup } from 'e2e-utils'
         )
 
         expect(errors).toContain(`"bar" is not a valid Route export field.`)
-
-        expect(errors).toMatch(
-          /Invalid configuration "revalidate":\s+Expected "false | number \(>= 0\)", got "-1"/
-        )
 
         expect(errors).toMatch(
           /Route "src\/app\/type-checks\/route-handlers\/route\.ts" has an invalid "GET" export:\s+Type "boolean" is not a valid type for the function's first argument/

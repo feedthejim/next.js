@@ -104,6 +104,10 @@
   static-path generator, Route Handler runtime, language service, and
   generated types no longer transport `fetchCache`. The internal incremental
   cache entry discriminator remains a separate implementation concept.
+  Route-level `revalidate` is absent from the same segment, compiler, build,
+  renderer, Route Handler, type-generation, and language-service surfaces.
+  Explicit per-fetch `next.revalidate`, Cache Components lifetimes, tags, and
+  Server Action invalidation remain the caching model.
   `fork-metrics.json` is the current scorecard, including static complexity,
   validation cost, and relevant runtime performance guardrails.
 - **Constraints:** Backward compatibility is out of scope. Do not add migration
@@ -115,7 +119,10 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Remove route-level `revalidate`, then remove
+- **Next action:** Collapse the 33 dead Edge-runtime guards in the Node-only
+  App renderer and delete the unreachable App Edge webpack entry chain. Keep
+  the shared Edge compiler transition until Proxy/middleware and
+  instrumentation have an explicit platform policy. Then remove
   `experimental_ppr`.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
@@ -123,15 +130,58 @@
   performance metrics; each slice is committed; the worktree is clean; and no
   required follow-up is implicit.
 - **Last verified:** 2026-07-27 on `feedthejim/simplify-next-rendering`.
-  App Router `fetchCache` configuration is absent from JavaScript and Rust
+  App Router `revalidate` configuration is absent from JavaScript and Rust
   schemas, rendering, Route Handlers, static-path generation, generated types,
-  language-service metadata, and supported fixtures. Core types, `next-core`,
-  the 30-case RSC diagnostic contract, 84 direct JavaScript assertions, the
+  language-service metadata, and App fixtures. Core types, `next-core`, the
+  30-case RSC diagnostic contract, five direct JavaScript assertions, the
   56-test fast contract, the full bootstrap, and the core release build passed.
   The rebuilt native binding passed five production resume-cache and Server
-  Action assertions plus two Partial Prefetching navigation assertions.
+  Action assertions plus two Partial Prefetching navigation assertions,
+  preserving explicit fetch revalidation and tag invalidation.
 
 ## History
+
+### 2026-07-27: Cache lifetimes without route-level revalidate
+
+Removed App Router route-level `revalidate` from the JavaScript and Rust
+segment schemas, compiler endpoint contract, build reduction, static route
+classification, component-tree prerender state, Route Handler userland and
+static-generation defaults, generated entry types, and TypeScript language
+service. App Route static generation now starts from the canonical infinite
+cache default and can only be narrowed by explicit fetch or Cache Components
+behavior. Removed the special configuration errors and the helper whose only
+purpose was treating route config as a static-generation switch.
+
+Removed 104 numeric or false App fixture exports while retaining the two
+Pages API exports outside this slice. Deleted mode-only rendering, invalid
+config, Cache Components error, and type-generation assertions. Existing
+fixtures that still mention revalidation now exercise supported explicit
+fetch, `unstable_cache`, cache lifetime, tag, Route Handler, or Server Action
+behavior.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** Exact implementation references fell from 17 to zero
+  and App fixture exports from 104 to zero. Residual semantic test names fell
+  from 515 to 387; these are a visible naming and matrix-pruning queue, not a
+  supported route configuration.
+- **Leanness:** Authored framework source fell by one file, 136 lines, and
+  5,228 bytes. Tracked Rust compiler source fell by 51 lines and 1,802 bytes.
+  The comparable core distribution fell by 476,275 bytes overall and 25,464
+  JavaScript bytes. Test-suite and dependency counts were unchanged.
+- **Runtime performance:** The retained production fixtures were ready in 96
+  to 101 milliseconds. Explicit fetch-cache consistency completed in 598
+  milliseconds, fetch-cache Server Action invalidation in 649 milliseconds,
+  and Partial Prefetching runtime caching in 920 milliseconds. These are
+  warm-local guardrails, not improvement claims.
+- **Iteration efficiency:** Three faster agents removed disjoint JavaScript,
+  Rust, and test surfaces concurrently; validation remained centralized.
+  Types took 17.35 seconds, five JavaScript plus 30 Rust diagnostic assertions
+  took 6.10 seconds, and the 56-test fast contract took 1.79 seconds. The full
+  bootstrap took 70.59 seconds including a 53.94-second native build, the core
+  release took 26.48 seconds, and the seven-assertion browser selection took
+  42.50 seconds with a 34.68-second Jest body. The successful validation path
+  totaled 164.81 seconds.
 
 ### 2026-07-27: Explicit fetch caching without route modes
 

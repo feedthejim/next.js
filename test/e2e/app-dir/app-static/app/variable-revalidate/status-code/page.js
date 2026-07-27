@@ -1,7 +1,5 @@
 import { fetchRetry } from '../../../lib/fetch-retry'
 
-export const revalidate = 0
-
 export default async function Page() {
   const data = await fetchRetry(
     'https://next-data-api-endpoint.vercel.app/api/random?status=404',

@@ -1,5 +1,3 @@
-export const revalidate = 0
-
 export default async function Page(props) {
   const params = await props.params
   return (

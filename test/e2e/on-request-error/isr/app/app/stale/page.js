@@ -3,5 +3,3 @@ export default function Page() {
     throw new Error('app:stale')
   return <p>{Date.now()}</p>
 }
-
-export const revalidate = 2

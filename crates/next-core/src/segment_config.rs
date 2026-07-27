@@ -17,8 +17,7 @@ use swc_core::{
 };
 use turbo_rcstr::{RcStr, rcstr};
 use turbo_tasks::{
-    NonLocalValue, ResolvedVc, TryJoinIterExt, ValueDefault, Vc, trace::TraceRawVcs,
-    util::WrapFuture,
+    ResolvedVc, TryJoinIterExt, ValueDefault, Vc, trace::TraceRawVcs, util::WrapFuture,
 };
 use turbo_tasks_fs::FileSystemPath;
 use turbopack_core::{
@@ -29,9 +28,7 @@ use turbopack_core::{
 };
 use turbopack_ecmascript::{
     EcmascriptInputTransforms, EcmascriptModuleAssetType,
-    analyzer::{
-        Bump, ConstantNumber, ConstantValue, JsValue, ObjectPart, ThreadLocal, graph::EvalContext,
-    },
+    analyzer::{Bump, ConstantValue, JsValue, ObjectPart, ThreadLocal, graph::EvalContext},
     parse::{ParseResult, parse},
 };
 
@@ -42,22 +39,9 @@ use crate::{
     util::{MiddlewareMatcherKind, NextRuntime},
 };
 
-#[derive(
-    Default, PartialEq, Eq, Clone, Copy, Debug, TraceRawVcs, NonLocalValue, Encode, Decode,
-)]
-pub enum NextRevalidate {
-    #[default]
-    Never,
-    ForceCache,
-    Frequency {
-        seconds: u32,
-    },
-}
-
 #[turbo_tasks::value(shared)]
 #[derive(Debug, Default, Clone)]
 pub struct NextSegmentConfig {
-    pub revalidate: Option<NextRevalidate>,
     pub runtime: Option<NextRuntime>,
     pub preferred_region: Option<Vec<RcStr>>,
     pub middleware_matcher: Option<Vec<MiddlewareMatcherKind>>,
@@ -89,12 +73,10 @@ impl NextSegmentConfig {
     /// the parent's values.
     pub fn apply_parent_config(&mut self, parent: &Self) {
         let NextSegmentConfig {
-            revalidate,
             runtime,
             preferred_region,
             ..
         } = self;
-        *revalidate = revalidate.or(parent.revalidate);
         *runtime = runtime.or(parent.runtime);
         *preferred_region = preferred_region.take().or(parent.preferred_region.clone());
     }
@@ -122,12 +104,10 @@ impl NextSegmentConfig {
             Ok(())
         }
         let Self {
-            revalidate,
             runtime,
             preferred_region,
             ..
         } = self;
-        merge_parallel(revalidate, &parallel_config.revalidate, "revalidate")?;
         merge_parallel(runtime, &parallel_config.runtime, "runtime")?;
         merge_parallel(
             preferred_region,
@@ -676,37 +656,6 @@ async fn parse_config_value(
                     _ => {
                         // Ignore,
                     }
-                }
-            }
-        }
-        "revalidate" => {
-            let Some(value) = get_value() else {
-                return invalid_config(
-                    source,
-                    "revalidate",
-                    span,
-                    rcstr!("It mustn't be reexported."),
-                    None,
-                    IssueSeverity::Error,
-                )
-                .await;
-            };
-
-            match value {
-                JsValue::Constant(ConstantValue::Num(ConstantNumber(val))) if val >= 0.0 => {
-                    config.revalidate = Some(NextRevalidate::Frequency {
-                        seconds: val as u32,
-                    });
-                }
-                JsValue::Constant(ConstantValue::False) => {
-                    config.revalidate = Some(NextRevalidate::Never);
-                }
-                JsValue::Constant(ConstantValue::Str(str)) if str.as_str() == "force-cache" => {
-                    config.revalidate = Some(NextRevalidate::ForceCache);
-                }
-                _ => {
-                    //noop; revalidate validation occurs in runtime at
-                    //https://github.com/vercel/next.js/blob/cd46c221d2b7f796f963d2b81eea1e405023db23/packages/next/src/server/lib/patch-fetch.ts#L20
                 }
             }
         }

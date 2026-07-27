@@ -675,48 +675,6 @@ describe('app-dir static/dynamic handling', () => {
     expect(newPageData).not.toBe(initPageData)
   })
 
-  if (!process.env.CUSTOM_CACHE_HANDLER) {
-    it('should revalidate correctly with config and fetch revalidate', async () => {
-      const initial$ = await next.render$(
-        '/variable-config-revalidate/revalidate-3'
-      )
-      const initialDate = initial$('#date').text()
-      const initialRandomData = initial$('#random-data').text()
-
-      expect(initialDate).toBeTruthy()
-      expect(initialRandomData).toBeTruthy()
-
-      let prevInitialDate
-      let prevInitialRandomData
-
-      // wait for a fresh revalidation
-      await check(async () => {
-        const $ = await next.render$('/variable-config-revalidate/revalidate-3')
-        prevInitialDate = $('#date').text()
-        prevInitialRandomData = $('#random-data').text()
-
-        expect(prevInitialDate).not.toBe(initialDate)
-        expect(prevInitialRandomData).not.toBe(initialRandomData)
-        return 'success'
-      }, 'success')
-
-      // the date should revalidate first after 3 seconds
-      // while the fetch data stays in place for 9 seconds
-      await check(async () => {
-        const $ = await next.render$('/variable-config-revalidate/revalidate-3')
-        const curDate = $('#date').text()
-        const curRandomData = $('#random-data').text()
-
-        expect(curDate).not.toBe(prevInitialDate)
-        expect(curRandomData).not.toBe(prevInitialRandomData)
-
-        prevInitialDate = curDate
-        prevInitialRandomData = curRandomData
-        return 'success'
-      }, 'success')
-    })
-  }
-
   it('should not cache non-ok statusCode', async () => {
     await check(async () => {
       const $ = await next.render$('/variable-revalidate/status-code')

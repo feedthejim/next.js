@@ -1,5 +1,3 @@
-export const revalidate = 1
-
 export default async function Home() {
   console.log('home page rendered')
   const randomNumber = await fetch(

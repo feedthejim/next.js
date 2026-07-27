@@ -1,7 +1,5 @@
 type AnySearchParams = { [key: string]: string | Array<string> | undefined }
 
-export const revalidate = 1
-
 export default async function UnexpectedErrorPage(props: {
   searchParams: Promise<AnySearchParams>
 }) {

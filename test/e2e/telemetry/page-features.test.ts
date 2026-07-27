@@ -182,7 +182,6 @@ describe('page features telemetry', () => {
         await fs.writeFile(
           path.join(next.testDir, 'app/ssr/page.js'),
           `
-          export const revalidate = 0
           export default function Page() {
             return <p>ssr page</p>
           }

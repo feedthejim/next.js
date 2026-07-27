@@ -100,13 +100,6 @@ export type InstantSample = {
  */
 const AppSegmentConfigSchema = z.object({
   /**
-   * The number of seconds to revalidate the page or false to disable revalidation.
-   */
-  revalidate: z
-    .union([z.number().int().nonnegative(), z.literal(false)])
-    .optional(),
-
-  /**
    * How this segment should be prefetched.
    */
   instant: InstantConfigSchema.optional(),
@@ -157,13 +150,6 @@ export function parseAppSegmentConfig(
     errorMap: (issue, ctx) => {
       if (issue.path.length === 1) {
         switch (issue.path[0]) {
-          case 'revalidate': {
-            return {
-              message: `Invalid revalidate value ${JSON.stringify(
-                ctx.data
-              )} on "${route}", must be a non-negative number or false`,
-            }
-          }
           case 'instant': {
             return {
               // @TODO replace this link with a link to the docs when they are written
@@ -202,11 +188,6 @@ export function parseAppSegmentConfig(
  * The configuration for a page.
  */
 export type AppSegmentConfig = {
-  /**
-   * The revalidation period for the page in seconds, or false to disable ISR.
-   */
-  revalidate?: number | false
-
   /**
    * How this segment should be prefetched.
    */

@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
 
-export const revalidate = false
-
 export async function GET() {
   console.log('Load data')
   return NextResponse.json({

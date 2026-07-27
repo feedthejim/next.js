@@ -147,8 +147,6 @@ describe('ReactRefreshRegression app', () => {
     await session.patch(
       'app/page.js',
       outdent`
-        export const revalidate = 0
-
         import Component from '../index'
         export default function Page() {
           return <Component />

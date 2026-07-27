@@ -1,5 +1,3 @@
-export const revalidate = 1
-
 export function generateStaticParams() {
   return [
     {

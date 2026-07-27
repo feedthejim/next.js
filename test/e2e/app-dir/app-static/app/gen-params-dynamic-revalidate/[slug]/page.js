@@ -1,7 +1,5 @@
 import { fetchRetry } from '../../../lib/fetch-retry'
 
-export const revalidate = 3
-
 export async function generateStaticParams() {
   return [{ slug: 'one' }]
 }

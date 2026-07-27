@@ -15,7 +15,6 @@ import { parseLoaderTree } from '../../shared/lib/router/utils/parse-loader-tree
 import type { AppRenderContext, GetDynamicParamFromSegment } from './app-render'
 import { createComponentStylesAndScripts } from './create-component-styles-and-scripts'
 import { getLayerAssets } from './get-layer-assets'
-import { validateRevalidate } from '../lib/patch-fetch'
 import { PARALLEL_ROUTE_DEFAULT_PATH } from '../../client/components/builtin/default'
 import { getTracer } from '../lib/trace/tracer'
 import { NextNodeServerSpan } from '../lib/trace/constants'
@@ -241,42 +240,6 @@ async function createComponentTreeInternal(
           injectedJS: injectedJSWithCurrentLayout,
         })
       : []
-
-  if (typeof layoutOrPageMod?.revalidate !== 'undefined') {
-    validateRevalidate(layoutOrPageMod?.revalidate, workStore.route)
-  }
-
-  if (typeof layoutOrPageMod?.revalidate === 'number') {
-    const defaultRevalidate = layoutOrPageMod.revalidate as number
-
-    const workUnitStore = workUnitAsyncStorage.getStore()
-
-    if (workUnitStore) {
-      switch (workUnitStore.type) {
-        case 'prerender':
-        case 'prerender-runtime':
-        case 'prerender-legacy':
-        case 'prerender-ppr':
-          if (workUnitStore.revalidate > defaultRevalidate) {
-            workUnitStore.revalidate = defaultRevalidate
-          }
-          break
-        case 'request':
-          // A request store doesn't have a revalidate property.
-          break
-        // createComponentTree is not called for these stores:
-        case 'cache':
-        case 'private-cache':
-        case 'prerender-client':
-        case 'validation-client':
-        case 'unstable-cache':
-        case 'generate-static-params':
-          break
-        default:
-          workUnitStore satisfies never
-      }
-    }
-  }
 
   // Read unstable_dynamicStaleTime from page modules (not layouts) and track it on
   // the store's stale field. This affects the segment cache stale time via

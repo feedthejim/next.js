@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
 
-export const revalidate = 0
-
 export function generateStaticParams() {
   return [{ slug: 'first' }]
 }

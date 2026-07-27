@@ -1,5 +1,3 @@
-export const revalidate = 3
-
 export function generateStaticParams() {
   return [{ slug: 'first' }]
 }

@@ -1,7 +1,5 @@
 import { use } from 'react'
 
-export const revalidate = false
-
 async function getData() {
   await new Promise((resolve) => setTimeout(resolve, 5000))
   return {

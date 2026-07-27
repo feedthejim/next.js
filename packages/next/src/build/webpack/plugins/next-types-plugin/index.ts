@@ -74,7 +74,6 @@ checkFields<Diff<{
   instant?: InstantConfigForTypeCheckInternal
   prefetch?: Prefetch
   unstable_dynamicStaleTime?: number
-  revalidate?: RevalidateRange<TEntry> | false
   /** @deprecated The \`preferredRegion\` config is deprecated. Remove this export. */
   preferredRegion?: 'auto' | 'global' | 'home' | string | string[]
   maxDuration?: number
@@ -182,10 +181,6 @@ ${
   params?: Promise<SegmentParams>
 }
 
-// =============
-// Utility types
-type RevalidateRange<T> = T extends { revalidate: any } ? NonNegative<T['revalidate']> : never
-
 // If T is unknown or any, it will be an empty {} type. Otherwise, it will be the same as Omit<T, keyof Base>.
 type OmitWithTag<T, K extends keyof any, _M> = Omit<T, K>
 type Diff<Base, T extends Base, Message extends string = ''> = 0 extends (1 & T) ? {} : OmitWithTag<T, keyof Base, Message>
@@ -206,11 +201,6 @@ ${
 
 function checkFields<_ extends { [k in keyof any]: never }>() {}
 
-// https://github.com/sindresorhus/type-fest
-type Numeric = number | bigint
-type Zero = 0 | 0n
-type Negative<T extends Numeric> = T extends Zero ? never : \`\${T}\` extends \`-\${string}\` ? T : never
-type NonNegative<T extends Numeric> = T extends Zero ? T : Negative<T> extends never ? T : '__invalid_negative_number__'
 `
 }
 

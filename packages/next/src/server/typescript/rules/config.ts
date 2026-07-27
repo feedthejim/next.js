@@ -51,24 +51,6 @@ const API_DOCS: Record<
       if (typeof value === 'string') return `Deploy to region: ${value}.`
     },
   },
-  revalidate: {
-    description:
-      "The `revalidate` option sets the default revalidation time for that layout or page. Note that it doesn't override the value specify by each `fetch()`.",
-    type: 'mixed',
-    options: {
-      false:
-        'This is the default and changes the fetch cache to indefinitely cache anything that uses force-cache or is fetched before a dynamic Hook/fetch.',
-      0: 'Specifying `0` implies that this layout or page should never be static.',
-      30: 'Set the revalidation time to `30` seconds. The value can be `0` or any positive number.',
-    },
-    link: 'https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#revalidate',
-    isValid: (value: string) => {
-      return value === 'false' || Number(value.replace(/_/g, '')) >= 0
-    },
-    getHint: (value: any) => {
-      return `Set the default revalidation time to \`${value}\` seconds.`
-    },
-  },
   metadata: {
     description: 'Next.js Metadata configurations',
     link: 'https://nextjs.org/docs/app/building-your-application/optimizing/metadata',

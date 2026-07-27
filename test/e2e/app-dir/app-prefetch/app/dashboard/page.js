@@ -1,7 +1,5 @@
 import Link from 'next/link'
 
-export const revalidate = 0
-
 async function getData() {
   await new Promise((resolve) => setTimeout(resolve, 3000))
   return {

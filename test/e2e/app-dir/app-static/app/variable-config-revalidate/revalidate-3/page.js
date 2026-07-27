@@ -1,5 +1,3 @@
-export const revalidate = 3
-
 export const metadata = {
   title: 'Cache Test',
 }

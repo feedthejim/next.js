@@ -408,7 +408,6 @@ export interface Endpoint {
 }
 
 interface EndpointConfig {
-  revalidate?: 'never' | 'force-cache' | number
   runtime?: 'nodejs' | 'edge'
   preferredRegion?: string
 }

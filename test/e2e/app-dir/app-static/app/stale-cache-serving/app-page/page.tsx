@@ -1,5 +1,3 @@
-export const revalidate = 0
-
 const delay = 3000
 
 export default async function Page(props) {

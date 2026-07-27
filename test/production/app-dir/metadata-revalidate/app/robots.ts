@@ -10,5 +10,3 @@ export default function robots(): MetadataRoute.Robots {
     sitemap: 'https://acme.com/sitemap.xml',
   }
 }
-
-export const revalidate = 5

@@ -5,5 +5,3 @@ export default async function Page() {
 
   return <div>Time: {time}</div>
 }
-
-export const revalidate = 1

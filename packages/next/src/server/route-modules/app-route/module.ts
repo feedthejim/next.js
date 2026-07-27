@@ -1,6 +1,5 @@
 import type { NextConfig } from '../../config-shared'
 import type { AppRouteRouteDefinition } from '../../route-definitions/app-route-route-definition'
-import type { AppSegmentConfig } from '../../../build/segment-config/app/app-segment-config'
 import type { NextRequest } from '../../web/spec-extension/request'
 import type { NextURL } from '../../web/next-url'
 import type { DeepReadonly } from '../../../shared/lib/deep-readonly'
@@ -49,7 +48,6 @@ import {
 } from '../../app-render/action-async-storage.external'
 import * as sharedModules from './shared-modules'
 import { getIsPossibleServerAction } from '../../lib/server-action-request-meta'
-import { isStaticGenEnabled } from './helpers/is-static-gen-enabled'
 import {
   abortAndThrowOnSynchronousRequestDataAccess,
   postponeWithTracking,
@@ -156,7 +154,6 @@ export type AppRouteHandlers = {
  * routes. This contains all the user generated code.
  */
 export type AppRouteUserlandModule = AppRouteHandlers &
-  Pick<AppSegmentConfig, 'revalidate'> &
   Pick<AppSegment, 'generateStaticParams'>
 
 /**
@@ -278,14 +275,6 @@ export class AppRouteRouteModule extends RouteModule<
     // Get the non-static methods for this route.
     this._hasNonStaticMethods = hasNonStaticMethods(userland)
 
-    if (this.nextConfigOutput === 'export') {
-      if (!isStaticGenEnabled(userland) && userland['GET']) {
-        throw new Error(
-          `Route "${this.definition.pathname}" must export revalidate or generateStaticParams with "output: export". See more info here: https://nextjs.org/docs/advanced-features/static-html-export`
-        )
-      }
-    }
-
     // We only warn in development after here, so return if we're not in
     // development.
     if (process.env.NODE_ENV === 'development') {
@@ -393,14 +382,7 @@ export class AppRouteRouteModule extends RouteModule<
     let res: unknown
     try {
       if (isStaticGeneration) {
-        const userlandRevalidate = this.userland.revalidate
-        const defaultRevalidate: number =
-          // If the static generation store does not have a revalidate value
-          // set, then we should set it the revalidate value from the userland
-          // module or default to false.
-          userlandRevalidate === false || userlandRevalidate === undefined
-            ? INFINITE_CACHE
-            : userlandRevalidate
+        const defaultRevalidate = INFINITE_CACHE
 
         /**
          * When we are attempting to statically prerender the GET handler of a route.ts module,

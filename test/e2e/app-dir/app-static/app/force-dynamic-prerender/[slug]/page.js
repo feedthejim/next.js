@@ -1,7 +1,5 @@
 import { cookies } from 'next/headers'
 
-export const revalidate = 60
-
 export const generateStaticParams = async () => {
   return [{ slug: 'frameworks' }]
 }

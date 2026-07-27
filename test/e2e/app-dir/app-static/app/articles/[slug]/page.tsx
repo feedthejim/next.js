@@ -15,8 +15,6 @@ const Article = async ({ params }: Props) => {
   return <div>Articles page with slug</div>
 }
 
-export const revalidate = 1
-
 export async function generateStaticParams() {
   return [
     {

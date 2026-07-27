@@ -1,5 +1,3 @@
-export const revalidate = 0
-
 export default async function RootLayout({ children }) {
   await new Promise((resolve) => setTimeout(resolve, 0))
 

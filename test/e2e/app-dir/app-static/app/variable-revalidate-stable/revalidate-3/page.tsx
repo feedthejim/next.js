@@ -1,7 +1,5 @@
 import { Suspense } from 'react'
 
-export const revalidate = 3
-
 async function RandomSuspenseResolve() {
   await new Promise((resolve) => {
     setTimeout(resolve, Math.random() * 5_000)

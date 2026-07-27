@@ -56,51 +56,6 @@ describe('typescript-plugin', () => {
     )
   })
 
-  it('forwards all quick info arguments and preserves native fields for valid config values', () => {
-    const position = positionOf('30') + 1
-    const result = quickInfo.getQuickInfoAtPosition(
-      quickInfoFile,
-      position,
-      120,
-      2
-    )
-
-    expect(quickInfo.getCapturedQuickInfoArgs()).toEqual([
-      quickInfoFile,
-      position,
-      120,
-      2,
-    ])
-    expect(result?.canIncreaseVerbosityLevel).toBe(true)
-
-    const documentation = documentationText(result)
-    expect(documentation[0]).toBe(nativeDocumentation)
-    expect(documentation.slice(1).join(' ')).toContain(
-      'Set the revalidation time to `30` seconds'
-    )
-    expect(documentation.slice(1).join(' ')).toContain(
-      'Read more about the "revalidate" option'
-    )
-  })
-
-  it('preserves native fields and appends Next.js docs for config names', () => {
-    const result = quickInfo.getQuickInfoAtPosition(
-      quickInfoFile,
-      positionOf('revalidate')
-    )
-
-    expect(result?.canIncreaseVerbosityLevel).toBe(true)
-
-    const documentation = documentationText(result)
-    expect(documentation[0]).toBe(nativeDocumentation)
-    expect(documentation.slice(1).join(' ')).toContain(
-      'The `revalidate` option sets'
-    )
-    expect(documentation.slice(1).join(' ')).toContain(
-      'Read more about the "revalidate" option'
-    )
-  })
-
   it('keeps native quick info inside function config initializers', () => {
     const result = quickInfo.getQuickInfoAtPosition(
       quickInfoFile,

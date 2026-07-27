@@ -1,6 +1,4 @@
 import { nextTestSetup } from 'e2e-utils'
-import { waitFor } from 'next-test-utils'
-import cheerio from 'cheerio'
 
 describe('app dir rendering', () => {
   const { next, isNextDev, skipped } = nextTestSetup({
@@ -58,45 +56,6 @@ describe('app dir rendering', () => {
       // expect(duration < 7000).toBe(true)
       expect($('#slow-layout-message').text()).toBe('hello from slow layout')
       expect($('#slow-page-message').text()).toBe('hello from slow page')
-    })
-  })
-
-  describe('ISR', () => {
-    it('should revalidate the page when revalidate is configured', async () => {
-      const getPage = async () => {
-        const res = await next.fetch('isr-multiple/nested')
-        const html = await res.text()
-
-        return {
-          $: cheerio.load(html),
-          cacheHeader: res.headers['x-nextjs-cache'],
-        }
-      }
-      const { $ } = await getPage()
-      expect($('#layout-message').text()).toBe('hello from layout')
-      expect($('#page-message').text()).toBe('hello from page')
-
-      const layoutNow = $('#layout-now').text()
-      const pageNow = $('#page-now').text()
-
-      await waitFor(2000)
-
-      // TODO: implement
-      // Trigger revalidate
-      // const { cacheHeader: revalidateCacheHeader } = await getPage()
-      // expect(revalidateCacheHeader).toBe('STALE')
-
-      // TODO: implement
-      const { $: $revalidated /* cacheHeader: revalidatedCacheHeader */ } =
-        await getPage()
-      // expect(revalidatedCacheHeader).toBe('REVALIDATED')
-
-      const layoutNowRevalidated = $revalidated('#layout-now').text()
-      const pageNowRevalidated = $revalidated('#page-now').text()
-
-      // Expect that the `Date.now()` is different as the page have been regenerated
-      expect(layoutNow).not.toBe(layoutNowRevalidated)
-      expect(pageNow).not.toBe(pageNowRevalidated)
     })
   })
 

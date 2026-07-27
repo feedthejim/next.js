@@ -4,5 +4,3 @@ export function GET() {
   }
   return new Response('app:route')
 }
-
-export const revalidate = 2

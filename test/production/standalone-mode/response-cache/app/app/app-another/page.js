@@ -1,5 +1,3 @@
-export const revalidate = 1
-
 export default function Page() {
   console.log('rendering app-another')
   return (

@@ -4,9 +4,3 @@
    :              ^^^^^^^
  2 | export const revalidate = 1
    `----
-  x Route segment config "revalidate" is not supported by the App Router. Please remove it.
-   ,-[input.js:2:1]
- 1 | export const runtime = 'edge'
- 2 | export const revalidate = 1
-   :              ^^^^^^^^^^
-   `----

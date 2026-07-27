@@ -1,5 +1,3 @@
-export const revalidate = 1
-
 export function GET() {
   const response = JSON.stringify({
     rand1: Math.random(),

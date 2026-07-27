@@ -2502,37 +2502,35 @@ export default async function build(
                           }
 
                           const appConfig = workerResult.appConfig || {}
-                          if (appConfig.revalidate !== 0) {
-                            const hasGenerateStaticParams =
-                              workerResult.prerenderedRoutes &&
-                              workerResult.prerenderedRoutes.length > 0
+                          const hasGenerateStaticParams =
+                            workerResult.prerenderedRoutes &&
+                            workerResult.prerenderedRoutes.length > 0
 
-                            if (
-                              config.output === 'export' &&
-                              isDynamic &&
-                              !hasGenerateStaticParams
-                            ) {
-                              throw new Error(
-                                `Page "${page}" is missing "generateStaticParams()" so it cannot be used with "output: export" config. See more info here: https://nextjs.org/docs/messages/generate-static-params`
-                              )
-                            }
+                          if (
+                            config.output === 'export' &&
+                            isDynamic &&
+                            !hasGenerateStaticParams
+                          ) {
+                            throw new Error(
+                              `Page "${page}" is missing "generateStaticParams()" so it cannot be used with "output: export" config. See more info here: https://nextjs.org/docs/messages/generate-static-params`
+                            )
+                          }
 
-                            // Mark an app route without dynamic params as static.
-                            if (!isDynamic) {
-                              staticPaths.set(originalAppPath, [
-                                {
-                                  params: {},
-                                  pathname: page,
-                                  encodedPathname: page,
-                                  fallbackRouteParams: [],
-                                  fallbackMode:
-                                    workerResult.prerenderFallbackMode,
-                                  fallbackRootParams: [],
-                                  throwOnEmptyStaticShell: true,
-                                },
-                              ])
-                              isStatic = true
-                            }
+                          // Mark an app route without dynamic params as static.
+                          if (!isDynamic) {
+                            staticPaths.set(originalAppPath, [
+                              {
+                                params: {},
+                                pathname: page,
+                                encodedPathname: page,
+                                fallbackRouteParams: [],
+                                fallbackMode:
+                                  workerResult.prerenderFallbackMode,
+                                fallbackRootParams: [],
+                                throwOnEmptyStaticShell: true,
+                              },
+                            ])
+                            isStatic = true
                           }
 
                           if (workerResult.prerenderFallbackMode) {
@@ -3209,9 +3207,7 @@ export default async function build(
 
             const ssgPageRoutesSet = new Set(pageInfos.get(page)?.ssgPageRoutes)
 
-            let hasRevalidateZero =
-              appConfig.revalidate === 0 ||
-              getCacheControl(page).revalidate === 0
+            let hasRevalidateZero = getCacheControl(page).revalidate === 0
 
             if (hasRevalidateZero && pageInfos.get(page)?.isStatic) {
               // if the page was marked as being static, but it contains dynamic data
@@ -3350,10 +3346,7 @@ export default async function build(
                 hasStaticRsc,
               } = routeResult ?? {}
 
-              const cacheControl = getCacheControl(
-                route.pathname,
-                appConfig.revalidate
-              )
+              const cacheControl = getCacheControl(route.pathname)
 
               // Generated concrete paths (for example `/blog/post-1`) inherit
               // the route-level classification from the dynamic page

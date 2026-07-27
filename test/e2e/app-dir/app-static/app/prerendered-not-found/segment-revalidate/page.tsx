@@ -1,8 +1,6 @@
 import React from 'react'
 import { notFound } from 'next/navigation'
 
-export const revalidate = 3
-
 export default async function Page() {
   await fetch('https://next-data-api-endpoint.vercel.app/api/random', {
     next: {

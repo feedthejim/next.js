@@ -1,7 +1,5 @@
 import Link from 'next/link'
 
-export const revalidate = 3600 // arbitrarily long, just so that it doesn't happen during a test run
-
 export async function generateStaticParams() {
   return ['nodejs', 'edge'].flatMap((runtime) =>
     ['dynamic-page', 'middleware', 'route', 'server-action'].map((page) => ({

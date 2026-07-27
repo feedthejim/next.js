@@ -1,7 +1,5 @@
 import { use } from 'react'
 
-export const revalidate = 0
-
 async function getData() {
   return {
     message: 'hello from layout',

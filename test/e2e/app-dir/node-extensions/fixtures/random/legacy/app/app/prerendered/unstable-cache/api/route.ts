@@ -1,5 +1,3 @@
-export const revalidate = 1
-
 import { unstable_cache as cache } from 'next/cache'
 
 export async function GET() {

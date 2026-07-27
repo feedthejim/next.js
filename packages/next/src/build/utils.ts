@@ -974,7 +974,7 @@ export async function isPageStatic({
 
 type ReducedAppConfig = Pick<
   AppSegmentConfig,
-  'revalidate' | 'preferredRegion' | 'maxDuration'
+  'preferredRegion' | 'maxDuration'
 >
 
 /**
@@ -990,26 +990,13 @@ export function reduceAppConfig(
   const config: ReducedAppConfig = {}
 
   for (const segment of segments) {
-    const { preferredRegion, revalidate, maxDuration } = segment.config || {}
+    const { preferredRegion, maxDuration } = segment.config || {}
 
     // TODO: should conflicting configs here throw an error
     // e.g. if layout defines one region but page defines another
 
     if (typeof preferredRegion !== 'undefined') {
       config.preferredRegion = preferredRegion
-    }
-
-    if (typeof revalidate !== 'undefined') {
-      config.revalidate = revalidate
-    }
-
-    // Any revalidate number overrides false, and shorter revalidate overrides
-    // longer (initially).
-    if (
-      typeof revalidate === 'number' &&
-      (typeof config.revalidate !== 'number' || revalidate < config.revalidate)
-    ) {
-      config.revalidate = revalidate
     }
 
     if (typeof maxDuration !== 'undefined') {

@@ -9,7 +9,6 @@ export default function Root({ children }) {
   )
 }
 
-export const revalidate = 0
 export async function generateStaticParams() {
   return [{ slug: ['slug'] }]
 }

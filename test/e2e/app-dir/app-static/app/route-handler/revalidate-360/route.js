@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
 
-export const revalidate = 0
-
 export async function GET() {
   const data360 = await fetch(
     'https://next-data-api-endpoint.vercel.app/api/random',

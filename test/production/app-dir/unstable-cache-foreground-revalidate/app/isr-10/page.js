@@ -1,7 +1,5 @@
 import { unstable_cache } from 'next/cache'
 
-export const revalidate = 10
-
 const getCachedData = unstable_cache(
   async () => {
     const generatedAt = Date.now()

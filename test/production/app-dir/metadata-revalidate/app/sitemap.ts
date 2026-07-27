@@ -8,5 +8,3 @@ export default function sitemap() {
     },
   ]
 }
-
-export const revalidate = 5
