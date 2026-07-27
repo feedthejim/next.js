@@ -15,6 +15,13 @@ describe('cached navigations - fork Partial Prefetching default', () => {
     return
   }
 
+  it('renders parameters outside generateStaticParams on demand', async () => {
+    const response = await next.fetch('/with-fallback-params/ungenerated')
+
+    expect(response.status).toBe(200)
+    expect(await response.text()).toContain('<p id="slug">ungenerated</p>')
+  })
+
   it('runtime-caches a route that has no per-segment prefetch config', async () => {
     let page: Playwright.Page
     const browser = await next.browser('/', {

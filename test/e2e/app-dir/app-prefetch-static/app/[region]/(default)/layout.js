@@ -9,5 +9,3 @@ export function generateStaticParams() {
     region,
   }))
 }
-
-export const dynamicParams = false

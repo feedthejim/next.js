@@ -89,9 +89,12 @@
   for Edge middleware and instrumentation while those products remain.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
-  Router contract allowlist. `fork-metrics.json` is the current scorecard,
-  including static complexity, validation cost, and relevant runtime
-  performance guardrails.
+  Router contract allowlist. App routes have one dynamic-parameter model:
+  `generateStaticParams` seeds known paths, while other values use the
+  canonical App Page partial fallback or App Route blocking fallback. The
+  inherited `dynamicParams` mode and its special build errors are absent.
+  `fork-metrics.json` is the current scorecard, including static complexity,
+  validation cost, and relevant runtime performance guardrails.
 - **Constraints:** Backward compatibility is out of scope. Do not add migration
   layers or special removed-feature errors. Preserve only behavior in the fork
   contract. Keep each independently verified slice committed before starting
@@ -101,10 +104,9 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Remove `dynamicParams` App Router configuration and its
-  inherited Rust/JavaScript plumbing while preserving the canonical fallback
-  parameter behavior, then continue with `dynamic`, `fetchCache`, `revalidate`,
-  and `experimental_ppr`.
+- **Next action:** Remove the `dynamic` App Router configuration and its
+  rendering branches, then continue with `fetchCache`, `revalidate`, and
+  `experimental_ppr`.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -133,9 +135,54 @@
   endpoint packaging, `next-api` checked successfully, the full bootstrap and
   core release builds passed, the 56-test fast contract passed, all 12 PPR
   browser assertions passed, and all five resume-cache and Server Action
-  assertions passed against the rebuilt local binding.
+  assertions passed against the rebuilt local binding. App Router dynamic
+  parameters now have one lazy-generation model: `dynamicParams` is absent
+  from JavaScript and Rust route configuration, static-path planning, generated
+  types, language-service metadata, and supported fixtures. Parameters outside
+  `generateStaticParams` are generated on demand. The 80-case static-path unit
+  suite, 31 RSC diagnostics, eight TypeScript plugin and generated-type
+  assertions, `next-api` check, 56-test fast contract, rebuilt native binding,
+  and core release build passed. A production Turbopack E2E also proved that
+  an ungenerated parameter returns successfully under the fork's Partial
+  Prefetching configuration.
 
 ## History
+
+### 2026-07-27: One dynamic parameter model
+
+Removed `dynamicParams` from the App segment schema, JavaScript-to-Rust
+contract, inherited Rust configuration, generated entry validation, TypeScript
+language service, metadata loader, App Route userland type, and static-path
+planner. The canonical behavior now always permits parameters outside
+`generateStaticParams` to be generated on demand. Removed mode-only fixture
+declarations and assertions, then added that supported behavior to the retained
+Partial Prefetching production E2E without adding another application or
+browser process.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** Exact App route-config `dynamicParams` and
+  `dynamic_params` references fell from 38 to zero. Fallback planning has one
+  four-case state machine instead of combining the base fallback with a
+  per-segment boolean, and removed exports now receive ordinary language and
+  module behavior rather than a bespoke framework diagnostic.
+- **Leanness:** The implementation, fixture, manifest, test, and scorecard
+  tooling diff is 350 net lines smaller: 90 additions and 440 deletions,
+  excluding this history entry and the generated snapshot. Authored framework
+  source fell by 120 lines and 3,782 bytes, and tracked Rust compiler source
+  fell by 41 lines and 1,358 bytes. The comparable warm distribution fell by
+  14,057 bytes overall and 5,736 JavaScript bytes. Test-file and dependency
+  counts were unchanged because coverage moved into an existing E2E.
+- **Runtime performance:** The retained production Turbopack fixture started
+  in 74 milliseconds, served the ungenerated parameter assertion in 126
+  milliseconds, and passed its Partial Prefetching browser assertion in 927
+  milliseconds. These are single warm-local guardrails, not speed claims.
+- **Iteration efficiency:** Direct Rust, static-path, compiler-diagnostic, and
+  TypeScript-plugin checks took 43.72 seconds, types took 14.46 seconds, and
+  the 56-test fast contract took 4.26 seconds. The full bootstrap took 37.28
+  seconds, including a 9.13-second native binding build and 23.11-second core
+  release. The retained production journey took 22.02 seconds with a
+  14.74-second Jest body. Productive validation cost 121.74 seconds.
 
 ### 2026-07-27: One App endpoint packaging path
 

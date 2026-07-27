@@ -208,14 +208,12 @@ export async function getFiles(cwd) {
 export function runTests({
   trailingSlash = true,
   dynamicPage,
-  dynamicParams,
   dynamicApiRoute,
   generateStaticParamsOpt,
   expectedErrMsg,
 }: {
   trailingSlash?: boolean
   dynamicPage?: string
-  dynamicParams?: string
   dynamicApiRoute?: string
   generateStaticParamsOpt?:
     | 'set noop'
@@ -264,13 +262,6 @@ export function runTests({
           `export const dynamic = 'force-static'`,
           `export const dynamic = ${dynamicApiRoute}`
         )
-      )
-    }
-
-    if (dynamicParams !== undefined) {
-      await next.patchFile(
-        'app/another/[slug]/page.js',
-        (content) => `export const dynamicParams = ${dynamicParams}\n` + content
       )
     }
 

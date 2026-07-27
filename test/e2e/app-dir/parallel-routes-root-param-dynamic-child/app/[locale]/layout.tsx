@@ -5,8 +5,6 @@ export function generateStaticParams() {
   return [{ locale: 'en' }, { locale: 'fr' }]
 }
 
-export const dynamicParams = false
-
 export default function RootLayout({
   children,
 }: {

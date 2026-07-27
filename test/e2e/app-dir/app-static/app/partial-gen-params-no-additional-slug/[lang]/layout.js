@@ -1,5 +1,3 @@
-export const dynamicParams = true
-
 export function generateStaticParams() {
   return [{ lang: 'en' }, { lang: 'fr' }]
 }

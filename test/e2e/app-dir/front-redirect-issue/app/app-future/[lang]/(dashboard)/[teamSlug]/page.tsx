@@ -11,8 +11,6 @@ export default async function TeamDashboardPage(props: any) {
   return notFound()
 }
 
-export const dynamicParams = true
-
 export async function generateMetadata() {
   return {
     title: 'test',

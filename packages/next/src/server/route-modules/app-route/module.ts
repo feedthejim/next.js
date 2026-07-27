@@ -164,10 +164,7 @@ export type AppRouteHandlers = {
  * routes. This contains all the user generated code.
  */
 export type AppRouteUserlandModule = AppRouteHandlers &
-  Pick<
-    AppSegmentConfig,
-    'dynamic' | 'revalidate' | 'dynamicParams' | 'fetchCache'
-  > &
+  Pick<AppSegmentConfig, 'dynamic' | 'revalidate' | 'fetchCache'> &
   Pick<AppSegment, 'generateStaticParams'>
 
 /**

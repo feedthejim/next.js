@@ -157,6 +157,18 @@ const clientRuntimeFiles = frameworkSourceFiles.filter(
 const appSegmentConfigFiles = frameworkSourceFiles.filter((file) =>
   file.startsWith('packages/next/src/build/segment-config/app/')
 )
+const appRouteConfigFiles = [
+  ...appSegmentConfigFiles,
+  'packages/next/src/build/static-paths/app.ts',
+  'packages/next/src/build/swc/types.ts',
+  'packages/next/src/build/templates/app-page-runtime.ts',
+  'packages/next/src/build/webpack/loaders/next-metadata-route-loader.ts',
+  'packages/next/src/build/webpack/plugins/next-types-plugin/index.ts',
+  'packages/next/src/server/route-modules/app-route/module.ts',
+  'packages/next/src/server/typescript/rules/config.ts',
+  'crates/next-core/src/segment_config.rs',
+  'crates/next-custom-transforms/src/transforms/react_server_components.rs',
+].filter(existsSync)
 const appEntryFiles = [
   'crates/next-api/src/app.rs',
   'crates/next-core/src/next_app/app_page_entry.rs',
@@ -258,6 +270,10 @@ const metrics = {
     appEdgeContextRuntimeConstants: countMatches(
       appEntryFiles,
       /\bNextRuntime::Edge\b/g
+    ),
+    appDynamicParamsModeReferences: countMatches(
+      appRouteConfigFiles,
+      /\bdynamicParams\b|\bdynamic_params\b/g
     ),
   },
   packageDependencies: {

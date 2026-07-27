@@ -106,7 +106,6 @@ pub enum NextRevalidate {
 #[derive(Debug, Default, Clone)]
 pub struct NextSegmentConfig {
     pub dynamic: Option<NextSegmentDynamic>,
-    pub dynamic_params: Option<bool>,
     pub revalidate: Option<NextRevalidate>,
     pub fetch_cache: Option<NextSegmentFetchCache>,
     pub runtime: Option<NextRuntime>,
@@ -141,7 +140,6 @@ impl NextSegmentConfig {
     pub fn apply_parent_config(&mut self, parent: &Self) {
         let NextSegmentConfig {
             dynamic,
-            dynamic_params,
             revalidate,
             fetch_cache,
             runtime,
@@ -149,7 +147,6 @@ impl NextSegmentConfig {
             ..
         } = self;
         *dynamic = dynamic.or(parent.dynamic);
-        *dynamic_params = dynamic_params.or(parent.dynamic_params);
         *revalidate = revalidate.or(parent.revalidate);
         *fetch_cache = fetch_cache.or(parent.fetch_cache);
         *runtime = runtime.or(parent.runtime);
@@ -180,7 +177,6 @@ impl NextSegmentConfig {
         }
         let Self {
             dynamic,
-            dynamic_params,
             revalidate,
             fetch_cache,
             runtime,
@@ -188,11 +184,6 @@ impl NextSegmentConfig {
             ..
         } = self;
         merge_parallel(dynamic, &parallel_config.dynamic, "dynamic")?;
-        merge_parallel(
-            dynamic_params,
-            &parallel_config.dynamic_params,
-            "dynamicParams",
-        )?;
         merge_parallel(revalidate, &parallel_config.revalidate, "revalidate")?;
         merge_parallel(fetch_cache, &parallel_config.fetch_cache, "fetchCache")?;
         merge_parallel(runtime, &parallel_config.runtime, "runtime")?;
@@ -787,35 +778,6 @@ async fn parse_config_value(
                     .await;
                 }
             };
-        }
-        "dynamicParams" => {
-            let Some(value) = get_value() else {
-                return invalid_config(
-                    source,
-                    "dynamicParams",
-                    span,
-                    rcstr!("It mustn't be reexported."),
-                    None,
-                    IssueSeverity::Error,
-                )
-                .await;
-            };
-            if matches!(value, JsValue::Constant(ConstantValue::Undefined)) {
-                return Ok(());
-            }
-            let Some(val) = value.as_bool() else {
-                return invalid_config(
-                    source,
-                    "dynamicParams",
-                    span,
-                    rcstr!("It needs to be a static boolean."),
-                    Some(&value),
-                    IssueSeverity::Error,
-                )
-                .await;
-            };
-
-            config.dynamic_params = Some(val);
         }
         "revalidate" => {
             let Some(value) = get_value() else {

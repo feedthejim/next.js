@@ -185,9 +185,8 @@ Track at least:
 - Rust compiler pipeline source files, lines, and bytes, plus obsolete
   Cache Components and `use cache` mode fields at the JavaScript/Rust seam
 - App endpoint Rust source files, lines, and bytes
-- App Router route-config runtime schema fields, edge-entry wrappers, and
-  residual runtime-selection branches until App rendering has one platform
-  entry path
+- App Router route-config mode fields, edge-entry wrappers, and residual
+  runtime-selection branches until App rendering has one platform entry path
 - public `NextConfig` and `ExperimentalConfig` member counts
 - legacy rendering-mode and feature-gate references
 - webpack-path and Pages Router-path source proxies until those systems are

@@ -1074,8 +1074,8 @@ export function createAppPageEntrypoint({
             pageIsDynamic &&
             (isProduction || !isPrerendered)
           ) {
-            // if the page has dynamicParams: false and this pathname wasn't
-            // prerendered trigger the no fallback handling
+            // If this pathname has no fallback and wasn't prerendered, trigger
+            // the no-fallback handling.
             if (
               // In development, fall through to render to handle missing
               // getStaticPaths.

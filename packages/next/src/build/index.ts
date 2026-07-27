@@ -3060,7 +3060,7 @@ export default async function build(
               }
 
               // TODO: output manifest specific to app paths and their
-              // revalidate periods and dynamicParams settings
+              // revalidate periods
               sortedStaticPaths.forEach(([originalAppPath, routes]) => {
                 const appConfig = appDefaultConfigs.get(originalAppPath)
                 const isDynamicError = appConfig?.dynamic === 'error'

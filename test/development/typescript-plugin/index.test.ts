@@ -23,16 +23,12 @@ function documentationText(quickInfo: ts.QuickInfo | undefined) {
   return quickInfo?.documentation?.map((part) => part.text) || []
 }
 
-const noNativeQuickInfoPosition = positionOf('true')
-
 describe('typescript-plugin', () => {
   let languageService: PluginLanguageService
   let quickInfo: QuickInfoTestAdapter
 
   beforeAll(() => {
     quickInfo = getQuickInfoTestAdapter(__dirname, (prior, args) => {
-      if (args[1] === noNativeQuickInfoPosition) return
-
       const nativeQuickInfo: ts.QuickInfo = prior || {
         kind: ts.ScriptElementKind.unknown,
         kindModifiers: ts.ScriptElementKindModifier.none,
@@ -102,37 +98,6 @@ describe('typescript-plugin', () => {
     )
     expect(documentation.slice(1).join(' ')).toContain(
       'Read more about the "dynamic" option'
-    )
-  })
-
-  it('keeps synthesized quick info when TypeScript has none', () => {
-    const result = quickInfo.getQuickInfoAtPosition(
-      quickInfoFile,
-      noNativeQuickInfoPosition
-    )
-
-    expect(result?.kind).toBe(ts.ScriptElementKind.enumElement)
-    expect(result?.canIncreaseVerbosityLevel).toBeUndefined()
-    expect(documentationText(result).join(' ')).toContain(
-      'Allow rendering dynamic params'
-    )
-  })
-
-  it('keeps the synthesized override for invalid config values', () => {
-    const position = positionOf("'invalid-runtime'") + 1
-    const result = quickInfo.getQuickInfoAtPosition(quickInfoFile, position)
-
-    expect(result?.kind).toBe(ts.ScriptElementKind.enumElement)
-    expect(result?.textSpan).toEqual({
-      start: position - 1,
-      length: "'invalid-runtime'".length,
-    })
-    expect(result?.canIncreaseVerbosityLevel).toBeUndefined()
-
-    const documentation = documentationText(result)
-    expect(documentation.includes(nativeDocumentation)).toBe(false)
-    expect(documentation.join(' ')).toContain(
-      'Read more about the "runtime" option'
     )
   })
 

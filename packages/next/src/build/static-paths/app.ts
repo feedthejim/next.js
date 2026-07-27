@@ -7,7 +7,6 @@ import type {
   StaticPathsResult,
 } from './types'
 
-import path from 'node:path'
 import { AfterRunner } from '../../server/after/run-with-after'
 import { createWorkStore } from '../../server/async-storage/work-store'
 import { FallbackMode } from '../../lib/fallback'
@@ -287,23 +286,19 @@ export function generateAllParamCombinations(
 /**
  * Calculates the fallback mode based on the given parameters.
  *
- * @param dynamicParams - Whether dynamic params are enabled.
  * @param fallbackRootParams - The root params that are part of the fallback.
  * @param baseFallbackMode - The base fallback mode to use.
  * @returns The calculated fallback mode.
  */
 export function calculateFallbackMode(
-  dynamicParams: boolean,
   fallbackRootParams: readonly string[],
   baseFallbackMode: FallbackMode | undefined
 ): FallbackMode {
-  return dynamicParams
-    ? // If the fallback params includes any root params, then we need to
-      // perform a blocking static render.
-      fallbackRootParams.length > 0
-      ? FallbackMode.BLOCKING_STATIC_RENDER
-      : (baseFallbackMode ?? FallbackMode.NOT_FOUND)
-    : FallbackMode.NOT_FOUND
+  // If the fallback params includes any root params, then we need to
+  // perform a blocking static render.
+  return fallbackRootParams.length > 0
+    ? FallbackMode.BLOCKING_STATIC_RENDER
+    : (baseFallbackMode ?? FallbackMode.NOT_FOUND)
 }
 
 /**
@@ -860,15 +855,6 @@ export async function buildAppStaticPaths({
 }): Promise<StaticPathsResult> {
   const supportsPartialParams = isAppPageRouteModule(ComponentMod.routeModule)
 
-  if (
-    segments.some((generate) => generate.config?.dynamicParams === true) &&
-    nextConfigOutput === 'export'
-  ) {
-    throw new Error(
-      '"dynamicParams: true" cannot be used with "output: export". See more info here: https://nextjs.org/docs/app/building-your-application/deploying/static-exports'
-    )
-  }
-
   ComponentMod.patchFetch()
 
   const incrementalCache = await createIncrementalCache({
@@ -944,26 +930,6 @@ export async function buildAppStaticPaths({
 
   let lastDynamicSegmentHadGenerateStaticParams = false
   for (const segment of segments) {
-    // Check to see if there are any missing params for segments that have
-    // dynamicParams set to false.
-    if (
-      segment.paramName &&
-      segment.paramType &&
-      segment.config?.dynamicParams === false
-    ) {
-      for (const params of routeParams) {
-        if (segment.paramName in params) continue
-
-        const relative = segment.filePath
-          ? path.relative(dir, segment.filePath)
-          : undefined
-
-        throw new Error(
-          `Segment "${relative}" exports "dynamicParams: false" but the param "${segment.paramName}" is missing from the generated route params.`
-        )
-      }
-    }
-
     if (
       segment.paramName &&
       segment.paramType &&
@@ -999,23 +965,14 @@ export async function buildAppStaticPaths({
     )
   }
 
-  // TODO: dynamic params should be allowed to be granular per segment but
-  // we need additional information stored/leveraged in the prerender
-  // manifest to allow this behavior.
-  const dynamicParams = segments.every(
-    (segment) => segment.config?.dynamicParams !== false
-  )
-
   const supportsRoutePreGeneration =
     hadAllParamsGenerated || !process.env.__NEXT_DEV_SERVER
 
-  const fallbackMode = dynamicParams
-    ? supportsRoutePreGeneration
-      ? supportsPartialParams
-        ? FallbackMode.PRERENDER
-        : FallbackMode.BLOCKING_STATIC_RENDER
-      : undefined
-    : FallbackMode.NOT_FOUND
+  const fallbackMode = supportsRoutePreGeneration
+    ? supportsPartialParams
+      ? FallbackMode.PRERENDER
+      : FallbackMode.BLOCKING_STATIC_RENDER
+    : undefined
 
   const prerenderedRoutesByPathname = new Map<string, PrerenderedRoute>()
 
@@ -1052,11 +1009,7 @@ export async function buildAppStaticPaths({
         pathname: page,
         encodedPathname: page,
         fallbackRouteParams,
-        fallbackMode: calculateFallbackMode(
-          dynamicParams,
-          rootParamKeys,
-          fallbackMode
-        ),
+        fallbackMode: calculateFallbackMode(rootParamKeys, fallbackMode),
         fallbackRootParams: rootParamKeys,
         throwOnEmptyStaticShell: true,
       })
@@ -1152,11 +1105,7 @@ export async function buildAppStaticPaths({
         pathname,
         encodedPathname: normalizePathname(encodedPathname),
         fallbackRouteParams,
-        fallbackMode: calculateFallbackMode(
-          dynamicParams,
-          fallbackRootParams,
-          fallbackMode
-        ),
+        fallbackMode: calculateFallbackMode(fallbackRootParams, fallbackMode),
         fallbackRootParams,
         throwOnEmptyStaticShell: true,
       })

@@ -2,7 +2,6 @@ import Link from 'next/link'
 
 export const dynamic = 'error'
 export const revalidate = 3600 // arbitrarily long, just so that it doesn't happen during a test run
-export const dynamicParams = true
 
 export async function generateStaticParams() {
   return ['nodejs', 'edge'].flatMap((runtime) =>

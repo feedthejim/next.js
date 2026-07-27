@@ -107,11 +107,6 @@ const AppSegmentConfigSchema = z.object({
     .optional(),
 
   /**
-   * Whether the page supports dynamic parameters.
-   */
-  dynamicParams: z.boolean().optional(),
-
-  /**
    * The dynamic behavior of the page.
    */
   dynamic: z
@@ -233,11 +228,6 @@ export type AppSegmentConfig = {
    * The revalidation period for the page in seconds, or false to disable ISR.
    */
   revalidate?: number | false
-
-  /**
-   * Whether the page supports dynamic parameters.
-   */
-  dynamicParams?: boolean
 
   /**
    * The dynamic behavior of the page.

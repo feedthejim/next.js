@@ -16,7 +16,6 @@ const Article = async ({ params }: Props) => {
 }
 
 export const revalidate = 1
-export const dynamicParams = true
 
 export async function generateStaticParams() {
   return [

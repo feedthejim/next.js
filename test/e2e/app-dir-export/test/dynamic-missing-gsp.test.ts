@@ -68,15 +68,4 @@ describe('app dir - with output export - dynamic missing gsp', () => {
       expectedErrMsg: expectedErrMsg,
     })
   })
-
-  if (isNextDev) {
-    describe('should error when dynamic route is set to true', () => {
-      runTests({
-        dynamicPage: 'undefined',
-        dynamicParams: 'true',
-        expectedErrMsg:
-          '"dynamicParams: true" cannot be used with "output: export". See more info here: https://nextjs.org/docs/app/building-your-application/deploying/static-exports',
-      })
-    })
-  }
 })

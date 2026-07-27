@@ -41,18 +41,6 @@ describe('app-dir static/dynamic handling', () => {
     }
   })
 
-  if (!process.env.__NEXT_CACHE_COMPONENTS) {
-    it('should respond correctly for dynamic route with dynamicParams false in layout', async () => {
-      const res = await next.fetch('/partial-params-false/en/another')
-      expect(res.status).toBe(200)
-    })
-
-    it('should respond correctly for partially dynamic route with dynamicParams false in layout', async () => {
-      const res = await next.fetch('/partial-params-false/en/static')
-      expect(res.status).toBe(200)
-    })
-  }
-
   it('should use auto no cache when no fetch config', async () => {
     const res = await next.fetch('/no-config-fetch')
     expect(res.status).toBe(200)
@@ -3920,7 +3908,7 @@ describe('app-dir static/dynamic handling', () => {
     expect(JSON.parse($2('#draft-mode').text())).toEqual({ isEnabled: true })
   })
 
-  it('should handle partial-gen-params with default dynamicParams correctly', async () => {
+  it('should lazily render parameters outside generateStaticParams', async () => {
     const res = await next.fetch('/partial-gen-params/en/first')
     expect(res.status).toBe(200)
 
@@ -3929,76 +3917,6 @@ describe('app-dir static/dynamic handling', () => {
     const params = JSON.parse($('#params').text())
 
     expect(params).toEqual({ lang: 'en', slug: 'first' })
-  })
-
-  it('should handle partial-gen-params with layout dynamicParams = false correctly', async () => {
-    for (const { path, status, params } of [
-      // these checks don't work with custom memory only
-      // cache handler
-      ...(process.env.CUSTOM_CACHE_HANDLER
-        ? []
-        : [
-            {
-              path: '/partial-gen-params-no-additional-lang/en/first',
-              status: 200,
-              params: { lang: 'en', slug: 'first' },
-            },
-          ]),
-      {
-        path: '/partial-gen-params-no-additional-lang/de/first',
-        status: 404,
-        params: {},
-      },
-      {
-        path: '/partial-gen-params-no-additional-lang/en/non-existent',
-        status: 404,
-        params: {},
-      },
-    ]) {
-      const res = await next.fetch(path)
-      expect(res.status).toBe(status)
-
-      const html = await res.text()
-      const $ = cheerio.load(html)
-      const curParams = JSON.parse($('#params').text() || '{}')
-
-      expect(curParams).toEqual(params)
-    }
-  })
-
-  it('should handle partial-gen-params with page dynamicParams = false correctly', async () => {
-    for (const { path, status, params } of [
-      // these checks don't work with custom memory only
-      // cache handler
-      ...(process.env.CUSTOM_CACHE_HANDLER
-        ? []
-        : [
-            {
-              path: '/partial-gen-params-no-additional-slug/en/first',
-              status: 200,
-              params: { lang: 'en', slug: 'first' },
-            },
-          ]),
-      {
-        path: '/partial-gen-params-no-additional-slug/de/first',
-        status: 404,
-        params: {},
-      },
-      {
-        path: '/partial-gen-params-no-additional-slug/en/non-existent',
-        status: 404,
-        params: {},
-      },
-    ]) {
-      const res = await next.fetch(path)
-      expect(res.status).toBe(status)
-
-      const html = await res.text()
-      const $ = cheerio.load(html)
-      const curParams = JSON.parse($('#params').text() || '{}')
-
-      expect(curParams).toEqual(params)
-    }
   })
 
   // fetch cache in generateStaticParams needs fs for persistence
@@ -4655,37 +4573,6 @@ describe('app-dir static/dynamic handling', () => {
     })
   }
 
-  // since we aren't leveraging fs cache with custom handler
-  // then these will 404 as they are cache misses
-  if (!(isNextStart && process.env.CUSTOM_CACHE_HANDLER)) {
-    it('should handle dynamicParams: false correctly', async () => {
-      const validParams = ['tim', 'seb', 'styfle']
-
-      for (const param of validParams) {
-        const res = await next.fetch(`/blog/${param}`, {
-          redirect: 'manual',
-        })
-        expect(res.status).toBe(200)
-        const html = await res.text()
-        const $ = cheerio.load(html)
-
-        expect(JSON.parse($('#params').text())).toEqual({
-          author: param,
-        })
-        expect($('#page').text()).toBe('/blog/[author]')
-      }
-      const invalidParams = ['timm', 'non-existent']
-
-      for (const param of invalidParams) {
-        const invalidRes = await next.fetch(`/blog/${param}`, {
-          redirect: 'manual',
-        })
-        expect(invalidRes.status).toBe(404)
-        expect(await invalidRes.text()).toContain('page could not be found')
-      }
-    })
-  }
-
   it('should work with forced dynamic path', async () => {
     for (const slug of ['first', 'second']) {
       const res = await next.fetch(`/dynamic-no-gen-params-ssr/${slug}`, {
@@ -4706,7 +4593,7 @@ describe('app-dir static/dynamic handling', () => {
     }
   })
 
-  it('should handle dynamicParams: true correctly', async () => {
+  it('should lazily render generated and ungenerated nested parameters', async () => {
     const paramsToCheck = [
       {
         author: 'tim',

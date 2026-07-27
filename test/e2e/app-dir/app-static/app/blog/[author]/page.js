@@ -1,7 +1,5 @@
 import Link from 'next/link'
 
-export const dynamicParams = false
-
 export default async function Page(props) {
   const params = await props.params
   await fetch('https://example.vercel.sh', {
