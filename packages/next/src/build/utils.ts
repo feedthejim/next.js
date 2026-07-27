@@ -980,12 +980,7 @@ export async function isPageStatic({
 
 type ReducedAppConfig = Pick<
   AppSegmentConfig,
-  | 'revalidate'
-  | 'dynamic'
-  | 'fetchCache'
-  | 'preferredRegion'
-  | 'runtime'
-  | 'maxDuration'
+  'revalidate' | 'dynamic' | 'fetchCache' | 'preferredRegion' | 'maxDuration'
 >
 
 /**
@@ -1001,14 +996,8 @@ export function reduceAppConfig(
   const config: ReducedAppConfig = {}
 
   for (const segment of segments) {
-    const {
-      dynamic,
-      fetchCache,
-      preferredRegion,
-      revalidate,
-      runtime,
-      maxDuration,
-    } = segment.config || {}
+    const { dynamic, fetchCache, preferredRegion, revalidate, maxDuration } =
+      segment.config || {}
 
     // TODO: should conflicting configs here throw an error
     // e.g. if layout defines one region but page defines another
@@ -1036,10 +1025,6 @@ export function reduceAppConfig(
       (typeof config.revalidate !== 'number' || revalidate < config.revalidate)
     ) {
       config.revalidate = revalidate
-    }
-
-    if (typeof runtime !== 'undefined') {
-      config.runtime = runtime
     }
 
     if (typeof maxDuration !== 'undefined') {

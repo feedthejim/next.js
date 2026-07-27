@@ -80,7 +80,6 @@ checkFields<Diff<{
   fetchCache?: 'auto' | 'force-no-store' | 'only-no-store' | 'default-no-store' | 'default-cache' | 'only-cache' | 'force-cache'
   /** @deprecated The \`preferredRegion\` config is deprecated. Remove this export. */
   preferredRegion?: 'auto' | 'global' | 'home' | string | string[]
-  runtime?: 'nodejs' | 'experimental-edge' | 'edge'
   maxDuration?: number
   ${
     options.type === 'route'

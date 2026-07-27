@@ -2373,10 +2373,15 @@ export default async function build(
                   errorFromUnsupportedSegmentConfig()
                 }
 
+                const pageRuntime =
+                  staticInfo?.type === PAGE_TYPES.PAGES
+                    ? staticInfo.runtime
+                    : undefined
+
                 // If there's any thing that would contribute to the functions
                 // configuration, we need to add it to the manifest.
                 if (
-                  typeof staticInfo?.runtime !== 'undefined' ||
+                  typeof pageRuntime !== 'undefined' ||
                   typeof staticInfo?.maxDuration !== 'undefined' ||
                   typeof staticInfo?.preferredRegion !== 'undefined'
                 ) {
@@ -2392,11 +2397,11 @@ export default async function build(
                   }
                 }
 
-                const pageRuntime = middlewareManifest.functions[
+                const routeRuntime = middlewareManifest.functions[
                   originalAppPath || page
                 ]
                   ? 'edge'
-                  : staticInfo?.runtime
+                  : pageRuntime
 
                 if (!isCompileMode) {
                   isServerComponent =
@@ -2407,7 +2412,7 @@ export default async function build(
                     try {
                       let edgeInfo: any
 
-                      if (isEdgeRuntime(pageRuntime)) {
+                      if (isEdgeRuntime(routeRuntime)) {
                         if (pageType === 'app') {
                           edgeRuntimeAppCount++
                         } else {
@@ -2434,7 +2439,7 @@ export default async function build(
                             locales: config.i18n?.locales,
                             defaultLocale: config.i18n?.defaultLocale,
                             parentId: isPageStaticSpan.getId(),
-                            pageRuntime,
+                            pageRuntime: routeRuntime,
                             edgeInfo,
                             pageType,
                             authInterrupts: isAuthInterruptsEnabled,
@@ -2465,7 +2470,7 @@ export default async function build(
                         isAppPage = !isAppRouteRoute(originalAppPath)
 
                         // TODO-APP: handle prerendering with edge
-                        if (isEdgeRuntime(pageRuntime)) {
+                        if (isEdgeRuntime(routeRuntime)) {
                           isStatic = false
                           isSSG = false
 
@@ -2663,7 +2668,7 @@ export default async function build(
                   isAppPage,
                   ssgPageRoutes,
                   initialCacheControl: undefined,
-                  runtime: pageRuntime,
+                  runtime: routeRuntime,
                   pageDuration: undefined,
                   ssgPageDurations: undefined,
                   hasEmptyStaticShell: undefined,
@@ -2733,7 +2738,11 @@ export default async function build(
           errorFromUnsupportedSegmentConfig()
         }
 
-        if (staticInfo.runtime === 'nodejs' || isProxyFile(page)) {
+        if (
+          (staticInfo.type === PAGE_TYPES.PAGES &&
+            staticInfo.runtime === 'nodejs') ||
+          isProxyFile(page)
+        ) {
           hasNodeMiddleware = true
           functionsConfigManifest.functions['/_middleware'] = {
             runtime: 'nodejs',

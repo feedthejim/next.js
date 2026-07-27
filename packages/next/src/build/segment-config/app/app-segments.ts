@@ -53,13 +53,6 @@ function attach(segment: AppSegment, userland: unknown, route: string) {
     if (typeof createEmptyParamsError === 'function') {
       segment.createEmptyParamsError = createEmptyParamsError as () => Error
     }
-
-    // Validate that `generateStaticParams` makes sense in this context.
-    if (segment.config?.runtime === 'edge') {
-      throw new Error(
-        'Edge runtime is not supported with `generateStaticParams`.'
-      )
-    }
   }
 }
 

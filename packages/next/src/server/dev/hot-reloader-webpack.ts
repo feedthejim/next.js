@@ -989,7 +989,10 @@ export default class HotReloaderWebpack implements NextJsHotReloaderInterface {
             const isInstrumentation =
               isInstrumentationHookFile(page) && pageType === PAGE_TYPES.ROOT
 
-            let pageRuntime = staticInfo?.runtime
+            const pageRuntime =
+              staticInfo?.type === PAGE_TYPES.PAGES
+                ? staticInfo.runtime
+                : undefined
 
             runDependingOnPageType({
               page,

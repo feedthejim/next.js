@@ -4721,34 +4721,6 @@
     "flakey": [],
     "runtimeError": false
   },
-  "test/e2e/app-dir/cache-components-route-handler-errors/cache-components-route-handler-errors.test.ts": {
-    "passed": [],
-    "failed": [
-      "cache-components-route-handler-errors should error when route handlers use segment configs that aren't supported by cacheComponents"
-    ],
-    "pending": [],
-    "flakey": [],
-    "runtimeError": false
-  },
-  "test/e2e/app-dir/cache-components-segment-configs/cache-components-edge-deduplication.test.ts": {
-    "passed": [],
-    "failed": [],
-    "pending": [
-      "cache-components-edge-deduplication should not duplicate errors when layout is compiled for both edge and non-edge contexts"
-    ],
-    "flakey": [],
-    "runtimeError": false
-  },
-  "test/e2e/app-dir/cache-components-segment-configs/cache-components-segment-configs.test.ts": {
-    "passed": [],
-    "failed": [
-      "cache-components-segment-configs it should error when using segment configs that aren't supported by cacheComponents",
-      "cache-components-segment-configs should propagate configurations from layouts to pages"
-    ],
-    "pending": [],
-    "flakey": [],
-    "runtimeError": false
-  },
   "test/e2e/app-dir/cache-components/cache-components.connection.test.ts": {
     "passed": [
       "cache-components should be able to pass connection as a promise to another component and trigger an intermediate Suspense boundary",

@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
-  "label": "compiler-invariants",
-  "capturedAt": "2026-07-27T21:02:11.660Z",
+  "label": "app-runtime-schema-removal",
+  "capturedAt": "2026-07-27T21:12:32.852Z",
   "git": {
-    "baseHead": "46bf3724ae"
+    "baseHead": "4d40e1d293"
   },
   "source": {
     "frameworkTracked": {
       "files": 2458,
-      "lines": 1093968,
-      "bytes": 51399996
+      "lines": 1093922,
+      "bytes": 51398780
     },
     "frameworkAuthored": {
       "files": 1753,
-      "lines": 299637,
-      "bytes": 9657547
+      "lines": 299591,
+      "bytes": 9656331
     },
     "vendoredCompiled": {
       "files": 705,
@@ -32,14 +32,14 @@
       "bytes": 526771
     },
     "compilerRust": {
-      "files": 977,
-      "lines": 52372,
-      "bytes": 1827826
+      "files": 979,
+      "lines": 52117,
+      "bytes": 1818100
     },
     "webpackPathProxy": {
       "files": 267,
-      "lines": 138143,
-      "bytes": 7396165
+      "lines": 138145,
+      "bytes": 7396212
     },
     "pagesRouterPathProxy": {
       "files": 30,
@@ -63,7 +63,10 @@
     "loadingBoundaryStrategy": 0,
     "perSegmentPrefetchCapability": 0,
     "clientRenderingModeEnv": 0,
-    "compilerCacheModeFields": 0
+    "compilerCacheModeFields": 0,
+    "appRouteConfigRuntimeSchemaFields": 0,
+    "appEdgeEntryWrappers": 0,
+    "appRuntimeSelectionBranches": 13
   },
   "packageDependencies": {
     "dependencies": 6,
@@ -71,37 +74,38 @@
     "peerDependencies": 6
   },
   "tests": {
-    "totalFiles": 1858,
-    "e2eFiles": 1109,
+    "totalFiles": 1855,
+    "e2eFiles": 1106,
     "developmentFiles": 291,
     "productionFiles": 348,
     "unitFiles": 108
   },
   "builtArtifacts": {
-    "conditions": "warm local after final core release build; comparable to prior warm core-build snapshot",
-    "nextDistBytes": 180648953,
-    "nextDistJavaScriptBytes": 76317178
+    "conditions": "warm local after full bootstrap build; not directly comparable to prior core-build-only snapshot",
+    "nextDistBytes": 180642095,
+    "nextDistJavaScriptBytes": 76313999
   },
-  "validationTimingConditions": "warm local; directTests combines cleaned RSC error fixtures, RSC transform fixtures, and next-core cargo check; focusedTests is 56-assertion fork fast allowlist; no browser run because direct transform fixtures observe this compiler-only option removal",
+  "validationTimingConditions": "warm local except first cargo check after Rust source edits; directTests combines next-api cargo check, RSC diagnostics, and next-types plugin unit test; focusedTests is 56-assertion fork fast allowlist; browserTests is the production resume-cache journey against the rebuilt local native binding",
   "validationTimingsMs": {
-    "types": 14070,
-    "directTests": 16250,
-    "focusedTests": 1780,
+    "types": 18060,
+    "directTests": 36130,
+    "focusedTests": 2030,
     "testSelectionOverhead": null,
     "httpTests": null,
     "httpTestBody": null,
-    "browserStartup": null,
-    "browserTestBody": null,
-    "browserTests": null,
+    "browserStartup": 147,
+    "browserTestBody": 19783,
+    "browserTests": 27550,
     "edgeDceBuild": null,
-    "nextBuild": 23860,
-    "buildAll": null,
-    "total": 55960
+    "nativeBuild": null,
+    "nextBuild": null,
+    "buildAll": 49210,
+    "total": 132980
   },
   "runtimePerformance": {
-    "conditions": null,
+    "conditions": "single warm-local Turbopack production resume-cache journey against rebuilt native binding; startup is a guardrail, not a performance claim",
     "devStartupMs": null,
-    "productionStartupMs": null,
+    "productionStartupMs": 147,
     "routeHandlerRequestMs": null,
     "routeHandlerRevalidationMs": null,
     "edgeMiddlewareStartupMs": null,

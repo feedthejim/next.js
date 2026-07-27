@@ -1140,7 +1140,6 @@ impl AppEndpoint {
     async fn app_page_entry(&self, loader_tree: Vc<AppPageLoaderTree>) -> Result<Vc<AppEntry>> {
         Ok(get_app_page_entry(
             self.app_project.rsc_module_context(),
-            self.app_project.edge_rsc_module_context(),
             loader_tree,
             self.page.clone(),
             self.app_project.project().project_path().owned().await?,
@@ -1172,7 +1171,6 @@ impl AppEndpoint {
 
         Ok(get_app_route_entry(
             self.app_project.route_module_context(),
-            self.app_project.edge_route_module_context(),
             Vc::upcast(FileSource::new(path)),
             self.page.clone(),
             self.app_project.project().project_path().owned().await?,
@@ -1189,7 +1187,6 @@ impl AppEndpoint {
     ) -> Result<Vc<AppEntry>> {
         Ok(get_app_metadata_route_entry(
             self.app_project.route_module_context(),
-            self.app_project.edge_route_module_context(),
             self.app_project.project().project_path().owned().await?,
             self.page.clone(),
             *self.app_project.project().next_mode().await?,

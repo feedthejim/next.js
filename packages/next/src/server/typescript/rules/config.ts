@@ -119,18 +119,6 @@ const API_DOCS: Record<
       return value === 'true' || value === 'false'
     },
   },
-  runtime: {
-    description:
-      'The `runtime` option controls the preferred runtime to render this route.',
-    options: {
-      '"nodejs"': 'Prefer the Node.js runtime.',
-      '"edge"': `@deprecated\n\nThe Edge Runtime is deprecated. Use \`"nodejs"\` instead.`,
-      '"experimental-edge"': `@deprecated\n\nThis option is no longer experimental. Use \`edge\` instead.`,
-    } satisfies DocsOptionsObject<
-      FullAppSegmentConfig['runtime'] | 'experimental-edge'
-    >,
-    link: 'https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#runtime',
-  },
   metadata: {
     description: 'Next.js Metadata configurations',
     link: 'https://nextjs.org/docs/app/building-your-application/optimizing/metadata',

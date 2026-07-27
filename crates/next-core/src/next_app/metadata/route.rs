@@ -58,7 +58,6 @@ pub async fn get_app_metadata_route_source(
 #[turbo_tasks::function]
 pub async fn get_app_metadata_route_entry(
     nodejs_context: Vc<ModuleAssetContext>,
-    edge_context: Vc<ModuleAssetContext>,
     project_root: FileSystemPath,
     mut page: AppPage,
     mode: NextMode,
@@ -103,7 +102,6 @@ pub async fn get_app_metadata_route_entry(
 
     Ok(get_app_route_entry(
         nodejs_context,
-        edge_context,
         get_app_metadata_route_source(mode, metadata, is_multi_dynamic),
         page,
         project_root,

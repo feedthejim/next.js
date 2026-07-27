@@ -1,0 +1,5 @@
+  x Route segment config "fetchCache" is not supported by the App Router. Please remove it.
+   ,-[input.js:1:1]
+ 1 | export const fetchCache = 'force-no-store'
+   :              ^^^^^^^^^^
+   `----

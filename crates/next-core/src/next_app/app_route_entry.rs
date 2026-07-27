@@ -5,8 +5,6 @@ use turbo_tasks_fs::FileSystemPath;
 use turbopack::ModuleAssetContext;
 use turbopack_core::{
     context::AssetContext,
-    file_source::FileSource,
-    module::Module,
     reference_type::{EntryReferenceSubType, ReferenceType},
     source::Source,
 };
@@ -14,10 +12,9 @@ use turbopack_core::{
 use crate::{
     next_app::{AppEntry, AppPage, AppPath},
     next_config::{NextConfig, OutputType},
-    next_edge::entry::wrap_edge_entry,
     parse_segment_config_from_source,
     segment_config::{NextSegmentConfig, ParseSegmentMode},
-    util::{NextRuntime, app_function_name, load_next_js_template},
+    util::load_next_js_template,
 };
 
 /// Computes the entry for a Next.js app route.
@@ -30,7 +27,6 @@ use crate::{
 #[turbo_tasks::function]
 pub async fn get_app_route_entry(
     nodejs_context: Vc<ModuleAssetContext>,
-    edge_context: Vc<ModuleAssetContext>,
     source: Vc<Box<dyn Source>>,
     page: AppPage,
     project_root: FileSystemPath,
@@ -46,19 +42,12 @@ pub async fn get_app_route_entry(
         segment_from_source
     };
 
-    let is_edge = matches!(config.await?.runtime, Some(NextRuntime::Edge));
-    let module_asset_context = if is_edge {
-        edge_context
-    } else {
-        nodejs_context
-    };
-
+    let module_asset_context = nodejs_context;
     let original_name: RcStr = page.to_string().into();
     let pathname: RcStr = AppPath::from(page.clone()).to_string().into();
 
     let ident = source.ident().await?;
     let path = &ident.path;
-
     let inner = rcstr!("INNER_APP_ROUTE");
 
     let output_type: &str = next_config
@@ -71,15 +60,13 @@ pub async fn get_app_route_entry(
         })
         .unwrap_or("\"\"");
 
-    // Load the file from the next.js codebase.
     let virtual_source = load_next_js_template(
         "app-route.js",
-        project_root.clone(),
+        project_root,
         [
             ("VAR_DEFINITION_PAGE", &*page.to_string()),
             ("VAR_DEFINITION_PATHNAME", &pathname),
             ("VAR_DEFINITION_FILENAME", path.file_stem().unwrap()),
-            // TODO(alexkirsz) Is this necessary?
             ("VAR_DEFINITION_BUNDLE_PATH", ""),
             ("VAR_RESOLVED_PAGE_PATH", &path.to_string_ref().await?),
             ("VAR_USERLAND", &inner),
@@ -102,22 +89,12 @@ pub async fn get_app_route_entry(
         inner => userland_module
     };
 
-    let mut rsc_entry = module_asset_context
+    let rsc_entry = module_asset_context
         .process(
             virtual_source,
             ReferenceType::Internal(ResolvedVc::cell(inner_assets)),
         )
         .module();
-
-    if is_edge {
-        rsc_entry = wrap_edge_route(
-            Vc::upcast(module_asset_context),
-            project_root,
-            rsc_entry,
-            page,
-            next_config,
-        );
-    }
 
     Ok(AppEntry {
         pathname,
@@ -126,98 +103,4 @@ pub async fn get_app_route_entry(
         config: config.to_resolved().await?,
     }
     .cell())
-}
-
-#[turbo_tasks::function]
-async fn wrap_edge_route(
-    asset_context: Vc<Box<dyn AssetContext>>,
-    project_root: FileSystemPath,
-    entry: ResolvedVc<Box<dyn Module>>,
-    page: AppPage,
-    next_config: Vc<NextConfig>,
-) -> Result<Vc<Box<dyn Module>>> {
-    let inner = rcstr!("INNER_ROUTE_ENTRY");
-    let mut cache_handler_imports = String::new();
-    let mut cache_handler_map_entries = String::new();
-    let mut incremental_cache_handler_import = None;
-    let mut cache_handler_inner_assets = fxindexmap! {};
-
-    let cache_handlers = next_config.cache_handlers_map().owned().await?;
-    for (index, (kind, handler_path)) in cache_handlers.iter().enumerate() {
-        let cache_handler_inner: RcStr = format!("INNER_CACHE_HANDLER_{index}").into();
-        let cache_handler_var = format!("cacheHandler{index}");
-        cache_handler_imports.push_str(&format!(
-            "import {cache_handler_var} from {};\n",
-            serde_json::to_string(&*cache_handler_inner)?
-        ));
-        cache_handler_map_entries.push_str(&format!(
-            "  {}: {cache_handler_var},\n",
-            serde_json::to_string(kind.as_str())?
-        ));
-
-        let cache_handler_module = asset_context
-            .process(
-                Vc::upcast(FileSource::new(project_root.join(handler_path)?)),
-                ReferenceType::Undefined,
-            )
-            .module()
-            .to_resolved()
-            .await?;
-        cache_handler_inner_assets.insert(cache_handler_inner, cache_handler_module);
-    }
-
-    for cache_handler_path in next_config
-        .cache_handler(project_root.clone())
-        .await?
-        .into_iter()
-    {
-        let cache_handler_inner: RcStr = "INNER_INCREMENTAL_CACHE_HANDLER".into();
-        incremental_cache_handler_import = Some(cache_handler_inner.clone());
-        let cache_handler_module = asset_context
-            .process(
-                Vc::upcast(FileSource::new(cache_handler_path.clone())),
-                ReferenceType::Undefined,
-            )
-            .module()
-            .to_resolved()
-            .await?;
-        cache_handler_inner_assets.insert(cache_handler_inner, cache_handler_module);
-    }
-
-    let source = load_next_js_template(
-        "edge-app-route.js",
-        project_root.clone(),
-        [("VAR_USERLAND", &*inner), ("VAR_PAGE", &page.to_string())],
-        [
-            ("cacheHandlerImports", cache_handler_imports.as_str()),
-            (
-                "edgeCacheHandlersRegistration",
-                cache_handler_map_entries.as_str(),
-            ),
-        ],
-        [(
-            "incrementalCacheHandler",
-            incremental_cache_handler_import.as_deref(),
-        )],
-    )
-    .await?;
-
-    let mut inner_assets = fxindexmap! {
-        inner => entry
-    };
-    inner_assets.extend(cache_handler_inner_assets);
-
-    let wrapped = asset_context
-        .process(
-            source,
-            ReferenceType::Internal(ResolvedVc::cell(inner_assets)),
-        )
-        .module();
-
-    Ok(wrap_edge_entry(
-        asset_context,
-        project_root.clone(),
-        wrapped,
-        app_function_name(&page).into(),
-    ))
 }

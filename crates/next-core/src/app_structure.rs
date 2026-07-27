@@ -1568,9 +1568,8 @@ async fn directory_tree_to_entrypoints_internal_untraced(
 
     let subdirectories = &directory_tree.subdirectories;
     let modules = &directory_tree.modules;
-    // Route can have its own segment config, also can inherit from the layout root
-    // segment config. https://nextjs.org/docs/app/building-your-application/rendering/edge-and-nodejs-runtimes#segment-runtime-option
-    // Pass down layouts from each tree to apply segment config when adding route.
+    // Pass down layouts from each tree to apply inherited segment config when
+    // adding a route.
     let root_layouts = if let Some(layout) = &modules.layout {
         let mut layouts = root_layouts.owned().await?;
         layouts.push(layout.clone());

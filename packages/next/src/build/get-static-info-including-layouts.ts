@@ -91,7 +91,6 @@ export async function getStaticInfoIncludingLayouts({
   return {
     ...pageStaticInfo,
     config,
-    runtime: config.runtime,
     preferredRegion: config.preferredRegion,
     maxDuration: config.maxDuration,
   }

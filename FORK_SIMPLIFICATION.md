@@ -75,7 +75,14 @@
   compiler contract no longer carries Cache Components or use-cache booleans.
   The RSC transform has one route-config policy, Server Actions always compile
   `"use cache"`, and the remaining supported `instant` export is accepted
-  without a feature gate.
+  without a feature gate. App Router entries now have one Node.js module
+  context: `export const runtime` is absent from the App segment schema,
+  static-info contract, inherited layout configuration, TypeScript language
+  service, and generated entry validation. Turbopack no longer constructs the
+  App Page, Route Handler, or metadata Edge entry wrappers. Three browser E2E
+  suites and their applications that only exercised removed route-config and
+  Edge-error modes are gone; direct compiler fixtures now cover unsupported
+  exports in both page and Route Handler entry files.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -90,10 +97,10 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Delete the now-unreachable `runtime`, `dynamicParams`,
-  `dynamic`, `fetchCache`, `revalidate`, and `experimental_ppr` App Router
-  schema and runtime plumbing in bounded vertical slices, converting any
-  retained browser-only contract to a direct compiler or render test first.
+- **Next action:** Collapse the 13 residual App endpoint runtime-selection
+  branches that now always receive Node, then delete `dynamicParams`, `dynamic`,
+  `fetchCache`, `revalidate`, and `experimental_ppr` App Router plumbing in
+  bounded vertical slices.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -113,9 +120,61 @@
   resume-cache journey passed against the rebuilt local Turbopack binding. The
   cleaned Rust transform contracts passed 30 RSC diagnostics and six transform
   fixtures, and `next-core` passed a focused Cargo check with no compiler mode
-  fields.
+  fields. After removing application-selected runtimes, `next-api` passed a
+  focused Cargo check, the direct compiler contract passed 31 diagnostics,
+  all 12 PPR partial-hydration assertions passed, and the retained production
+  Partial Prefetching navigation passed against the rebuilt native binding.
+  The full bootstrap build passed, as did the five-assertion production
+  resume-cache journey against that local binding.
 
 ## History
+
+### 2026-07-27: One App Router runtime
+
+Removed `runtime` from the App segment schema, static-info result, inherited
+layout reduction, TypeScript language-service metadata, generated entry
+validation, and both JavaScript and Rust App entry selection. App Pages, Route
+Handlers, and metadata routes now enter Turbopack through the Node.js module
+context without constructing an Edge wrapper. Pages Router and Proxy runtime
+selection remain temporarily isolated in their own contracts.
+
+Moved unsupported route-config verification below the browser boundary.
+Deleted three E2E suites, their two fixture applications, and their Rspack
+matrix entries. The direct RSC transform contract now covers both a page with
+all removed segment modes and a Route Handler with `fetchCache`.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** The App segment schema has zero `runtime` properties.
+  Static-info consumers now discriminate App and Pages results explicitly,
+  and the App entry constructors no longer accept competing Node and Edge
+  contexts. The scorecard now enforces zero App runtime schema fields and zero
+  App edge-wrapper references, while exposing 13 residual packaging branches
+  as the next deletion target.
+- **Leanness:** The implementation, fixture, manifest, and scorecard-tooling
+  diff is 853 net lines smaller: 54 additions and 907 deletions, excluding this
+  history entry and the generated snapshot. Authored framework source fell by
+  46 lines and 1,216 bytes. The tracked Rust compiler pipeline fell by 255
+  lines and 9,726 bytes. Three E2E files and 32 fixture or matrix files are
+  gone. The full-bootstrap distribution was 6,858 bytes smaller overall and
+  3,179 JavaScript bytes smaller, but that build condition is not directly
+  comparable to the previous core-only snapshot. Dependencies were unchanged.
+- **Runtime performance:** The retained production Turbopack navigation
+  fixture was ready in 71 milliseconds and passed its Partial Prefetching
+  assertion. The PPR fixture was ready in 98 milliseconds and passed all 12
+  shell, hydration, metadata, and no-JavaScript assertions. These single warm
+  observations are guardrails, not performance claims.
+- **Iteration efficiency:** The 31-case direct compiler contract passed in
+  0.46 seconds. The committed scorecard records 36.13 seconds for direct
+  compiler checks, 18.06 seconds for types, 2.03 seconds for the 56-test fast
+  contract, 49.21 seconds for the full bootstrap, and 27.55 seconds for the
+  five-assertion resume-cache browser journey. Its 132.98-second total is
+  77.02 seconds above the previous slice because it replaces a core-only build
+  and no browser run with a full bootstrap and browser validation, so the
+  totals are not comparable. Additional PPR and Partial Prefetching browser
+  verification took 54.35 seconds. Rebuilding the native compiler took 7.42
+  seconds, and one 4.66-second isolated-package integrity retry was
+  test-selection overhead.
 
 ### 2026-07-27: One compiler feature model
 

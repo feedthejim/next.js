@@ -154,6 +154,14 @@ const clientRuntimeFiles = frameworkSourceFiles.filter(
     file.startsWith('packages/next/src/client/') ||
     file.startsWith('packages/next/src/next-devtools/')
 )
+const appSegmentConfigFiles = frameworkSourceFiles.filter((file) =>
+  file.startsWith('packages/next/src/build/segment-config/app/')
+)
+const appEntryFiles = [
+  'crates/next-api/src/app.rs',
+  'crates/next-core/src/next_app/app_page_entry.rs',
+  'crates/next-core/src/next_app/app_route_entry.rs',
+].filter(existsSync)
 const compilerRustFiles = [
   ...worktreeFiles('crates/next-core'),
   ...worktreeFiles('crates/next-custom-transforms'),
@@ -232,6 +240,18 @@ const metrics = {
       compilerRustFiles,
       /\bcache_components_enabled\b|\buse_cache_enabled\b/g
     ),
+    appRouteConfigRuntimeSchemaFields: countMatches(
+      appSegmentConfigFiles,
+      /^\s*runtime(?:\?|):/gm
+    ),
+    appEdgeEntryWrappers: countMatches(
+      appEntryFiles,
+      /\bwrap_edge_page\b|\bwrap_edge_route\b/g
+    ),
+    appRuntimeSelectionBranches: countMatches(
+      appEntryFiles,
+      /\bNextRuntime::Edge\b/g
+    ),
   },
   packageDependencies: {
     dependencies: Object.keys(nextPackage.dependencies ?? {}).length,
@@ -270,6 +290,7 @@ const metrics = {
     browserTestBody: optionalNumber('browser-test-body-ms'),
     browserTests: optionalNumber('browser-tests-ms'),
     edgeDceBuild: optionalNumber('edge-dce-build-ms'),
+    nativeBuild: optionalNumber('native-build-ms'),
     nextBuild: optionalNumber('next-build-ms'),
     buildAll: optionalNumber('build-all-ms'),
     total: optionalNumber('validation-total-ms'),

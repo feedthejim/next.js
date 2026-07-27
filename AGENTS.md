@@ -184,6 +184,9 @@ Track at least:
   bytes
 - Rust compiler pipeline source files, lines, and bytes, plus obsolete
   Cache Components and `use cache` mode fields at the JavaScript/Rust seam
+- App Router route-config runtime schema fields, edge-entry wrappers, and
+  residual runtime-selection branches until App rendering has one platform
+  entry path
 - public `NextConfig` and `ExperimentalConfig` member counts
 - legacy rendering-mode and feature-gate references
 - webpack-path and Pages Router-path source proxies until those systems are
@@ -193,7 +196,8 @@ Track at least:
 - built `packages/next/dist` total and JavaScript bytes
 - iteration and CI cost: wall time for type checking, focused tests, browser
   startup and test body, focused browser tests, the core package build, the
-  bootstrap build, and the complete validation slice when run
+  native compiler build, the bootstrap build, and the complete validation
+  slice when run
 - runtime performance when the changed path can affect it: development and
   production startup, Fast Refresh latency, PPR shell first byte and
   completion, Partial Prefetching navigation latency, response bytes, and peak

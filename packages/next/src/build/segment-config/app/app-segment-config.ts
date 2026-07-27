@@ -165,11 +165,6 @@ const AppSegmentConfigSchema = z.object({
   preferredRegion: z.union([z.string(), z.array(z.string())]).optional(),
 
   /**
-   * The runtime to use for the page.
-   */
-  runtime: z.enum(['edge', 'nodejs']).optional(),
-
-  /**
    * The maximum duration for the page in seconds.
    */
   maxDuration: z.number().int().nonnegative().optional(),
@@ -291,11 +286,6 @@ export type AppSegmentConfig = {
    * The preferred region for the page.
    */
   preferredRegion?: string | string[]
-
-  /**
-   * The runtime to use for the page.
-   */
-  runtime?: 'edge' | 'nodejs'
 
   /**
    * The maximum duration for the page in seconds.

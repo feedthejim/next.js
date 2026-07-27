@@ -497,7 +497,8 @@ export async function createEntrypoints(
 
       runDependingOnPageType({
         page,
-        pageRuntime: staticInfo.runtime,
+        pageRuntime:
+          staticInfo.type === PAGE_TYPES.PAGES ? staticInfo.runtime : undefined,
         pageType: pagesType,
         onClient: () => {
           if (isServerComponent || isInsideAppDir) {

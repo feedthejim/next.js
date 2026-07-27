@@ -86,8 +86,7 @@ export interface AppPageStaticInfo {
   generateSitemaps?: boolean
   generateImageMetadata?: boolean
   middleware?: ProxyConfig
-  config: Omit<AppSegmentConfig, 'runtime' | 'maxDuration'> | undefined
-  runtime: AppSegmentConfig['runtime'] | undefined
+  config: Omit<AppSegmentConfig, 'maxDuration'> | undefined
   preferredRegion: AppSegmentConfig['preferredRegion'] | undefined
   maxDuration: number | undefined
   hadUnsupportedValue: boolean
@@ -638,7 +637,6 @@ export async function getAppPageStaticInfo({
     return {
       type: PAGE_TYPES.APP,
       config: undefined,
-      runtime: undefined,
       preferredRegion: undefined,
       maxDuration: undefined,
       hadUnsupportedValue: false,
@@ -685,13 +683,6 @@ export async function getAppPageStaticInfo({
   const route = normalizeAppPath(page)
   const config = parseAppSegmentConfig(exportedConfig, route)
 
-  // Prevent edge runtime and generateStaticParams in the same file.
-  if (isEdgeRuntime(config.runtime) && generateStaticParams) {
-    throw new Error(
-      `Page "${page}" cannot use both \`export const runtime = 'edge'\` and export \`generateStaticParams\`.`
-    )
-  }
-
   // Prevent use client and generateStaticParams in the same file.
   if (directives?.has('client') && generateStaticParams) {
     throw new Error(
@@ -730,10 +721,6 @@ export async function getAppPageStaticInfo({
     )
   }
 
-  if (isEdgeRuntime(config.runtime)) {
-    warnAboutEdgeRuntime()
-  }
-
   if (config.preferredRegion !== undefined) {
     warnAboutPreferredRegion()
   }
@@ -746,7 +733,6 @@ export async function getAppPageStaticInfo({
     generateStaticParams,
     config,
     middleware: parseMiddlewareConfig(page, exportedConfig.config, nextConfig),
-    runtime: config.runtime,
     preferredRegion: config.preferredRegion,
     maxDuration: config.maxDuration,
     hadUnsupportedValue,

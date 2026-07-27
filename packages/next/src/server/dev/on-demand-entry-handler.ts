@@ -930,7 +930,8 @@ export function onDemandEntryHandler({
       const isServerComponent =
         isInsideAppDir && staticInfo.rsc !== RSC_MODULE_TYPES.client
 
-      let pageRuntime = staticInfo.runtime
+      const pageRuntime =
+        staticInfo.type === PAGE_TYPES.PAGES ? staticInfo.runtime : undefined
 
       runDependingOnPageType({
         page: route.page,
