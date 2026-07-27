@@ -20,10 +20,7 @@ import type {
   MockedResponse,
 } from '../../server/lib/mock-request'
 import { isDynamicUsageError } from '../helpers/is-dynamic-usage-error'
-import { isStaticGenEnabled } from '../../server/route-modules/app-route/helpers/is-static-gen-enabled'
 import type { ExperimentalConfig } from '../../server/config-shared'
-import { isMetadataRoute } from '../../lib/metadata/is-metadata-route'
-import { normalizeAppPath } from '../../shared/lib/router/utils/app-paths'
 import type { Params } from '../../server/request/params'
 import { AfterRunner } from '../../server/after/run-with-after'
 import type { MultiFileWriter } from '../../lib/multi-file-writer'
@@ -37,13 +34,11 @@ export async function exportAppRoute(
   req: MockedRequest,
   res: MockedResponse,
   params: Params | undefined,
-  page: string,
   module: AppRouteRouteModule,
   incrementalCache: IncrementalCache | undefined,
   cacheLifeProfiles: import('../../server/config-shared').ResolvedCacheLifeProfiles,
   htmlFilepath: string,
   fileWriter: MultiFileWriter,
-  cacheComponents: boolean,
   staticPageGenerationTimeout: number,
   experimental: Required<
     Pick<ExperimentalConfig, 'authInterrupts' | 'useCacheTimeout'>
@@ -72,7 +67,6 @@ export async function exportAppRoute(
       previewModeSigningKey: '',
     },
     renderOpts: {
-      cacheComponents,
       // app-route handlers don't run instant validation, so the level
       // value is irrelevant here.
       // TODO: move validationLevel and other global config out of renderOpts
@@ -97,24 +91,6 @@ export async function exportAppRoute(
     // The route file may be an async module (top-level await), so the
     // userland module must be resolved before its exports can be inspected.
     await module.ensureUserland()
-    const userland = module.userland
-    // we don't bail from the static optimization for
-    // metadata routes, since it's app-route we can always append /route suffix.
-    const routePath = normalizeAppPath(page) + '/route'
-    const isPageMetadataRoute = isMetadataRoute(routePath)
-
-    if (
-      !isStaticGenEnabled(userland) &&
-      !isPageMetadataRoute &&
-      // We don't disable static gen when cacheComponents is enabled because we
-      // expect that anything dynamic in the GET handler will make it dynamic
-      // and thus avoid the cache surprises that led to us removing static gen
-      // unless specifically opted into
-      cacheComponents !== true
-    ) {
-      return { cacheControl: { revalidate: 0, expire: undefined } }
-    }
-
     const response = await module.handle(request, context)
 
     const isValidStatus = response.status < 400 || response.status === 404

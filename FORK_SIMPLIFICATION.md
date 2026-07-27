@@ -48,7 +48,9 @@
   contract across the build, analyze, and adapter-completion entry points. App
   static-path generation no longer receives a Cache Components mode from
   production or development workers, and always computes static-shell
-  metadata.
+  metadata. App Route build templates and export workers likewise carry no
+  Cache Components mode, and Route Handler static generation has one staged
+  prerender algorithm.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -63,8 +65,8 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Remove Cache Components mode plumbing from the App Route
-  build, export, and request execution pipeline.
+- **Next action:** Remove Cache Components configuration gates from Turbopack
+  development and HMR.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -78,6 +80,36 @@
   passed.
 
 ## History
+
+### 2026-07-27: One App Route prerender algorithm
+
+Removed Cache Components mode plumbing from App Route build templates, export
+workers, Node and Edge handler contexts, and request execution. App Route
+execution now normalizes the invariant once when creating its work store and
+uses only the staged prospective and final prerender algorithm. The legacy
+prerender store branch and the pre-Cache-Components export bailout are gone.
+The retained Route Handler fixture no longer declares the removed public
+configuration option.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** Cache Components references fell from 128 to 120. App
+  Route producers no longer transport a mode, and the execution consumer has
+  one prerender algorithm instead of a staged-versus-legacy branch.
+- **Leanness:** Authored framework source fell by 46 lines and 2,197 bytes. The
+  warm built distribution fell by 24,855 bytes overall and 7,927 JavaScript
+  bytes. Test and dependency counts were unchanged.
+- **Runtime performance:** The clean HTTP fixture passed cache fill,
+  concurrent deduplication, and revalidation without a browser. Its production
+  server was ready in 76 milliseconds, the first cached Route Handler request
+  took 85 milliseconds, and revalidation took 224 milliseconds. These are
+  directional local observations.
+- **Iteration efficiency:** Types passed in 13.85 seconds, the 19-test fast
+  allowlist in 1.80 seconds, the core build in 21.87 seconds, and the final
+  three-assertion HTTP fixture in 15.00 seconds with a 13.59-second test body.
+  The first 21.00-second fixture run exposed the obsolete config warning and
+  prompted its deletion. Final productive validation took 52.53 seconds;
+  total measured iteration cost was 73.53 seconds.
 
 ### 2026-07-27: One App static-path mode
 

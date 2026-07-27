@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
-  "label": "one-app-static-path-mode",
-  "capturedAt": "2026-07-27T19:42:39.399Z",
+  "label": "one-app-route-prerender-algorithm",
+  "capturedAt": "2026-07-27T19:49:16.180Z",
   "git": {
-    "baseHead": "6d0df14aa9"
+    "baseHead": "a07c657cfa"
   },
   "source": {
     "frameworkTracked": {
       "files": 2458,
-      "lines": 1094105,
-      "bytes": 51406221
+      "lines": 1094059,
+      "bytes": 51404024
     },
     "frameworkAuthored": {
       "files": 1753,
-      "lines": 299774,
-      "bytes": 9663772
+      "lines": 299728,
+      "bytes": 9661575
     },
     "vendoredCompiled": {
       "files": 705,
@@ -47,7 +47,7 @@
     "experimentalConfig": 149
   },
   "legacyModeReferences": {
-    "cacheComponents": 128,
+    "cacheComponents": 120,
     "routePPR": 0,
     "appPPR": 0,
     "cacheComponentsEnv": 0,
@@ -72,28 +72,32 @@
     "unitFiles": 108
   },
   "builtArtifacts": {
-    "conditions": "warm local after core build and focused PPR browser fixture pack; comparable to prior warm core-build snapshot",
-    "nextDistBytes": 180700771,
-    "nextDistJavaScriptBytes": 76336969
+    "conditions": "warm local after core build and focused Route Handler fixture pack; comparable to prior warm core-build snapshot",
+    "nextDistBytes": 180675916,
+    "nextDistJavaScriptBytes": 76329042
   },
-  "validationTimingConditions": "warm local; directTests is the static-path algorithm suite; focusedTests is the fork fast allowlist; browserTests is the retained PPR journey; testSelectionOverhead is a stopped broad unit-suite attempt; total includes all measured work",
+  "validationTimingConditions": "warm local; focusedTests is fork fast allowlist; httpTests is the final warning-free Route Handler fixture; total also includes the initial fixture run that exposed obsolete config",
   "validationTimingsMs": {
-    "types": 13942,
-    "directTests": 3410,
-    "focusedTests": 1792,
-    "testSelectionOverhead": 61860,
-    "browserStartup": 131,
-    "browserTestBody": 18408,
-    "browserTests": 26000,
+    "types": 13854,
+    "directTests": null,
+    "focusedTests": 1804,
+    "testSelectionOverhead": null,
+    "httpTests": 15000,
+    "httpTestBody": 13592,
+    "browserStartup": null,
+    "browserTestBody": null,
+    "browserTests": null,
     "edgeDceBuild": null,
-    "nextBuild": 22030,
+    "nextBuild": 21870,
     "buildAll": null,
-    "total": 129034
+    "total": 73528
   },
   "runtimePerformance": {
-    "conditions": "production Turbopack PPR partial-hydration fixture, warm local",
+    "conditions": "production Turbopack Route Handler-only fixture, warm local",
     "devStartupMs": null,
     "productionStartupMs": 76,
+    "routeHandlerRequestMs": 85,
+    "routeHandlerRevalidationMs": 224,
     "edgeMiddlewareStartupMs": null,
     "edgeImageResponseMs": null,
     "edgeImageResponseBytes": null,
