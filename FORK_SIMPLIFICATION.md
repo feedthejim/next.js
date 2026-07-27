@@ -18,7 +18,8 @@
   application-level PPR is unconditional. App Page route kind now directly
   selects PPR without application or per-route configuration helpers. App Page
   component-tree generation and Flight tree walking have one Cache Components
-  and PPR path.
+  and PPR path. The App Page runtime also treats PPR, Cache Components, and
+  resume-data capture as unconditional.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -34,8 +35,8 @@
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
 - **Next action:** Remove remaining App Page `isRoutePPREnabled` booleans from
-  runtime-template, response-cache, and build protocols, then collapse the
-  client to one segment-cache prefetch protocol.
+  response-cache and build protocols, then collapse the client to one
+  segment-cache prefetch protocol.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -47,6 +48,25 @@
   assertions passed.
 
 ## History
+
+### 2026-07-27: Unconditional App Page runtime PPR
+
+Deleted the App Page runtime's manifest-selected PPR mode, non-Cache
+Components branches, legacy static-to-dynamic error, and conditional
+resume-data capture. App Pages now pass PPR explicitly at the shared cache
+boundary while Route Handlers retain their separate non-PPR contract. Authored
+framework source fell by 93 lines and 4,538 bytes. Route-PPR references fell by
+17 and Cache Components references fell by 11. The built JavaScript
+observation was 9,849 bytes smaller; the total distribution observation was
+not comparable because the previous snapshot included transient build output.
+Types passed in 14.80 seconds, the 16-test fast contract passed in 1.85
+seconds, the core build passed in 22.42 seconds, the 12-assertion PPR journey
+passed in 26.30 seconds, and the converted one-assertion navigation journey
+passed in 15.64 seconds. The navigation fixture's production server was ready
+in 78 milliseconds and its first browser load took 250 milliseconds. All
+single-run validation timings were slower than the prior slice by between 0.24
+and 2.71 seconds, so they remain directional rather than evidence of a
+regression.
 
 ### 2026-07-27: One Flight tree-walking model
 
