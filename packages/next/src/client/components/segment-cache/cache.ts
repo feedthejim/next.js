@@ -109,7 +109,7 @@ import { pingVisibleLinks } from '../links'
 import { PAGE_SEGMENT_KEY } from '../../../shared/lib/segment'
 import { FetchStrategy } from './types'
 import { createPromiseWithResolvers } from '../../../shared/lib/promise-with-resolvers'
-import { readFromBFCache, UnknownDynamicStaleTime } from './bfcache'
+import { UnknownDynamicStaleTime } from './bfcache'
 import { discoverKnownRoute, matchKnownRoute } from './optimistic-routes'
 import { convertServerPatchToFullTree, type NavigationSeed } from './navigation'
 import { getNavigationBuildId } from '../../navigation-build-id'
@@ -1028,9 +1028,7 @@ export function upsertSegmentEntry(
 
   const existingEntry = readSegmentCacheEntry(now, varyPath)
   if (existingEntry !== null) {
-    // Don't replace a more specific segment with a less-specific one. A case where this
-    // might happen is if the existing segment was fetched via
-    // `<Link prefetch={true}>`.
+    // Don't replace a more specific segment with a less-specific one.
     if (
       // We fetched the new segment using a different, less specific fetch strategy
       // than the segment we already have in the cache, so it can't have more content.
@@ -1109,13 +1107,6 @@ export function upgradeToPendingSegment(
   pendingEntry.status = EntryStatus.Pending
   pendingEntry.fetchStrategy = fetchStrategy
 
-  if (fetchStrategy === FetchStrategy.Full) {
-    // We can assume the response will contain the full segment data. Set this
-    // to false so we know it's OK to omit this segment from any navigation
-    // requests that may happen while the data is still pending.
-    pendingEntry.isPartial = false
-  }
-
   // Set the version here, since this is right before the request is initiated.
   // The next time the segment cache version is incremented, the entry will
   // effectively be evicted. This happens before initiating the request, rather
@@ -1140,102 +1131,6 @@ export function upgradeToPendingSegment(
   }
 
   return pendingEntry
-}
-
-export function attemptToFulfillDynamicSegmentFromBFCache(
-  now: number,
-  segment: EmptySegmentCacheEntry,
-  tree: RouteTree
-): FulfilledSegmentCacheEntry | null {
-  // Attempts to fulfill an empty segment cache entry using data from the
-  // bfcache. This is only valid during a Full prefetch (i.e. one that includes
-  // dynamic data), because the bfcache stores data from navigations which
-  // always include dynamic data.
-
-  // We always use the canonical vary path when checking the bfcache. This is
-  // the same operation we'd use to access the cache during a
-  // regular navigation.
-  const varyPath = tree.varyPath
-
-  // Read from the BFCache without expiring it (pass -1). We check freshness
-  // ourselves using navigatedAt, because the BFCache's staleAt may have been
-  // overridden by a per-page unstable_dynamicStaleTime and can't be used to
-  // derive the original request time.
-  const bfcacheEntry = readFromBFCache(varyPath)
-  if (bfcacheEntry !== null) {
-    // The stale time for dynamic prefetches (default: 5 mins) is different
-    // from the stale time for regular navigations (default: 0 secs). Use
-    // navigatedAt to compute the correct expiry for prefetch purposes.
-    const dynamicPrefetchStaleAt =
-      bfcacheEntry.navigatedAt + STATIC_STALETIME_MS
-    if (now > dynamicPrefetchStaleAt) {
-      return null
-    }
-
-    const pendingSegment = upgradeToPendingSegment(
-      segment,
-      FetchStrategy.Full,
-      // Fulfilled synchronously from the BFCache; nothing for a locked
-      // navigation to wait on.
-      null
-    )
-    const isPartial = false
-    return fulfillSegmentCacheEntry(
-      pendingSegment,
-      bfcacheEntry.rsc,
-      dynamicPrefetchStaleAt,
-      isPartial,
-      // bfcache data is concrete, never an ISR fallback.
-      false
-    )
-  }
-  return null
-}
-
-/**
- * Attempts to replace an existing segment cache entry with data from the
- * bfcache. Unlike `attemptToFulfillDynamicSegmentFromBFCache` (which fills an
- * empty entry), this creates a new entry and upserts it, so it works even when
- * the segment is already fulfilled.
- */
-export function attemptToUpgradeSegmentFromBFCache(
-  now: number,
-  tree: RouteTree
-): FulfilledSegmentCacheEntry | null {
-  const varyPath = tree.varyPath
-  const bfcacheEntry = readFromBFCache(varyPath)
-  if (bfcacheEntry !== null) {
-    const dynamicPrefetchStaleAt =
-      bfcacheEntry.navigatedAt + STATIC_STALETIME_MS
-    if (now > dynamicPrefetchStaleAt) {
-      return null
-    }
-    const pendingSegment = upgradeToPendingSegment(
-      createDetachedSegmentCacheEntry(now),
-      FetchStrategy.Full,
-      // Fulfilled synchronously from the BFCache; nothing for a locked
-      // navigation to wait on.
-      null
-    )
-    const isPartial = false
-    const newEntry = fulfillSegmentCacheEntry(
-      pendingSegment,
-      bfcacheEntry.rsc,
-      dynamicPrefetchStaleAt,
-      isPartial,
-      // bfcache data is concrete, never an ISR fallback.
-      false
-    )
-    const segmentVaryPath = getSegmentVaryPathForRequest(
-      FetchStrategy.Full,
-      tree
-    )
-    const upserted = upsertSegmentEntry(now, segmentVaryPath, newEntry)
-    if (upserted !== null && upserted.status === EntryStatus.Fulfilled) {
-      return upserted
-    }
-  }
-  return null
 }
 
 function pingBlockedTasks(entry: {
@@ -1927,10 +1822,8 @@ export async function fetchRouteOnCacheMiss(
     // TODO: The `closed` promise was originally used to track when a streaming
     // network connection closes, so the scheduler could limit concurrent
     // connections. Now that prefetch responses are buffered, `closed` is
-    // resolved immediately after buffering — before the outer function even
-    // returns. This mechanism is only still meaningful for dynamic (Full)
-    // prefetches, which use incremental streaming. Consider removing the
-    // `closed` plumbing for buffered prefetch paths.
+    // resolved immediately after buffering, before the outer function even
+    // returns. Consider removing the `closed` plumbing for buffered paths.
     const closed = createPromiseWithResolvers<void>()
 
     // This checks whether the response was served from the per-segment cache,
@@ -2457,10 +2350,6 @@ function readFulfilledIsPartial(isPartial: Promise<void>): boolean {
  * async case). A missing iterable, or a truncated shell decode whose value
  * landed past the boundary, reads as absent and falls back to the static
  * stale time.
- *
- * For the one response kind that isn't buffered when read — a dynamic `Full`
- * response (fetchStrategy.Full with Partial Prefetching disabled) — use
- * `resolveStaleAt` instead, since its values aren't materialized synchronously.
  */
 function readFulfilledStaleAt(
   now: number,
@@ -2580,8 +2469,7 @@ export async function fetchSegmentPrefetchesUsingDynamicRequest(
   fetchStrategy:
     | FetchStrategy.LoadingBoundary
     | FetchStrategy.PPRRuntime
-    | FetchStrategy.RuntimeShell
-    | FetchStrategy.Full,
+    | FetchStrategy.RuntimeShell,
   dynamicRequestTree: FlightRouterState,
   spawnedEntries: Map<SegmentRequestKey, PendingSegmentCacheEntry>
 ): Promise<PrefetchSubtaskResult<null> | null> {
@@ -2610,12 +2498,6 @@ export async function fetchSegmentPrefetchesUsingDynamicRequest(
     headers[NEXT_URL] = nextUrl
   }
   switch (fetchStrategy) {
-    case FetchStrategy.Full: {
-      // We omit the prefetch header from a full prefetch because it's essentially
-      // just a navigation request that happens ahead of time — it should include
-      // all the same data in the response.
-      break
-    }
     case FetchStrategy.PPRRuntime: {
       headers[NEXT_ROUTER_PREFETCH_HEADER] = '2'
       break
@@ -2655,45 +2537,13 @@ export async function fetchSegmentPrefetchesUsingDynamicRequest(
       return null
     }
 
-    // Track when the network connection closes. Only meaningful for Full
-    // (dynamic) prefetches which use incremental streaming. For buffered
-    // paths, this is resolved immediately — see TODO in fetchRouteOnCacheMiss.
+    // The runtime response is buffered before decoding, so the network
+    // connection is closed before this function returns its subtask.
     const closed = createPromiseWithResolvers<void>()
 
-    let fulfilledEntries: Array<FulfilledSegmentCacheEntry> | null = null
-    let prefetchStream: ReadableStream<Uint8Array>
-    let bufferedResponseSize: number | null = null
-    if (fetchStrategy === FetchStrategy.Full) {
-      // Full prefetches are dynamic responses stored in the prefetch cache.
-      // They don't carry vary params or other cache metadata, so there's no
-      // need to buffer them. Use the incremental version to allow data to be
-      // processed as it arrives.
-      prefetchStream = createIncrementalPrefetchResponseStream(
-        response.body,
-        closed.resolve,
-        function onResponseSizeUpdate(totalBytesReceivedSoFar) {
-          // When processing a dynamic response, we don't know how large each
-          // individual segment is, so approximate by assigning each segment
-          // the average of the total response size.
-          if (fulfilledEntries === null) {
-            // Haven't received enough data yet to know which segments
-            // were included.
-            return
-          }
-          const averageSize = totalBytesReceivedSoFar / fulfilledEntries.length
-          for (const entry of fulfilledEntries) {
-            setSizeInCacheMap(entry, averageSize)
-          }
-        }
-      )
-    } else {
-      const { stream, size } = await createNonTaskyPrefetchResponseStream(
-        response.body
-      )
-      closed.resolve()
-      prefetchStream = stream
-      bufferedResponseSize = size
-    }
+    const { stream: prefetchStream, size: bufferedResponseSize } =
+      await createNonTaskyPrefetchResponseStream(response.body)
+    closed.resolve()
 
     const [serverData, cacheData] = await Promise.all([
       createFromNextReadableStream<NavigationFlightResponse>(
@@ -2819,7 +2669,7 @@ export async function fetchSegmentPrefetchesUsingDynamicRequest(
     // marks the response as '~' (Partial). RuntimeShell additionally omits
     // every dynamic suspense boundary below the App Shell, so its segments
     // are always partial regardless of what the server marker says.
-    // Full/LoadingBoundary prefetches are always complete.
+    // LoadingBoundary prefetches are complete up to their loading boundary.
     const isResponsePartial =
       fetchStrategy === FetchStrategy.RuntimeShell ||
       (fetchStrategy === FetchStrategy.PPRRuntime &&
@@ -2843,7 +2693,7 @@ export async function fetchSegmentPrefetchesUsingDynamicRequest(
     // Aside from writing the data into the cache, this function also returns
     // the entries that were fulfilled, so we can streamingly update their sizes
     // in the LRU as more data comes in.
-    fulfilledEntries = writeDynamicRenderResponseIntoCache(
+    const fulfilledEntries = writeDynamicRenderResponseIntoCache(
       now,
       fetchStrategy,
       flightDatas,
@@ -2858,11 +2708,7 @@ export async function fetchSegmentPrefetchesUsingDynamicRequest(
 
     // For buffered responses, update LRU sizes now that we know which
     // entries were fulfilled.
-    if (
-      bufferedResponseSize !== null &&
-      fulfilledEntries !== null &&
-      fulfilledEntries.length > 0
-    ) {
+    if (fulfilledEntries !== null && fulfilledEntries.length > 0) {
       const averageSize = bufferedResponseSize / fulfilledEntries.length
       for (const entry of fulfilledEntries) {
         setSizeInCacheMap(entry, averageSize)
@@ -2892,10 +2738,7 @@ export async function fetchSegmentPrefetchesUsingDynamicRequest(
 
 function writeDynamicTreeResponseIntoCache(
   now: number,
-  fetchStrategy:
-    | FetchStrategy.LoadingBoundary
-    | FetchStrategy.PPRRuntime
-    | FetchStrategy.Full,
+  fetchStrategy: FetchStrategy.LoadingBoundary | FetchStrategy.PPRRuntime,
   response: RSCResponse<NavigationFlightResponse>,
   serverData: NavigationFlightResponse,
   entry: PendingRouteCacheEntry,
@@ -3014,8 +2857,7 @@ export function writeDynamicRenderResponseIntoCache(
     | FetchStrategy.LoadingBoundary
     | FetchStrategy.PPR
     | FetchStrategy.PPRRuntime
-    | FetchStrategy.RuntimeShell
-    | FetchStrategy.Full,
+    | FetchStrategy.RuntimeShell,
   flightDatas: NormalizedFlightData[],
   buildId: string | undefined,
   isResponsePartial: boolean,
@@ -3133,8 +2975,7 @@ function writeSeedDataIntoCache(
     | FetchStrategy.LoadingBoundary
     | FetchStrategy.PPR
     | FetchStrategy.PPRRuntime
-    | FetchStrategy.RuntimeShell
-    | FetchStrategy.Full,
+    | FetchStrategy.RuntimeShell,
   tree: RouteTree,
   staleAt: number,
   seedData: CacheNodeSeedData,
@@ -3194,8 +3035,7 @@ function fulfillEntrySpawnedByRuntimePrefetch(
     | FetchStrategy.LoadingBoundary
     | FetchStrategy.PPR
     | FetchStrategy.PPRRuntime
-    | FetchStrategy.RuntimeShell
-    | FetchStrategy.Full,
+    | FetchStrategy.RuntimeShell,
   rsc: React.ReactNode,
   isPartial: boolean,
   staleAt: number,
@@ -3209,14 +3049,6 @@ function fulfillEntrySpawnedByRuntimePrefetch(
   // Decide whether to re-key the entry under a more generic vary path based on
   // which params the segment actually depends on.
   //
-  // Skip re-keying for Full prefetches: as of today, `varyParams` tracking only
-  // works within the static stage portion of a response. A Full prefetch
-  // response covers all stages, and we can't track params during the dynamic
-  // stage without dead-locking the Flight stream, so the server-reported set is
-  // incomplete and can't be trusted for the full response. Re-keying with an
-  // untrustworthy set could replace concrete params with Fallback and let
-  // unrelated URLs read each other's content from the cache.
-  //
   // For RuntimeShell prefetches, always re-key to the precomputed shell vary
   // path. A shell entry is spawned at a concrete param path but is reusable
   // across all of them; tree.shellVaryPath (root-param values kept, every other
@@ -3226,10 +3058,7 @@ function fulfillEntrySpawnedByRuntimePrefetch(
   if (process.env.__NEXT_VARY_PARAMS) {
     if (fetchStrategy === FetchStrategy.RuntimeShell) {
       fulfilledVaryPath = tree.shellVaryPath
-    } else if (
-      fetchStrategy !== FetchStrategy.Full &&
-      segmentVaryParams !== null
-    ) {
+    } else if (segmentVaryParams !== null) {
       fulfilledVaryPath = getFulfilledSegmentVaryPath(
         tree.varyPath,
         segmentVaryParams
@@ -3250,7 +3079,7 @@ function fulfillEntrySpawnedByRuntimePrefetch(
       rsc,
       staleAt,
       isPartial,
-      // Dynamic-request (Full/Runtime) responses are not ISR fallbacks.
+      // Runtime responses are not ISR fallbacks.
       false
     )
     if (fulfilledVaryPath !== null) {
@@ -3280,7 +3109,7 @@ function fulfillEntrySpawnedByRuntimePrefetch(
         rsc,
         staleAt,
         isPartial,
-        // Dynamic-request (Full/Runtime) responses are not ISR fallbacks.
+        // Runtime responses are not ISR fallbacks.
         false
       )
       if (fulfilledVaryPath !== null) {
@@ -3305,7 +3134,7 @@ function fulfillEntrySpawnedByRuntimePrefetch(
         rsc,
         staleAt,
         isPartial,
-        // Dynamic-request (Full/Runtime) responses are not ISR fallbacks.
+        // Runtime responses are not ISR fallbacks.
         false
       )
       const varyPath =
@@ -3424,44 +3253,6 @@ export async function createNonTaskyPrefetchResponseStream(
   return { stream, size }
 }
 
-/**
- * Creates a streaming (non-buffered) prefetch response stream for dynamic/Full
- * prefetches. These are essentially dynamic responses that get stored in the
- * prefetch cache — they don't carry vary params or other cache metadata that
- * requires synchronous thenable resolution, so there's no need to buffer them.
- * They should continue to stream so consumers can process data as it arrives.
- */
-function createIncrementalPrefetchResponseStream(
-  originalFlightStream: ReadableStream<Uint8Array>,
-  onStreamClose: () => void,
-  onResponseSizeUpdate: (size: number) => void
-): ReadableStream<Uint8Array> {
-  // While processing the original stream, we incrementally update the size
-  // of the cache entry in the LRU.
-  let totalByteLength = 0
-  const reader = originalFlightStream.getReader()
-  return new ReadableStream({
-    async pull(controller) {
-      while (true) {
-        const { done, value } = await reader.read()
-        if (!done) {
-          // Pass to the target stream and keep consuming the Flight response
-          // from the server.
-          controller.enqueue(value)
-
-          // Incrementally update the size of the cache entry in the LRU.
-          totalByteLength += value.byteLength
-          onResponseSizeUpdate(totalByteLength)
-          continue
-        }
-        controller.close()
-        onStreamClose()
-        return
-      }
-    },
-  })
-}
-
 function addSegmentPathToUrlInOutputExportMode(
   url: URL,
   segmentPath: SegmentRequestKey
@@ -3487,20 +3278,20 @@ function addSegmentPathToUrlInOutputExportMode(
  * Generally, when an app uses dynamic data, a "more specific" fetch strategy is expected to provide more content:
  * - `LoadingBoundary` only provides static layouts
  * - `PPR` can provide shells for each segment (even for segments that use dynamic data)
- * - `PPRRuntime` can additionally include content that uses searchParams, params, or cookies
- * - `Full` includes all the content, even if it uses dynamic data
+ * - `PPRRuntime` can additionally include cacheable content that uses
+ *   searchParams, params, or cookies
  *
  * However, it's possible that a more specific fetch strategy *won't* give us more content if:
- * - a segment is fully static
- *   (then, `PPR`/`PPRRuntime`/`Full` will all yield equivalent results)
- * - providing searchParams/params/cookies doesn't reveal any more content, e.g. because of an `await connection()`
- *   (then, `PPR` and `PPRRuntime` will yield equivalent results, only `Full` will give us more)
+ * - a segment is fully static, so `PPR` and `PPRRuntime` yield equivalent
+ *   results
+ * - providing searchParams, params, or cookies does not reveal more cacheable
+ *   content, for example because of an `await connection()`
  * Because of this, when comparing two segments, we should also check if the existing segment is partial.
  * If it's not partial, then there's no need to prefetch it again, even using a "more specific" strategy.
  * There's currently no way to know if `PPRRuntime` will yield more data that `PPR`, so we have to assume it will.
  *
- * Also note that, in practice, we don't expect to be comparing `LoadingBoundary` to `PPR`/`PPRRuntime`,
- * because a non-PPR-enabled route wouldn't ever use the latter strategies. It might however use `Full`.
+ * In practice, `LoadingBoundary` is not compared with `PPR` or `PPRRuntime`
+ * because a non-PPR route does not use those strategies.
  */
 export function canNewFetchStrategyProvideMoreContent(
   currentStrategy: FetchStrategy,
@@ -3530,11 +3321,8 @@ function getStaleAtFromHeader(
  * yielded value wins) and, if a `response` is given and the iterable yields
  * nothing, falling back to the `Next-Router-Stale-Time` header.
  *
- * The async form is required for the two things `readFulfilledStaleAt` can't
- * do: the header fallback, and reading a dynamic `Full` response
- * (fetchStrategy.Full with Partial Prefetching disabled) — the one response
- * kind that isn't buffered before it's read, so its iterable values must be
- * awaited rather than drained synchronously off their thenable status.
+ * The async form supports the header fallback and callers whose iterable has
+ * not already been buffered and materialized.
  *
  * Buffered responses (static PPR, runtime prefetch, stage decodes) don't need
  * the async form: segment bundles and the shell-stage decode already read

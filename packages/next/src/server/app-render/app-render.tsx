@@ -4819,8 +4819,8 @@ type StreamRevealStage =
   | RenderStage.Runtime
 
 function navigationHasAppShell(navigationKind: DevNavigationKind): boolean {
-  // TODO(app-shells): when we implement `<Link prefetch={true}>/`prefetch = "unstable_eager"` in dev,
-  // this might need to be adjusted, because we'll use `Runtime` for the stage
+  // TODO(app-shells): when we implement `prefetch = "unstable_eager"` in dev,
+  // this might need adjustment because we'll use `Runtime` for the stage.
   return (
     navigationKind.type === 'prefetched-client' &&
     navigationKind.prefetchStage === RenderStage.ShellRuntime

@@ -26,17 +26,11 @@ import {
   upgradeToPendingSegment,
   overwriteRevalidatingSegmentCacheEntry,
   canNewFetchStrategyProvideMoreContent,
-  attemptToFulfillDynamicSegmentFromBFCache,
-  attemptToUpgradeSegmentFromBFCache,
 } from './cache'
 import type { RouteCacheKey } from './cache-key'
 import { createCacheKey } from './cache-key'
 import { urlSearchParamsToParsedUrlQuery } from '../../route-params'
-import {
-  FetchStrategy,
-  type PrefetchTaskFetchStrategy,
-  PrefetchPriority,
-} from './types'
+import { FetchStrategy, PrefetchPriority } from './types'
 import {
   getCurrentRouteCacheVersion,
   getCurrentSegmentCacheVersion,
@@ -79,16 +73,6 @@ export type PrefetchTask = {
    */
   routeCacheVersion: number
   segmentCacheVersion: number
-
-  /**
-   * Whether to prefetch dynamic data, in addition to static data. This is
-   * used by `<Link prefetch={true}>`.
-   *
-   * Note that a task with `FetchStrategy.PPR` might need to use
-   * `FetchStrategy.LoadingBoundary` instead if we find out that a route
-   * does not support PPR after doing the initial route prefetch.
-   */
-  fetchStrategy: PrefetchTaskFetchStrategy
 
   /**
    * sortId is an incrementing counter
@@ -273,8 +257,6 @@ export function startRevalidationCooldown(): void {
   }, REVALIDATION_COOLDOWN_MS)
 }
 
-export type IncludeDynamicData = null | 'full' | 'dynamic'
-
 /**
  * Initiates a prefetch task for the given URL. If a prefetch for the same URL
  * is already in progress, this will bump it to the top of the queue.
@@ -284,8 +266,6 @@ export type IncludeDynamicData = null | 'full' | 'dynamic'
  *
  * @param key The RouteCacheKey to prefetch.
  * @param treeAtTimeOfPrefetch The app's current FlightRouterState
- * @param fetchStrategy Whether to prefetch dynamic data, in addition to
- * static data. This is used by `<Link prefetch={true}>`.
  * @param navigationLockPrefetch Testing API only. Non-null when this prefetch
  * drives a locked navigation (from `ensurePrefetchThenNavigate`); carries that
  * navigation's "wait for prefetch to fulfill" state. Null otherwise.
@@ -293,7 +273,6 @@ export type IncludeDynamicData = null | 'full' | 'dynamic'
 export function schedulePrefetchTask(
   key: RouteCacheKey,
   treeAtTimeOfPrefetch: FlightRouterState,
-  fetchStrategy: PrefetchTaskFetchStrategy,
   priority: PrefetchPriority,
   onInvalidate: null | (() => void),
   navigationLockPrefetch: NavigationLockPrefetch | null
@@ -308,7 +287,6 @@ export function schedulePrefetchTask(
     phase: PrefetchPhase.RouteTree,
     hasBackgroundWork: false,
     spawnedRuntimePrefetches: null,
-    fetchStrategy,
     sortId: sortIdCounter++,
     isCanceled: false,
     fallbackRetryStatus: EntryStatus.Empty,
@@ -350,7 +328,6 @@ export function cancelPrefetchTask(task: PrefetchTask): void {
 export function reschedulePrefetchTask(
   task: PrefetchTask,
   treeAtTimeOfPrefetch: FlightRouterState,
-  fetchStrategy: PrefetchTaskFetchStrategy,
   priority: PrefetchPriority
 ): void {
   // Bump the prefetch task to the top of the queue, as if it were a fresh
@@ -378,7 +355,6 @@ export function reschedulePrefetchTask(
     task === mostRecentlyHoveredLink ? PrefetchPriority.Intent : priority
 
   task.treeAtTimeOfPrefetch = treeAtTimeOfPrefetch
-  task.fetchStrategy = fetchStrategy
 
   trackMostRecentlyHoveredLink(task)
 
@@ -398,9 +374,8 @@ export function isPrefetchTaskDirty(
 ): boolean {
   // This is used to quickly bail out of a prefetch task if the result is
   // guaranteed to not have changed since the task was initiated. This is
-  // strictly an optimization — theoretically, if it always returned true, no
-  // behavior should change because a full prefetch task will effectively
-  // perform the same checks.
+  // strictly an optimization. If it always returned true, behavior would not
+  // change because the task would repeat the same cache checks.
   return (
     task.routeCacheVersion !== getCurrentRouteCacheVersion() ||
     task.segmentCacheVersion !== getCurrentSegmentCacheVersion() ||
@@ -727,16 +702,8 @@ function pingRootRouteTree(
       // Spawn a task to request the route, load it into the cache, and ping
       // the task to continue.
 
-      // TODO: There are multiple strategies in the <Link> API for prefetching
-      // a route. Currently we've only implemented the main one: per-segment,
-      // static-data only.
-      //
-      // There's also `<Link prefetch={true}>`
-      // which prefetch both static *and* dynamic data.
-      // Similarly, we need to fallback to the old, per-page
-      // behavior if PPR is disabled for a route (via the incremental opt-in).
-      //
-      // Those cases will be handled here.
+      // Load the route tree before selecting segment requests. Transitional
+      // non-PPR routes fall back to the loading-boundary protocol.
       spawnPrefetchSubtask(fetchRouteOnCacheMiss(route, task.key))
 
       // If the request takes longer than a minute, a subsequent request should
@@ -780,32 +747,13 @@ function pingRootRouteTree(
       }
       const tree = route.tree
 
-      // A task's fetch strategy gets set to `PPR` for any "auto" prefetch.
-      // If it turned out that the route isn't PPR-enabled, we need to use `LoadingBoundary` instead.
-      // We don't need to do this for runtime prefetches, because those are only available in
-      // `cacheComponents`, where every route is PPR.
-      let fetchStrategy: FetchStrategy
-      if (tree.prefetchHints & PrefetchHint.SubtreeHasPartialPrefetching) {
-        // If `instant` is defined anywhere on the target route, ignore the
-        // fetch strategy and switch to unified strategy used by Cache
-        // Components (called `PPR` for now, will likely be renamed).
-        //
-        // In practice, this just means that a "full" prefetch (<Link
-        // prefetch={true}>) has no effect. You're meant to use Runtime
-        // Prefetching instead — that's the new pattern that replaces
-        // prefetch={true}.
-        //
-        // The reason we check for `instant` rather than the `cacheComponents`
-        // flag is to support incremental adoption. `prefetch={true}` will
-        // continue to work until you opt into `instant`.
-        fetchStrategy = FetchStrategy.PPR
-      } else if (task.fetchStrategy === FetchStrategy.PPR) {
-        fetchStrategy = route.supportsPerSegmentPrefetching
+      // Partial Prefetching uses the unified PPR strategy. Transitional
+      // non-PPR routes fall back to LoadingBoundary.
+      const fetchStrategy =
+        tree.prefetchHints & PrefetchHint.SubtreeHasPartialPrefetching ||
+        route.supportsPerSegmentPrefetching
           ? FetchStrategy.PPR
           : FetchStrategy.LoadingBoundary
-      } else {
-        fetchStrategy = task.fetchStrategy
-      }
 
       switch (fetchStrategy) {
         case FetchStrategy.PPR: {
@@ -819,10 +767,7 @@ function pingRootRouteTree(
 
           if (
             task.phase === PrefetchPhase.Speculative &&
-            !subtreeHasSpeculativePrefetch(
-              task.fetchStrategy,
-              tree.prefetchHints
-            )
+            !subtreeHasSpeculativePrefetch(tree.prefetchHints)
           ) {
             // Nothing in the target route needs to be speculatively prefetched.
             // Bail out.
@@ -912,8 +857,6 @@ function pingRootRouteTree(
 
           return PrefetchTaskExitStatus.Done
         }
-        case FetchStrategy.Full:
-        case FetchStrategy.PPRRuntime:
         case FetchStrategy.LoadingBoundary: {
           if (task.phase === PrefetchPhase.Shell) {
             // Shell phase only does work on routes that use the PPR strategy
@@ -1010,7 +953,6 @@ function pingRuntimeHead(
   route: FulfilledRouteCacheEntry,
   spawnedEntries: Map<SegmentRequestKey, PendingSegmentCacheEntry>,
   fetchStrategy:
-    | FetchStrategy.Full
     | FetchStrategy.PPRRuntime
     | FetchStrategy.RuntimeShell
     | FetchStrategy.LoadingBoundary
@@ -1022,10 +964,9 @@ function pingRuntimeHead(
     route.metadata,
     false,
     spawnedEntries,
-    // When prefetching the head, there's no difference between Full
-    // and LoadingBoundary
+    // Loading-boundary head data uses the cacheable runtime protocol.
     fetchStrategy === FetchStrategy.LoadingBoundary
-      ? FetchStrategy.Full
+      ? FetchStrategy.PPRRuntime
       : fetchStrategy
   )
 }
@@ -1151,7 +1092,7 @@ function pingNewPartOfCacheComponentsTree(
 
   if (
     task.phase === PrefetchPhase.Speculative &&
-    !subtreeHasSpeculativePrefetch(task.fetchStrategy, tree.prefetchHints)
+    !subtreeHasSpeculativePrefetch(tree.prefetchHints)
   ) {
     // Nothing in the new part of the tree needs to be speculatively prefetched.
     // Bail out.
@@ -1222,10 +1163,7 @@ function diffRouteTreeAgainstCurrent(
   oldTree: FlightRouterState,
   newTree: RouteTree,
   spawnedEntries: Map<SegmentRequestKey, PendingSegmentCacheEntry>,
-  fetchStrategy:
-    | FetchStrategy.Full
-    | FetchStrategy.PPRRuntime
-    | FetchStrategy.LoadingBoundary
+  fetchStrategy: FetchStrategy.PPRRuntime | FetchStrategy.LoadingBoundary
 ): FlightRouterState {
   // This is a single recursive traversal that does multiple things:
   // - Finds the parts of the target route (newTree) that are not part of
@@ -1317,36 +1255,6 @@ function diffRouteTreeAgainstCurrent(
             requestTreeChildren[parallelRouteKey] = requestTreeChild
             break
           }
-          case FetchStrategy.Full: {
-            // This is a "full" prefetch. Fetch all the data in the tree, both
-            // static and dynamic. We issue roughly the same request that we
-            // would during a real navigation. The goal is that once the
-            // navigation occurs, the router should not have to fetch any
-            // additional data.
-            //
-            // Although the response will include dynamic data, opting into a
-            // Full prefetch — via <Link prefetch={true}> — implicitly
-            // instructs the cache to treat the response as "static", or non-
-            // dynamic, since the whole point is to cache it for
-            // future navigations.
-            //
-            // Construct a tree (currently a FlightRouterState) that represents
-            // which segments need to be prefetched and which ones are already
-            // cached. If the tree is empty, then we can exit. Otherwise, we'll
-            // send the request tree to the server and use the response to
-            // populate the segment cache.
-            const requestTreeChild = pingRouteTreeAndIncludeDynamicData(
-              now,
-              task,
-              route,
-              newTreeChild,
-              false,
-              spawnedEntries,
-              fetchStrategy
-            )
-            requestTreeChildren[parallelRouteKey] = requestTreeChild
-            break
-          }
           default:
             fetchStrategy satisfies never
         }
@@ -1374,13 +1282,9 @@ function pingPPRDisabledRouteTreeUpToLoadingBoundary(
   spawnedEntries: Map<SegmentRequestKey, PendingSegmentCacheEntry>
 ): FlightRouterState {
   // This function is similar to pingRouteTreeAndIncludeDynamicData, except the
-  // server is only going to return a minimal loading state — it will stop
-  // rendering at the first loading boundary. Whereas a Full prefetch is
-  // intentionally aggressive and tries to pretfetch all the data that will be
-  // needed for a navigation, a LoadingBoundary prefetch is much more
-  // conservative. For example, it will omit from the request tree any segment
-  // that is already cached, regardles of whether it's partial or full. By
-  // contrast, a Full prefetch will refetch partial segments.
+  // server is only going to return a minimal loading state. It will stop
+  // rendering at the first loading boundary and omit segments that are already
+  // cached.
 
   // "inside-shared-layout" tells the server where to start looking for a
   // loading boundary.
@@ -1389,7 +1293,7 @@ function pingPPRDisabledRouteTreeUpToLoadingBoundary(
 
   const segment = readOrCreateSegmentCacheEntry(
     now,
-    task.fetchStrategy,
+    FetchStrategy.LoadingBoundary,
     tree,
     task._navigationLockPrefetch ?? null
   )
@@ -1437,8 +1341,7 @@ function pingPPRDisabledRouteTreeUpToLoadingBoundary(
       // partial. We could get a more complete version of the segment by
       // including it in this non-PPR request.
       //
-      // We're intentionally choosing not to, though, because it's generally
-      // better to avoid doing a full prefetch whenever possible.
+      // Loading-boundary prefetches intentionally keep the cached shell.
       break
     }
     case EntryStatus.Pending: {
@@ -1487,10 +1390,7 @@ function pingRouteTreeAndIncludeDynamicData(
   tree: RouteTree,
   isInsideRefetchingParent: boolean,
   spawnedEntries: Map<SegmentRequestKey, PendingSegmentCacheEntry>,
-  fetchStrategy:
-    | FetchStrategy.Full
-    | FetchStrategy.PPRRuntime
-    | FetchStrategy.RuntimeShell
+  fetchStrategy: FetchStrategy.PPRRuntime | FetchStrategy.RuntimeShell
 ): FlightRouterState {
   // The tree we're constructing is the same shape as the tree we're navigating
   // to. But even though this is a "new" tree, some of the individual segments
@@ -1502,11 +1402,8 @@ function pingRouteTreeAndIncludeDynamicData(
   // entire subtree.
   const segment = readOrCreateSegmentCacheEntry(
     now,
-    // Note that `fetchStrategy` might be different from `task.fetchStrategy`,
-    // and we have to use the former here.
-    // We can have a task with `FetchStrategy.PPR` where some of its segments are configured to
-    // always use runtime prefetching (via `export const prefetch`), and those should check for
-    // entries that include search params.
+    // Runtime-prefetched segments use a distinct cache key that includes
+    // search params.
     fetchStrategy,
     tree,
     task._navigationLockPrefetch ?? null
@@ -1517,18 +1414,6 @@ function pingRouteTreeAndIncludeDynamicData(
   switch (segment.status) {
     case EntryStatus.Empty: {
       // This segment is not cached.
-      if (fetchStrategy === FetchStrategy.Full) {
-        // Check if there's a matching entry in the bfcache. If so, fulfill the
-        // segment using the bfcache entry instead of issuing a new request.
-        const fulfilled = attemptToFulfillDynamicSegmentFromBFCache(
-          now,
-          segment,
-          tree
-        )
-        if (fulfilled !== null) {
-          break
-        }
-      }
       // Include it in the request.
       spawnedSegment = upgradeToPendingSegment(
         segment,
@@ -1550,19 +1435,9 @@ function pingRouteTreeAndIncludeDynamicData(
         // less specific strategy than the current one. This means we're in one
         // of these cases:
         //   - we have a static prefetch, and we're doing a runtime prefetch
-        //   - we have a static or runtime prefetch, and we're doing a Full
-        //     prefetch (or a navigation).
-        // In either case, we need to include it in the request to get a more
-        // specific (or full) version. However, if there's a non-stale bfcache
-        // entry from a previous navigation, prefer that over making a new
-        // request.
-        if (fetchStrategy === FetchStrategy.Full) {
-          const fulfilled = attemptToUpgradeSegmentFromBFCache(now, tree)
-          if (fulfilled !== null) {
-            break
-          }
-        }
-        spawnedSegment = pingFullSegmentRevalidation(
+        // We have a static prefetch and are doing a runtime prefetch, so include
+        // it in the request to get the more specific version.
+        spawnedSegment = pingRuntimeSegmentRevalidation(
           now,
           task,
           tree,
@@ -1581,7 +1456,7 @@ function pingRouteTreeAndIncludeDynamicData(
           fetchStrategy
         )
       ) {
-        spawnedSegment = pingFullSegmentRevalidation(
+        spawnedSegment = pingRuntimeSegmentRevalidation(
           now,
           task,
           tree,
@@ -1884,7 +1759,7 @@ function accumulateSegmentBundle(
   }
   const segment = readOrCreateSegmentCacheEntry(
     now,
-    task.fetchStrategy,
+    FetchStrategy.PPR,
     tree,
     task._navigationLockPrefetch ?? null
   )
@@ -1959,14 +1834,11 @@ function finishStaticBundleOnRuntimeBailout(
   }
 }
 
-function pingFullSegmentRevalidation(
+function pingRuntimeSegmentRevalidation(
   now: number,
   task: PrefetchTask,
   tree: RouteTree,
-  fetchStrategy:
-    | FetchStrategy.Full
-    | FetchStrategy.PPRRuntime
-    | FetchStrategy.RuntimeShell
+  fetchStrategy: FetchStrategy.PPRRuntime | FetchStrategy.RuntimeShell
 ): PendingSegmentCacheEntry | null {
   const revalidatingSegment = readOrCreateRevalidatingSegmentEntry(
     now,
@@ -1974,7 +1846,7 @@ function pingFullSegmentRevalidation(
     tree
   )
   if (revalidatingSegment.status === EntryStatus.Empty) {
-    // During a Full/PPRRuntime prefetch, a single dynamic request is made for all the
+    // During a runtime prefetch, a single dynamic request is made for all the
     // segments that we need. So we don't initiate a request here directly. By
     // returning a pending entry from this function, it signals to the caller
     // that this segment should be included in the request that's sent to
@@ -2060,24 +1932,10 @@ function doesCurrentSegmentMatchCachedSegment(
 }
 
 /**
- * Decides whether to skip the speculative prefetch of a subtree. Usually we
- * only perform a speculative prefetch if the Link's prefetch prop is set to
- * true. However, we also will do a speculative prefetch if the prefetching
- * mode of the segment is set to "unstable_eager".
+ * Decides whether to skip the speculative prefetch of a subtree.
  */
-export function subtreeHasSpeculativePrefetch(
-  fetchStrategy: FetchStrategy,
-  prefetchHints: number
-): boolean {
-  return (
-    // Check if this is a "full" prefetch (<Link prefetch={true}>).
-    fetchStrategy === FetchStrategy.Full ||
-    // Check if something in this subtree is configured to be eagerly
-    // prefetched at the route level. Segments that don't opt into Partial
-    // Prefetching are marked eager, so a route without any Partial Prefetching
-    // still speculatively prefetches everything.
-    (prefetchHints & PrefetchHint.SubtreeHasEagerPrefetch) !== 0
-  )
+export function subtreeHasSpeculativePrefetch(prefetchHints: number): boolean {
+  return (prefetchHints & PrefetchHint.SubtreeHasEagerPrefetch) !== 0
 }
 
 // -----------------------------------------------------------------------------

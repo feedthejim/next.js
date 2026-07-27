@@ -39,16 +39,4 @@ export const enum FetchStrategy {
   RuntimeShell = 1,
   PPR = 2,
   PPRRuntime = 3,
-  Full = 4,
 }
-
-/**
- * A subset of fetch strategies used for prefetch tasks.
- * A prefetch task can't know if it should use `PPR` or `LoadingBoundary`
- * until we complete the initial tree prefetch request, so we use `PPR` to signal both cases
- * and adjust it based on the route when actually fetching.
- * */
-export type PrefetchTaskFetchStrategy =
-  | FetchStrategy.PPR
-  | FetchStrategy.PPRRuntime
-  | FetchStrategy.Full

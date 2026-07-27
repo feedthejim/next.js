@@ -19,7 +19,6 @@ import {
   mountFormInstance,
   unmountPrefetchableInstance,
 } from '../components/links'
-import { FetchStrategy } from '../components/segment-cache/types'
 
 export type { FormProps }
 
@@ -100,13 +99,7 @@ export default function Form({
   const observeFormVisibilityOnMount = useCallback(
     (element: HTMLFormElement) => {
       if (isPrefetchEnabled && router !== null) {
-        mountFormInstance(
-          element,
-          actionProp,
-          router,
-          // We default to PPR. We'll discover whether or not the route supports it with the initial prefetch.
-          FetchStrategy.PPR
-        )
+        mountFormInstance(element, actionProp, router)
       }
       return () => {
         unmountPrefetchableInstance(element)

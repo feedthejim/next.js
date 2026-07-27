@@ -29,7 +29,9 @@
   `router.prefetch()` and declarative App Router links now expose only the
   fork's Partial Prefetching protocol. The public full-prefetch intent, its
   dynamic-on-hover upgrade, and its dedicated warning and overlay path are
-  absent.
+  absent. The client cache and scheduler no longer contain a Full strategy,
+  task-level strategy selection, BFCache-as-prefetch behavior, or the
+  incremental dynamic-prefetch stream.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -44,8 +46,8 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Remove the remaining internal `FetchStrategy.Full` cache and
-  scheduler path, then delete the PPR-disabled loading-boundary scheduler path.
+- **Next action:** Delete the PPR-disabled loading-boundary scheduler and cache
+  path, then remove the route capability signals that select it.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -54,10 +56,44 @@
 - **Last verified:** 2026-07-27 on `feedthejim/simplify-next-rendering`.
   `pnpm --filter=next types`, the 19-test fast App Router allowlist, 108 focused
   dev-overlay assertions, `pnpm --filter=next build`, the 34-assertion
-  production Turbopack runtime pack, the retained navigation journey, and the
-  transition-instrumentation journey passed.
+  production Turbopack runtime pack, the retained navigation journey, all 12
+  PPR partial-hydration assertions, and the transition-instrumentation journey
+  passed.
 
 ## History
+
+### 2026-07-27: No internal Full prefetch protocol
+
+Removed the final `FetchStrategy.Full` state and the task-level strategy field
+that threaded a now-unselectable mode through Link, Form, `router.prefetch`,
+the scheduler, cache keys, and testing locks. Runtime prefetching remains
+derived from server hints inside a PPR task. Full-only BFCache reuse,
+incremental dynamic-prefetch streaming, request headers, cache-key exceptions,
+and revalidation branches were deleted. Loading-boundary head requests use the
+cacheable runtime protocol until the next slice removes LoadingBoundary.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** `FetchStrategy.Full` references fell from 24 to zero.
+  Prefetch tasks no longer carry a selectable strategy, and their callers no
+  longer pass one.
+- **Leanness:** Authored framework source fell by 428 lines and 17,251 bytes.
+  Client-router source accounts for 384 lines and 15,899 bytes of that
+  reduction. Test and dependency counts were unchanged. The current `dist`
+  tree is 166,491,306 bytes, including 75,936,866 JavaScript bytes, but its
+  lifecycle differs from the previous snapshot, so the artifact delta is
+  non-comparable.
+- **Runtime performance:** The retained navigation journey passed with a
+  77-millisecond production startup, down 19 milliseconds from the preceding
+  single run. Initial browser load rose from 93 to 189 milliseconds and the
+  assertion body rose from 546 to 806 milliseconds. These are directional
+  local observations, not regression claims. Navigation latency, response
+  bytes, and peak memory were not measured.
+- **Iteration efficiency:** Types passed in 14.18 seconds, the 19-test fast
+  allowlist in 1.82 seconds, the core build in 21.98 seconds, the navigation
+  journey in 16.13 seconds, and the 12-assertion PPR journey in 23.66 seconds.
+  The 79.87-second validation total includes lint and both browser journeys, so
+  its scope is broader than the preceding slice.
 
 ### 2026-07-27: One declarative Link prefetch protocol
 

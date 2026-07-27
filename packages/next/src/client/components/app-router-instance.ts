@@ -14,7 +14,6 @@ import {
 import { reducer } from './router-reducer/router-reducer'
 import { addTransitionType, startTransition } from 'react'
 import { isThenable } from '../../shared/lib/is-thenable'
-import { FetchStrategy } from './segment-cache/types'
 import { prefetch as prefetchWithSegmentCache } from './segment-cache/prefetch'
 import { navigate } from './segment-cache/navigation'
 import {
@@ -404,7 +403,6 @@ export const publicAppRouterInstance: AppRouterInstance = {
         href,
         actionQueue.state.nextUrl,
         actionQueue.state.tree,
-        FetchStrategy.PPR,
         options?.onInvalidate ?? null
       )
     },

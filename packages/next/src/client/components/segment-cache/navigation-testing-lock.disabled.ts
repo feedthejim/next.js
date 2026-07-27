@@ -14,7 +14,6 @@
 
 import type { FlightRouterState } from '../../../shared/lib/app-router-types'
 import type { PendingSegmentCacheEntry, SegmentCacheEntry } from './cache'
-import type { FetchStrategy } from './types'
 import type {
   NavigationLockPrefetch,
   NavigationLockState,
@@ -72,8 +71,7 @@ export function getCurrentNavigationGate(): Promise<void> | null {
 export function resetNavigationLockToPending(): void {}
 
 export function shouldRestrictNavigationToShell(
-  _rootPrefetchHints: number,
-  _linkFetchStrategy: FetchStrategy
+  _rootPrefetchHints: number
 ): boolean {
   return false
 }

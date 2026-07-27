@@ -2,7 +2,7 @@ import type { FlightRouterState } from '../../../shared/lib/app-router-types'
 import { createPrefetchURL } from '../app-router-utils'
 import { createCacheKey } from './cache-key'
 import { schedulePrefetchTask } from './scheduler'
-import { PrefetchPriority, type PrefetchTaskFetchStrategy } from './types'
+import { PrefetchPriority } from './types'
 
 /**
  * Entrypoint for prefetching a URL into the Segment Cache.
@@ -12,8 +12,6 @@ import { PrefetchPriority, type PrefetchTaskFetchStrategy } from './types'
  * Roughly corresponds to the current URL.
  * @param treeAtTimeOfPrefetch - The FlightRouterState at the time the prefetch
  * was requested. This is only used when PPR is disabled.
- * @param fetchStrategy - Whether to prefetch dynamic data, in addition to
- * static data. This is used by `<Link prefetch={true}>`.
  * @param onInvalidate - A callback that will be called when the prefetch cache
  * When called, it signals to the listener that the data associated with the
  * prefetch may have been invalidated from the cache. This is not a live
@@ -28,7 +26,6 @@ export function prefetch(
   href: string,
   nextUrl: string | null,
   treeAtTimeOfPrefetch: FlightRouterState,
-  fetchStrategy: PrefetchTaskFetchStrategy,
   onInvalidate: null | (() => void)
 ) {
   const url = createPrefetchURL(href)
@@ -40,7 +37,6 @@ export function prefetch(
   schedulePrefetchTask(
     cacheKey,
     treeAtTimeOfPrefetch,
-    fetchStrategy,
     PrefetchPriority.Default,
     onInvalidate,
     null // navigationLockPrefetch

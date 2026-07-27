@@ -314,9 +314,7 @@ export function getSegmentVaryPathForRequest(
     // Only a runtime prefetch will include search params in the vary path.
     // Static prefetches never include search params, so they can be reused
     // across all possible search param values.
-    const doesVaryOnSearchParams =
-      fetchStrategy === FetchStrategy.Full ||
-      fetchStrategy === FetchStrategy.PPRRuntime
+    const doesVaryOnSearchParams = fetchStrategy === FetchStrategy.PPRRuntime
 
     if (!doesVaryOnSearchParams) {
       // The response from the the server will not vary on search params. Clone

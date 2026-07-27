@@ -38,7 +38,6 @@ import { discoverKnownRoute } from './optimistic-routes'
 import { createCacheKey, type NormalizedSearch } from './cache-key'
 import { schedulePrefetchTask } from './scheduler'
 import { PrefetchPriority, FetchStrategy } from './types'
-import { getLinkForCurrentNavigation } from '../links'
 import type { PageVaryPath } from './vary-path'
 import type { AppRouterState } from '../router-reducer/router-reducer-types'
 import { ScrollBehavior } from '../router-reducer/router-reducer-types'
@@ -253,10 +252,8 @@ export function navigateToKnownRoute(
   if (process.env.__NEXT_EXPOSE_TESTING_API) {
     const { shouldRestrictNavigationToShell } =
       require('./navigation-testing-lock') as typeof import('./navigation-testing-lock')
-    const link = getLinkForCurrentNavigation()
     restrictToShell = shouldRestrictNavigationToShell(
-      navigationSeed.routeTree.prefetchHints,
-      link !== null ? link.fetchStrategy : FetchStrategy.PPR
+      navigationSeed.routeTree.prefetchHints
     )
   }
 
@@ -1028,9 +1025,6 @@ async function ensurePrefetchThenNavigate(
   navigateType: 'push' | 'replace',
   navigationLock: NavigationLock | null
 ): Promise<AppRouterState> {
-  const link = getLinkForCurrentNavigation()
-  const fetchStrategy = link !== null ? link.fetchStrategy : FetchStrategy.PPR
-
   const cacheKey = createCacheKey(url.href, nextUrl)
 
   // Create this navigation's "wait for prefetch to fulfill" state and schedule
@@ -1044,7 +1038,6 @@ async function ensurePrefetchThenNavigate(
   schedulePrefetchTask(
     cacheKey,
     currentFlightRouterState,
-    fetchStrategy,
     PrefetchPriority.Default,
     null, // onInvalidate
     navigationLockPrefetch

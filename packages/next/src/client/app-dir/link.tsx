@@ -18,7 +18,6 @@ import {
   type LinkInstance,
 } from '../components/links'
 import { isLocalURL } from '../../shared/lib/router/utils/is-local-url'
-import { FetchStrategy } from '../components/segment-cache/types'
 import type { RouterTransitionPrefetchIntent } from '../router-transition-types'
 
 type Url = string | UrlObject
@@ -367,10 +366,6 @@ export default function LinkComponent(
   const prefetchIntent: RouterTransitionPrefetchIntent =
     prefetchProp === false ? 'none' : 'auto'
 
-  const fetchStrategy =
-    // TODO: it makes no sense to assign a fetchStrategy when prefetching is disabled.
-    FetchStrategy.PPR
-
   if (process.env.NODE_ENV !== 'production') {
     function createPropError(args: {
       key: string
@@ -592,7 +587,6 @@ export default function LinkComponent(
           element,
           formattedHref,
           router,
-          fetchStrategy,
           prefetchEnabled,
           setOptimisticLinkStatus
         )
@@ -606,13 +600,7 @@ export default function LinkComponent(
         unmountPrefetchableInstance(element)
       }
     },
-    [
-      prefetchEnabled,
-      formattedHref,
-      router,
-      fetchStrategy,
-      setOptimisticLinkStatus,
-    ]
+    [prefetchEnabled, formattedHref, router, setOptimisticLinkStatus]
   )
 
   const mergedRef = useMergedRef(observeLinkVisibilityOnMount, childRef)
