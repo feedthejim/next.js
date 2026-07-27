@@ -31,11 +31,9 @@
   performance metrics; each slice is committed; the worktree is clean; and no
   required follow-up is implicit.
 - **Last verified:** 2026-07-27 on `feedthejim/simplify-next-rendering`.
-  `pnpm --filter=next types`, 12 focused postponed-state and resume-cache unit
-  tests, and `pnpm --filter=next build` passed. The existing resume-data-cache
-  E2E reached application type checking in 16.13 seconds but was blocked by
-  missing `ResolvingMetadata` and `ResolvingViewport` exports in its isolated
-  package, before the test body ran.
+  `pnpm --filter=next types`, 26 focused renderer and router unit tests,
+  `pnpm --filter=next build`, and all 12 production Turbopack PPR partial
+  hydration assertions passed.
 
 ## History
 
@@ -48,10 +46,9 @@ longer branches on removed configuration. Authored framework and App Router
 source each fell by 367 lines and 16.5 KB. The clean built package fell by
 311,771 bytes overall and 85,634 JavaScript bytes. Cache Components references
 fell by three and route-PPR references fell by one. Type checking, the core
-package build, and all 12 focused serialization tests pass. The legacy E2E
-attempt exposed an isolated-package type-export failure, which is now evidence
-for the cheaper allowlist and test-conversion slice rather than a false product
-pass.
+package build, 26 focused unit tests, and all 12 production Turbopack PPR
+partial hydration assertions pass. The PPR fixture no longer opts into Cache
+Components because it exercises the fork's default model.
 
 ### 2026-07-27: Single resume-cache wire format
 

@@ -155,8 +155,8 @@ Track at least:
 - direct, optional, and peer dependency counts for `next`
 - end-to-end, development, production, and unit test file counts
 - built `packages/next/dist` total and JavaScript bytes
-- wall time for type checking, focused tests, the core package build, and the
-  bootstrap build when run
+- wall time for type checking, focused tests, focused browser tests, the core
+  package build, and the bootstrap build when run
 
 Record performance timings with the corresponding `fork-metrics` CLI options.
 Use the same warm or cold conditions when comparing timings and label the

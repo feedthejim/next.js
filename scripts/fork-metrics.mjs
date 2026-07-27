@@ -230,6 +230,7 @@ const metrics = {
   validationTimingsMs: {
     types: optionalNumber('types-ms'),
     focusedTests: optionalNumber('focused-tests-ms'),
+    browserTests: optionalNumber('browser-tests-ms'),
     nextBuild: optionalNumber('next-build-ms'),
     buildAll: optionalNumber('build-all-ms'),
   },

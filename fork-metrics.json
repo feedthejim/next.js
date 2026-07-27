@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "label": "single-rendering-prerender",
-  "capturedAt": "2026-07-27T17:34:09.158Z",
+  "capturedAt": "2026-07-27T17:36:45.177Z",
   "git": {
-    "baseHead": "af16b1b536"
+    "baseHead": "2df675a1b3"
   },
   "source": {
     "frameworkTracked": {
@@ -73,9 +73,10 @@
   },
   "validationTimingConditions": "warm-local-watcher-stopped",
   "validationTimingsMs": {
-    "types": 14000,
-    "focusedTests": 1370,
-    "nextBuild": 21870,
+    "types": 15233,
+    "focusedTests": 1331,
+    "browserTests": 20034,
+    "nextBuild": 22261,
     "buildAll": null
   }
 }
