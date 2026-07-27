@@ -265,6 +265,7 @@ import {
   type RenderResumeDataCache,
   type ResumeDataCache,
 } from '../resume-data-cache/resume-data-cache'
+import { installRuntimePrefetchResumeDataCache } from '../resume-data-cache/runtime-prefetch-cache'
 import type { MetadataErrorType } from '../../lib/metadata/resolve-metadata'
 import isError from '../../lib/is-error'
 import { createServerInsertedMetadata } from './metadata-insertion/create-server-inserted-metadata'
@@ -1040,8 +1041,8 @@ async function generateStagedDynamicFlightRenderResultNode(
   // the runtime prerender embedded in the RSC payload.
   {
     // Create a mutable cache that gets filled during the dynamic render.
-    const prerenderResumeDataCache = createPrerenderResumeDataCache()
-    requestStore.resumeDataCache = prerenderResumeDataCache
+    const prerenderResumeDataCache =
+      installRuntimePrefetchResumeDataCache(requestStore)
 
     const cacheSignal = new CacheSignal()
     trackPendingModules(cacheSignal)
@@ -3598,8 +3599,8 @@ async function renderToStream(
         // Partial Prefetching is always enabled, so every resume render fills
         // caches and spawns the runtime prerender embedded in the RSC payload.
         {
-          const prerenderResumeDataCache = createPrerenderResumeDataCache()
-          requestStore.resumeDataCache = prerenderResumeDataCache
+          const prerenderResumeDataCache =
+            installRuntimePrefetchResumeDataCache(requestStore)
 
           const cacheSignal = new CacheSignal()
           trackPendingModules(cacheSignal)

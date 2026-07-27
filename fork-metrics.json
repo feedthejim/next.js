@@ -1,20 +1,20 @@
 {
   "schemaVersion": 1,
-  "label": "cached-navigation-prerender-defaults",
-  "capturedAt": "2026-07-27T17:40:31.475Z",
+  "label": "runtime-prefetch-resume-cache-seam",
+  "capturedAt": "2026-07-27T17:43:10.363Z",
   "git": {
-    "baseHead": "d3a93ae809"
+    "baseHead": "2b8eef0170"
   },
   "source": {
     "frameworkTracked": {
-      "files": 2458,
-      "lines": 1096734,
-      "bytes": 51510563
+      "files": 2459,
+      "lines": 1096758,
+      "bytes": 51511293
     },
     "frameworkAuthored": {
-      "files": 1753,
-      "lines": 302403,
-      "bytes": 9768114
+      "files": 1754,
+      "lines": 302427,
+      "bytes": 9768844
     },
     "vendoredCompiled": {
       "files": 705,
@@ -23,8 +23,8 @@
     },
     "appRender": {
       "files": 97,
-      "lines": 28990,
-      "bytes": 994890
+      "lines": 28991,
+      "bytes": 994920
     },
     "clientRouter": {
       "files": 25,
@@ -60,23 +60,23 @@
     "peerDependencies": 6
   },
   "tests": {
-    "totalFiles": 1864,
+    "totalFiles": 1865,
     "e2eFiles": 1110,
     "developmentFiles": 297,
     "productionFiles": 348,
-    "unitFiles": 107
+    "unitFiles": 108
   },
   "builtArtifacts": {
     "conditions": "not-comparable-after-watch-build-output",
-    "nextDistBytes": 187467497,
-    "nextDistJavaScriptBytes": 80592865
+    "nextDistBytes": 182190371,
+    "nextDistJavaScriptBytes": 76690323
   },
   "validationTimingConditions": "warm-local-watcher-stopped",
   "validationTimingsMs": {
-    "types": 15219,
-    "focusedTests": 1164,
-    "browserTests": 25305,
-    "nextBuild": 22650,
+    "types": 14881,
+    "focusedTests": 1074,
+    "browserTests": null,
+    "nextBuild": 22759,
     "buildAll": null
   }
 }

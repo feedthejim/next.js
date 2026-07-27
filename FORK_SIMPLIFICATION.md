@@ -13,7 +13,8 @@
   Flight router-state construction, resume-cache serialization, runtime
   prefetch setup, render-option types, and the normal static-generation
   pipeline now use one Cache Components, Partial Prefetching, and cached
-  navigation model.
+  navigation model. Runtime-prefetch resume-cache installation is a directly
+  testable renderer seam.
   `fork-metrics.json` is the current scorecard.
 - **Constraints:** Backward compatibility is out of scope. Do not add migration
   layers or special removed-feature errors. Preserve only behavior in the fork
@@ -37,6 +38,15 @@
   hydration assertions passed.
 
 ## History
+
+### 2026-07-27: Direct runtime-prefetch cache seam
+
+Extracted resume-cache installation from two renderer call sites and added a
+0.17-second unit test proving that runtime prefetching preserves entries
+restored from the static prerender. This intentionally adds one authored file,
+24 framework lines, 730 bytes, and one unit-test file in exchange for testing
+the producer-consumer cache contract without an isolated application build,
+server, or browser. Type checking and the core package build pass.
 
 ### 2026-07-27: Cached navigation prerender defaults
 
