@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
-  "label": "route-kind-static-paths",
-  "capturedAt": "2026-07-27T18:32:51.310Z",
+  "label": "app-page-resume-routing",
+  "capturedAt": "2026-07-27T18:36:00.636Z",
   "git": {
-    "baseHead": "b4dcc86dd5"
+    "baseHead": "5f1ef97862"
   },
   "source": {
     "frameworkTracked": {
       "files": 2458,
-      "lines": 1095817,
-      "bytes": 51474410
+      "lines": 1095732,
+      "bytes": 51471258
     },
     "frameworkAuthored": {
       "files": 1753,
-      "lines": 301486,
-      "bytes": 9731961
+      "lines": 301401,
+      "bytes": 9728809
     },
     "vendoredCompiled": {
       "files": 705,
@@ -48,8 +48,8 @@
   },
   "legacyModeReferences": {
     "cacheComponents": 153,
-    "routePPR": 2,
-    "appPPR": 15,
+    "routePPR": 0,
+    "appPPR": 7,
     "cacheComponentsEnv": 29,
     "pprEnv": 2,
     "cachedNavigationsEnv": 4
@@ -68,24 +68,24 @@
   },
   "builtArtifacts": {
     "conditions": "warm-local-after-core-build",
-    "nextDistBytes": 181610959,
-    "nextDistJavaScriptBytes": 76539863
+    "nextDistBytes": 181590292,
+    "nextDistJavaScriptBytes": 76532954
   },
-  "validationTimingConditions": "warm-local-watcher-stopped-static-path-unit-suite",
+  "validationTimingConditions": "warm-local-watcher-stopped-combined-ppr-navigation",
   "validationTimingsMs": {
-    "types": 14650,
-    "focusedTests": 5370,
-    "browserStartup": null,
+    "types": 16990,
+    "focusedTests": 1970,
+    "browserStartup": 136,
     "browserTestBody": null,
-    "browserTests": null,
-    "nextBuild": 21930,
+    "browserTests": 34990,
+    "nextBuild": 22820,
     "buildAll": null,
-    "total": 41950
+    "total": 76770
   },
   "runtimePerformance": {
-    "conditions": "not-measured-static-path-algorithm-slice",
+    "conditions": "production-turbopack-navigation-fixture-warm-local",
     "devStartupMs": null,
-    "productionStartupMs": null,
+    "productionStartupMs": 88,
     "pprShellFirstByteMs": null,
     "pprCompleteMs": null,
     "partialNavigationMs": null,

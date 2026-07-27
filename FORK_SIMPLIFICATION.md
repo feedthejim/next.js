@@ -23,7 +23,9 @@
   PPR behavior from the canonical route kind instead of a second boolean, and
   the renderer and incremental cache no longer accept a route-PPR toggle.
   Static-path generation and build manifests likewise derive App Page behavior
-  from route identity rather than worker-provided PPR state.
+  from route identity rather than worker-provided PPR state. `BaseServer`
+  recognizes App Page resume requests directly and no longer interprets
+  manifest rendering modes as a runtime feature switch.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -38,8 +40,8 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Remove the final manifest-selected PPR branch from
-  `BaseServer`, then collapse the client to one segment-cache prefetch protocol.
+- **Next action:** Collapse the client to one segment-cache prefetch protocol,
+  then continue deleting remaining false-mode Cache Components branches.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -51,6 +53,24 @@
   assertions, and the Partial Prefetching navigation journey passed.
 
 ## History
+
+### 2026-07-27: App Page resume routing without PPR mode checks
+
+Removed the final route-PPR feature-mode references and the duplicate
+application-PPR field from `BaseServer`. App Page identity now directly gates
+postponed request metadata and resume POST handling, without consulting
+prerender-manifest rendering modes or legacy debug/test exceptions. The
+committed scorecard fell by 85 authored lines and 3,152 bytes; the bounded
+`BaseServer` diff itself removed 49 net lines. Route-PPR references fell from
+two to zero and application-PPR references fell from 15 to seven. The warm
+built distribution fell by 20,667 bytes, including 6,909 JavaScript bytes.
+Types passed in 16.99 seconds, the 19-test fast contract passed in 1.97
+seconds, the combined PPR and navigation browser run passed all 13 assertions
+in 34.99 seconds, and the core build passed in 22.82 seconds. The navigation
+fixture's production server was ready in 88 milliseconds and its first browser
+load took 136 milliseconds. Type and build time were 2.34 and 0.89 seconds
+slower than the prior observation; total validation is not comparable because
+this slice restored two browser journeys after an algorithm-only slice.
 
 ### 2026-07-27: Route-kind-derived static paths and build output
 

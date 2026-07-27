@@ -92,7 +92,6 @@ import {
   NEXT_ROUTER_SEGMENT_PREFETCH_HEADER,
   NEXT_URL,
   NEXT_ROUTER_STATE_TREE_HEADER,
-  NEXT_INSTANT_TEST_COOKIE,
   NEXT_HMR_REFRESH_HEADER,
 } from '../client/components/app-router-headers'
 import { nanoid } from 'next/dist/compiled/nanoid'
@@ -447,8 +446,6 @@ export default abstract class Server<
     readonly data: NextDataPathnameNormalizer | undefined
   }
 
-  private readonly isAppPPREnabled: boolean
-
   /**
    * This is used to persist cache scopes across
    * prefetch -> full route requests for cache components
@@ -538,8 +535,6 @@ export default abstract class Server<
       minimalMode || !!process.env.NEXT_PRIVATE_MINIMAL_MODE
 
     this.enabledDirectories = this.getEnabledDirectories(dev)
-
-    this.isAppPPREnabled = this.enabledDirectories.app
 
     this.normalizers = {
       // We should normalize the pathname from the RSC prefix only in minimal
@@ -1145,7 +1140,7 @@ export default abstract class Server<
           // It's important to execute the following block even it the request
           // matches a pages data route from above.
           if (
-            this.isAppPPREnabled &&
+            this.enabledDirectories.app &&
             this.minimalMode &&
             req.headers[NEXT_RESUME_HEADER] === '1' &&
             req.method === 'POST'
@@ -2293,57 +2288,13 @@ export default abstract class Server<
       routeModule = components.routeModule
     }
 
-    /**
-     * If the route being rendered is an app page, and the ppr feature has been
-     * enabled, then the given route _could_ support PPR.
-     */
-    const couldSupportPPR: boolean =
-      this.isAppPPREnabled &&
-      typeof routeModule !== 'undefined' &&
-      isAppPageRouteModule(routeModule)
-
-    // When enabled, this will allow the use of the `?__nextppronly` query to
-    // enable debugging of the static shell.
-    const hasDebugStaticShellQuery =
-      process.env.__NEXT_EXPERIMENTAL_STATIC_SHELL_DEBUGGING === '1' &&
-      typeof query.__nextppronly !== 'undefined' &&
-      couldSupportPPR
-
-    // Whether the testing API is exposed (dev mode or explicit flag)
-    const exposeTestingApi =
-      this.dev === true ||
-      this.nextConfig.experimental.exposeTestingApiInProductionBuild === true
-
-    // Check for the instant test cookie for MPA navigations (page reload, full
-    // page load) in the Instant Navigation Testing API. Only applies to
-    // document requests (no RSC header) - RSC requests should proceed normally
-    // even during a locked scope, with blocking happening on the client side.
-    const hasInstantTestCookie =
-      exposeTestingApi &&
-      !isRSCRequestHeader(req.headers[RSC_HEADER]) &&
-      typeof req.headers.cookie === 'string' &&
-      req.headers.cookie.includes(NEXT_INSTANT_TEST_COOKIE + '=') &&
-      couldSupportPPR
-
-    // This page supports PPR if it is marked as being `PARTIALLY_STATIC` in the
-    // prerender manifest and this is an app page.
-    const isRoutePPREnabled: boolean =
-      couldSupportPPR &&
-      ((
-        prerenderManifest.routes[pathname] ??
-        prerenderManifest.dynamicRoutes[pathname]
-      )?.renderingMode === 'PARTIALLY_STATIC' ||
-        // Ideally we'd want to check the appConfig to see if this page has PPR
-        // enabled or not, but that would require plumbing the appConfig through
-        // to the server during development. We assume that the page supports it
-        // but only during development or when the testing API is exposed.
-        ((hasDebugStaticShellQuery || hasInstantTestCookie) &&
-          (exposeTestingApi || this.experimentalTestProxy === true)))
+    const isAppPage =
+      typeof routeModule !== 'undefined' && isAppPageRouteModule(routeModule)
 
     // If we're in minimal mode, then try to get the postponed information from
     // the request metadata. If available, use it for resuming the postponed
     // render.
-    const minimalPostponed = isRoutePPREnabled
+    const minimalPostponed = isAppPage
       ? getRequestMeta(req, 'postponed')
       : undefined
     const hasPostponedState = typeof minimalPostponed === 'string'
