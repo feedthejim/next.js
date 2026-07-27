@@ -24,6 +24,8 @@ configuration:
 - `app/` is the only router.
 - Cache Components is always enabled.
 - Partial Prefetching is the only prefetch model.
+- Enabled App Router links and `router.prefetch()` use the same partial
+  prefetch protocol. `prefetch={false}` is the only declarative opt-out.
 - Partial Prerendering is the normal rendering model, not an optional mode.
 - Turbopack is the only application compiler and bundler.
 - Server Components, Server Actions, Route Handlers, metadata, streaming,
@@ -265,8 +267,8 @@ observe the same property.
   hook, or get removed?
 - Are image optimization and `next/font` core features or optional packages?
 - Which instrumentation surface remains after framework telemetry is removed?
-- What exact Partial Prefetching behavior should explicit `prefetch={true}` and
-  runtime-data prefetching have?
+- What exact opt-in policy should runtime-data prefetching use beyond the
+  default static shell?
 - Does the fork retain the current development overlay, or replace it with a
   smaller diagnostics surface?
 - How frequently should the fork synchronize React, Turbopack, and App Router

@@ -32,6 +32,11 @@
   absent. The client cache and scheduler no longer contain a Full strategy,
   task-level strategy selection, BFCache-as-prefetch behavior, or the
   incremental dynamic-prefetch stream.
+  The client route prefetch protocol now assumes every supported route emits
+  the Cache Components tree format. The non-PPR response decoder,
+  loading-boundary scheduler traversal, and LoadingBoundary fetch strategy are
+  absent. The retained navigation journey covers both imperative prefetch and
+  the default declarative Link path.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -46,8 +51,8 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Delete the PPR-disabled loading-boundary scheduler and cache
-  path, then remove the route capability signals that select it.
+- **Next action:** Remove the now-redundant per-segment prefetch capability
+  signal from route-cache entries and optimistic route matching.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -61,6 +66,38 @@
   passed.
 
 ## History
+
+### 2026-07-27: One PPR route prefetch protocol
+
+Removed the PPR-disabled route response decoder, LoadingBoundary fetch
+strategy, route capability selection, scheduler traversal, request encoding,
+and cache population path. The client now decodes every supported route as a
+Cache Components tree and schedules its static and runtime segments through
+one PPR protocol. The retained production navigation journey now exercises
+both imperative `router.prefetch()` and a default declarative Link, proving
+that each receives cached shell content without eagerly fetching dynamic
+content.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** `FetchStrategy.LoadingBoundary` references fell to zero.
+  Route scheduling no longer branches between PPR and loading-boundary
+  protocols.
+- **Leanness:** Authored framework and client-router source fell by 526 lines
+  and 21,141 bytes. Test-file and dependency counts were unchanged because the
+  declarative guardrail reuses the existing navigation fixture. The current
+  `dist` tree is 180,840,647 bytes, including 76,369,965 JavaScript bytes, but
+  its lifecycle is not comparable with the preceding snapshot.
+- **Runtime performance:** All 34 retained production browser assertions
+  passed. The navigation fixture's server was ready in 76 milliseconds and
+  its first browser load took 85 milliseconds. Navigation latency, response
+  bytes, and peak memory were not measured.
+- **Iteration efficiency:** Types passed in 14.49 seconds, the 19-test fast
+  allowlist in 1.81 seconds, the core build in 25.29 seconds, and the complete
+  retained browser allowlist in 76.98 seconds. Total validation took 118.57
+  seconds. The build was 3.31 seconds slower than the preceding single run,
+  while the browser scope was broader, so neither timing is a regression
+  claim.
 
 ### 2026-07-27: No internal Full prefetch protocol
 

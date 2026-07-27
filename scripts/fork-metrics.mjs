@@ -205,6 +205,10 @@ const metrics = {
       frameworkSourceFiles,
       /\bFetchStrategy\.Full\b/g
     ),
+    loadingBoundaryStrategy: countMatches(
+      frameworkSourceFiles,
+      /\bFetchStrategy\.LoadingBoundary\b/g
+    ),
   },
   packageDependencies: {
     dependencies: Object.keys(nextPackage.dependencies ?? {}).length,

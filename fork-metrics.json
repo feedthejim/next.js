@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
-  "label": "no-full-prefetch-protocol",
-  "capturedAt": "2026-07-27T19:07:11.512Z",
+  "label": "no-loading-boundary-prefetch-protocol",
+  "capturedAt": "2026-07-27T19:12:43.260Z",
   "git": {
-    "baseHead": "312a4b3f78"
+    "baseHead": "f774ca8fc2"
   },
   "source": {
     "frameworkTracked": {
       "files": 2458,
-      "lines": 1094884,
-      "bytes": 51438697
+      "lines": 1094358,
+      "bytes": 51417556
     },
     "frameworkAuthored": {
       "files": 1753,
-      "lines": 300553,
-      "bytes": 9696248
+      "lines": 300027,
+      "bytes": 9675107
     },
     "vendoredCompiled": {
       "files": 705,
@@ -28,8 +28,8 @@
     },
     "clientRouter": {
       "files": 39,
-      "lines": 15564,
-      "bytes": 554694
+      "lines": 15038,
+      "bytes": 533553
     },
     "webpackPathProxy": {
       "files": 267,
@@ -54,7 +54,8 @@
     "pprEnv": 2,
     "cachedNavigationsEnv": 4,
     "prefetchKind": 0,
-    "fullPrefetchStrategy": 0
+    "fullPrefetchStrategy": 0,
+    "loadingBoundaryStrategy": 0
   },
   "packageDependencies": {
     "dependencies": 6,
@@ -69,25 +70,25 @@
     "unitFiles": 108
   },
   "builtArtifacts": {
-    "conditions": "warm local after core build and isolated package packs; dist lifecycle differs from prior snapshot, delta non-comparable",
-    "nextDistBytes": 186454074,
-    "nextDistJavaScriptBytes": 80320635
+    "conditions": "warm local after core build and focused browser fixture packs; comparable to prior warm core-build snapshot",
+    "nextDistBytes": 180840647,
+    "nextDistJavaScriptBytes": 76369965
   },
-  "validationTimingConditions": "warm local; focusedTests is fork fast allowlist; browserTests combines navigation and PPR journeys; total includes lint",
+  "validationTimingConditions": "warm local; focusedTests is fork fast allowlist; browserTests combines navigation and PPR journeys; total includes focused lint",
   "validationTimingsMs": {
-    "types": 14180,
+    "types": 13890,
     "focusedTests": 1820,
-    "browserStartup": 189,
+    "browserStartup": 87,
     "browserTestBody": null,
-    "browserTests": 39790,
-    "nextBuild": 21980,
+    "browserTests": 37223,
+    "nextBuild": 22180,
     "buildAll": null,
-    "total": 79870
+    "total": 76863
   },
   "runtimePerformance": {
     "conditions": "production Turbopack navigation fixture, warm local",
     "devStartupMs": null,
-    "productionStartupMs": 77,
+    "productionStartupMs": 78,
     "pprShellFirstByteMs": null,
     "pprCompleteMs": null,
     "partialNavigationMs": null,

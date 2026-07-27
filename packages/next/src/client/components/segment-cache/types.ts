@@ -35,8 +35,7 @@ export const enum FetchStrategy {
   // Deliberately ordered so we can easily compare two segments
   // and determine if one segment is "more specific" than another
   // (i.e. if it's likely that it contains more data)
-  LoadingBoundary = 0,
-  RuntimeShell = 1,
-  PPR = 2,
-  PPRRuntime = 3,
+  RuntimeShell = 0,
+  PPR = 1,
+  PPRRuntime = 2,
 }

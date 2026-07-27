@@ -21,7 +21,6 @@ import {
   fetchSegmentPrefetchesUsingDynamicRequest,
   type PendingSegmentCacheEntry,
   type SegmentBundle,
-  convertRouteTreeToFlightRouterState,
   readOrCreateRevalidatingSegmentEntry,
   upgradeToPendingSegment,
   overwriteRevalidatingSegmentCacheEntry,
@@ -747,162 +746,67 @@ function pingRootRouteTree(
       }
       const tree = route.tree
 
-      // Partial Prefetching uses the unified PPR strategy. Transitional
-      // non-PPR routes fall back to LoadingBoundary.
-      const fetchStrategy =
-        tree.prefetchHints & PrefetchHint.SubtreeHasPartialPrefetching ||
-        route.supportsPerSegmentPrefetching
-          ? FetchStrategy.PPR
-          : FetchStrategy.LoadingBoundary
+      // Every supported route uses Cache Components, so each segment is
+      // prefetched statically or with a runtime request based on server hints.
+      if (
+        task.phase === PrefetchPhase.Speculative &&
+        !subtreeHasSpeculativePrefetch(tree.prefetchHints)
+      ) {
+        return PrefetchTaskExitStatus.Done
+      }
 
-      switch (fetchStrategy) {
-        case FetchStrategy.PPR: {
-          // For Cache Components pages, each segment may be prefetched
-          // statically or using a runtime request, based on various
-          // configurations and heuristics. We'll do this in two passes: first
-          // traverse the tree and perform all the static prefetches.
-          //
-          // Then, if there are any segments that need a runtime request,
-          // do another pass to perform a runtime prefetch.
+      pingStaticHead(now, task, route)
+      const exitStatus = pingSharedPartOfCacheComponentsTree(
+        now,
+        task,
+        route,
+        task.treeAtTimeOfPrefetch,
+        tree,
+        null
+      )
+      if (exitStatus === PrefetchTaskExitStatus.InProgress) {
+        return PrefetchTaskExitStatus.InProgress
+      }
 
-          if (
-            task.phase === PrefetchPhase.Speculative &&
-            !subtreeHasSpeculativePrefetch(tree.prefetchHints)
-          ) {
-            // Nothing in the target route needs to be speculatively prefetched.
-            // Bail out.
-            return PrefetchTaskExitStatus.Done
-          }
-
-          pingStaticHead(now, task, route)
-          const exitStatus = pingSharedPartOfCacheComponentsTree(
-            now,
-            task,
-            route,
-            task.treeAtTimeOfPrefetch,
-            tree,
-            null
-          )
-          if (exitStatus === PrefetchTaskExitStatus.InProgress) {
-            // Child yielded without finishing.
-            return PrefetchTaskExitStatus.InProgress
-          }
-
-          // We may need to do a runtime prefetch for one or more segments.
-          // Before checking, we can do some fast checks to bail out of this
-          // branch early.
-          if (
-            // Do any segments have runtime prefetching configured? This is
-            // sent by the server as part of the prefetch hints.
-            tree.prefetchHints & PrefetchHint.SubtreeHasRuntimePrefetch ||
-            // Are we in the Shell prefetching phase? The Shell phase is
-            // allowed to perform runtime prefetches even without an explicit
-            // opt-in because the Shell for a given route is reusable across
-            // all given params, by definition. So it does not lead to an
-            // explosion in prefetching costs.
-            // TODO: The server now emits signals for skipping unnecessary
-            // runtime prefetch requests: an advisory
-            // PrefetchHint.ShouldAttemptStaticPrefetch bit on the route
-            // tree, and a load-bearing response-level `needsRuntimeRequest`
-            // promise on the static segment responses (fulfilled `true`
-            // visible in the decode means a runtime request would return
-            // more; rewindable at the shell boundary; combined with each
-            // segment's `isPartial`). They aren't consumed yet; wiring them
-            // up is left for a follow-up.
-            task.phase === PrefetchPhase.Shell
-          ) {
-            const runtimeStrategy =
-              task.phase === PrefetchPhase.Shell
-                ? FetchStrategy.RuntimeShell
-                : FetchStrategy.PPRRuntime
-
-            // spawnedRuntimePrefetches was populated during the traversal
-            // above: every segment in the new part of the tree that is a
-            // candidate for runtime prefetching. It's derived purely from
-            // server hints, not cache state — it tells us whether a runtime
-            // request would be needed even if the cache were completely empty.
-            //
-            // If it's null, nothing in the new part of the tree is a candidate
-            // for runtime prefetching, and we don't fetch the head, either —
-            // the head is runtime prefetched only if one of the segments is.
-            const spawnedRuntimePrefetches = task.spawnedRuntimePrefetches
-            if (spawnedRuntimePrefetches !== null) {
-              const spawnedEntries = new Map<
-                SegmentRequestKey,
-                PendingSegmentCacheEntry
-              >()
-              pingRuntimeHead(now, task, route, spawnedEntries, runtimeStrategy)
-              const requestTree = pingRuntimePrefetches(
-                now,
-                task,
-                route,
-                tree,
-                spawnedRuntimePrefetches,
-                spawnedEntries,
-                runtimeStrategy
-              )
-              if (spawnedEntries.size > 0) {
-                spawnPrefetchSubtask(
-                  fetchSegmentPrefetchesUsingDynamicRequest(
-                    task,
-                    route,
-                    runtimeStrategy,
-                    requestTree,
-                    spawnedEntries
-                  )
-                )
-              }
-            }
-          }
-
-          return PrefetchTaskExitStatus.Done
-        }
-        case FetchStrategy.LoadingBoundary: {
-          if (task.phase === PrefetchPhase.Shell) {
-            // Shell phase only does work on routes that use the PPR strategy
-            // (Cache Components routes). Other strategies are Shell no-ops
-            // and fall through to Speculative.
-            return PrefetchTaskExitStatus.Done
-          }
-          // Prefetch multiple segments using a single dynamic request.
-          // TODO: We can consolidate this branch with previous one by modeling
-          // it as if the first segment in the new tree has runtime prefetching
-          // enabled. Will do this as a follow-up refactor. Might want to remove
-          // the special metatdata case below first. In the meantime, it's not
-          // really that much duplication, just would be nice to remove one of
-          // these codepaths.
+      if (
+        tree.prefetchHints & PrefetchHint.SubtreeHasRuntimePrefetch ||
+        task.phase === PrefetchPhase.Shell
+      ) {
+        const runtimeStrategy =
+          task.phase === PrefetchPhase.Shell
+            ? FetchStrategy.RuntimeShell
+            : FetchStrategy.PPRRuntime
+        const spawnedRuntimePrefetches = task.spawnedRuntimePrefetches
+        if (spawnedRuntimePrefetches !== null) {
           const spawnedEntries = new Map<
             SegmentRequestKey,
             PendingSegmentCacheEntry
           >()
-          pingRuntimeHead(now, task, route, spawnedEntries, fetchStrategy)
-          const dynamicRequestTree = diffRouteTreeAgainstCurrent(
+          pingRuntimeHead(now, task, route, spawnedEntries, runtimeStrategy)
+          const requestTree = pingRuntimePrefetches(
             now,
             task,
             route,
-            task.treeAtTimeOfPrefetch,
             tree,
+            spawnedRuntimePrefetches,
             spawnedEntries,
-            fetchStrategy
+            runtimeStrategy
           )
-          let needsDynamicRequest = spawnedEntries.size > 0
-          if (needsDynamicRequest) {
+          if (spawnedEntries.size > 0) {
             spawnPrefetchSubtask(
               fetchSegmentPrefetchesUsingDynamicRequest(
                 task,
                 route,
-                fetchStrategy,
-                dynamicRequestTree,
+                runtimeStrategy,
+                requestTree,
                 spawnedEntries
               )
             )
           }
-          return PrefetchTaskExitStatus.Done
         }
-        default:
-          fetchStrategy satisfies never
       }
-      break
+
+      return PrefetchTaskExitStatus.Done
     }
     default: {
       route satisfies never
@@ -952,10 +856,7 @@ function pingRuntimeHead(
   task: PrefetchTask,
   route: FulfilledRouteCacheEntry,
   spawnedEntries: Map<SegmentRequestKey, PendingSegmentCacheEntry>,
-  fetchStrategy:
-    | FetchStrategy.PPRRuntime
-    | FetchStrategy.RuntimeShell
-    | FetchStrategy.LoadingBoundary
+  fetchStrategy: FetchStrategy.PPRRuntime | FetchStrategy.RuntimeShell
 ): void {
   pingRouteTreeAndIncludeDynamicData(
     now,
@@ -964,10 +865,7 @@ function pingRuntimeHead(
     route.metadata,
     false,
     spawnedEntries,
-    // Loading-boundary head data uses the cacheable runtime protocol.
-    fetchStrategy === FetchStrategy.LoadingBoundary
-      ? FetchStrategy.PPRRuntime
-      : fetchStrategy
+    fetchStrategy
   )
 }
 
@@ -1154,233 +1052,6 @@ function pingNewPartOfCacheComponentsTree(
   }
   // This segment and all its children have finished prefetching.
   return PrefetchTaskExitStatus.Done
-}
-
-function diffRouteTreeAgainstCurrent(
-  now: number,
-  task: PrefetchTask,
-  route: FulfilledRouteCacheEntry,
-  oldTree: FlightRouterState,
-  newTree: RouteTree,
-  spawnedEntries: Map<SegmentRequestKey, PendingSegmentCacheEntry>,
-  fetchStrategy: FetchStrategy.PPRRuntime | FetchStrategy.LoadingBoundary
-): FlightRouterState {
-  // This is a single recursive traversal that does multiple things:
-  // - Finds the parts of the target route (newTree) that are not part of
-  //   of the current page (oldTree) by diffing them, using the same algorithm
-  //   as a real navigation.
-  // - Constructs a request tree (FlightRouterState) that describes which
-  //   segments need to be prefetched and which ones are already cached.
-  // - Creates a set of pending cache entries for the segments that need to
-  //   be prefetched, so that a subsequent prefetch task does not request the
-  //   same segments again.
-  const oldTreeChildren = oldTree[1]
-  const newTreeChildren = newTree.slots
-  let requestTreeChildren: Record<string, FlightRouterState> = {}
-  if (newTreeChildren !== null) {
-    for (const [parallelRouteKey, newTreeChild] of newTreeChildren) {
-      const newTreeChildSegment = newTreeChild.segment
-      const oldTreeChild: FlightRouterState | void =
-        oldTreeChildren[parallelRouteKey]
-      const oldTreeChildSegment: FlightRouterStateSegment | void =
-        oldTreeChild?.[0]
-      if (
-        oldTreeChildSegment !== undefined &&
-        doesCurrentSegmentMatchCachedSegment(
-          route,
-          newTreeChildSegment,
-          oldTreeChildSegment
-        )
-      ) {
-        // This segment is already part of the current route. Keep traversing.
-        const requestTreeChild = diffRouteTreeAgainstCurrent(
-          now,
-          task,
-          route,
-          oldTreeChild,
-          newTreeChild,
-          spawnedEntries,
-          fetchStrategy
-        )
-        requestTreeChildren[parallelRouteKey] = requestTreeChild
-      } else {
-        // This segment is not part of the current route. We're entering a
-        // part of the tree that we need to prefetch (unless everything is
-        // already cached).
-        switch (fetchStrategy) {
-          case FetchStrategy.LoadingBoundary: {
-            // When PPR is disabled, we can't prefetch per segment. We must
-            // fallback to the old prefetch behavior and send a dynamic request.
-            // Only routes that include a loading boundary can be prefetched in
-            // this way.
-            //
-            // This is simlar to a "full" prefetch, but we're much more
-            // conservative about which segments to include in the request.
-            //
-            // The server will only render up to the first loading boundary
-            // inside new part of the tree. If there's no loading boundary
-            // anywhere in the tree, the server will never return any data, so
-            // we can skip the request.
-            const subtreeHasLoadingBoundary =
-              (newTreeChild.prefetchHints &
-                (PrefetchHint.SegmentHasLoadingBoundary |
-                  PrefetchHint.SubtreeHasLoadingBoundary)) !==
-              0
-            const requestTreeChild = subtreeHasLoadingBoundary
-              ? pingPPRDisabledRouteTreeUpToLoadingBoundary(
-                  now,
-                  task,
-                  route,
-                  newTreeChild,
-                  null,
-                  spawnedEntries
-                )
-              : // There's no loading boundary within this tree. Bail out.
-                convertRouteTreeToFlightRouterState(newTreeChild)
-            requestTreeChildren[parallelRouteKey] = requestTreeChild
-            break
-          }
-          case FetchStrategy.PPRRuntime: {
-            // This is a runtime prefetch. Fetch all cacheable data in the tree,
-            // not just the static PPR shell.
-            const requestTreeChild = pingRouteTreeAndIncludeDynamicData(
-              now,
-              task,
-              route,
-              newTreeChild,
-              false,
-              spawnedEntries,
-              fetchStrategy
-            )
-            requestTreeChildren[parallelRouteKey] = requestTreeChild
-            break
-          }
-          default:
-            fetchStrategy satisfies never
-        }
-      }
-    }
-  }
-  const requestTree: FlightRouterState = [
-    newTree.segment,
-    requestTreeChildren,
-    null,
-    null,
-  ]
-  if (newTree.prefetchHints !== 0) {
-    requestTree[4] = newTree.prefetchHints
-  }
-  return requestTree
-}
-
-function pingPPRDisabledRouteTreeUpToLoadingBoundary(
-  now: number,
-  task: PrefetchTask,
-  route: FulfilledRouteCacheEntry,
-  tree: RouteTree,
-  refetchMarkerContext: 'refetch' | 'inside-shared-layout' | null,
-  spawnedEntries: Map<SegmentRequestKey, PendingSegmentCacheEntry>
-): FlightRouterState {
-  // This function is similar to pingRouteTreeAndIncludeDynamicData, except the
-  // server is only going to return a minimal loading state. It will stop
-  // rendering at the first loading boundary and omit segments that are already
-  // cached.
-
-  // "inside-shared-layout" tells the server where to start looking for a
-  // loading boundary.
-  let refetchMarker: 'refetch' | 'inside-shared-layout' | null =
-    refetchMarkerContext === null ? 'inside-shared-layout' : null
-
-  const segment = readOrCreateSegmentCacheEntry(
-    now,
-    FetchStrategy.LoadingBoundary,
-    tree,
-    task._navigationLockPrefetch ?? null
-  )
-  switch (segment.status) {
-    case EntryStatus.Empty: {
-      // This segment is not cached. Add a refetch marker so the server knows
-      // to start rendering here.
-      // TODO: Instead of a "refetch" marker, we could just omit this subtree's
-      // FlightRouterState from the request tree. I think this would probably
-      // already work even without any updates to the server. For consistency,
-      // though, I'll send the full tree and we'll look into this later as part
-      // of a larger redesign of the request protocol.
-
-      // Add the pending cache entry to the result map.
-      spawnedEntries.set(
-        tree.requestKey,
-        upgradeToPendingSegment(
-          segment,
-          // Set the fetch strategy to LoadingBoundary to indicate that the server
-          // might not include it in the pending response. If another route is able
-          // to issue a per-segment request, we'll do that in the background.
-          FetchStrategy.LoadingBoundary,
-          task._navigationLockPrefetch ?? null
-        )
-      )
-      if (refetchMarkerContext !== 'refetch') {
-        refetchMarker = refetchMarkerContext = 'refetch'
-      } else {
-        // There's already a parent with a refetch marker, so we don't need
-        // to add another one.
-      }
-      break
-    }
-    case EntryStatus.Fulfilled: {
-      // The segment is already cached.
-      const segmentHasLoadingBoundary =
-        (tree.prefetchHints & PrefetchHint.SegmentHasLoadingBoundary) !== 0
-      if (segmentHasLoadingBoundary) {
-        // This segment has a loading boundary, which means the server won't
-        // render its children. So there's nothing left to prefetch along this
-        // path. We can bail out.
-        return convertRouteTreeToFlightRouterState(tree)
-      }
-      // NOTE: If the cached segment were fetched using PPR, then it might be
-      // partial. We could get a more complete version of the segment by
-      // including it in this non-PPR request.
-      //
-      // Loading-boundary prefetches intentionally keep the cached shell.
-      break
-    }
-    case EntryStatus.Pending: {
-      // There's another prefetch currently in progress. Don't add the refetch
-      // marker yet, so the server knows it can skip rendering this segment.
-      break
-    }
-    case EntryStatus.Rejected: {
-      // The segment failed to load. We shouldn't issue another request until
-      // the stale time has elapsed.
-      break
-    }
-    default:
-      segment satisfies never
-  }
-  const requestTreeChildren: Record<string, FlightRouterState> = {}
-  if (tree.slots !== null) {
-    for (const [parallelRouteKey, childTree] of tree.slots) {
-      requestTreeChildren[parallelRouteKey] =
-        pingPPRDisabledRouteTreeUpToLoadingBoundary(
-          now,
-          task,
-          route,
-          childTree,
-          refetchMarkerContext,
-          spawnedEntries
-        )
-    }
-  }
-  const requestTree: FlightRouterState = [
-    tree.segment,
-    requestTreeChildren,
-    null,
-    refetchMarker,
-  ]
-  if (tree.prefetchHints !== 0) {
-    requestTree[4] = tree.prefetchHints
-  }
-  return requestTree
 }
 
 function pingRouteTreeAndIncludeDynamicData(

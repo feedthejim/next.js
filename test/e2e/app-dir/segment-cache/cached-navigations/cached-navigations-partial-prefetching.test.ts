@@ -35,6 +35,16 @@ describe('cached navigations - fork Partial Prefetching default', () => {
       { includes: 'Dynamic content', block: 'reject' },
     ])
 
+    // The default Link path uses the same partial scheduler protocol.
+    await act(async () => {
+      await browser
+        .elementByCss('input[data-link-accordion="/link-prefetchable"]')
+        .click()
+    }, [
+      { includes: 'Cached content' },
+      { includes: 'Dynamic content', block: 'reject' },
+    ])
+
     // First navigation to /runtime-prefetchable — a route that reads request
     // data but does NOT export any `prefetch` config. The link itself uses
     // prefetch={false}; the shell above came from the imperative prefetch.

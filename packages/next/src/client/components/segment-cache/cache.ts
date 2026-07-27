@@ -1826,126 +1826,52 @@ export async function fetchRouteOnCacheMiss(
     // returns. Consider removing the `closed` plumbing for buffered paths.
     const closed = createPromiseWithResolvers<void>()
 
-    // This checks whether the response was served from the per-segment cache,
-    // rather than the old prefetching flow. If it fails, it implies that PPR
-    // is disabled on this route.
-    const routeIsPPREnabled =
-      response.headers.get(NEXT_DID_POSTPONE_HEADER) === '2' ||
-      // In output: "export" mode, we can't rely on response headers. But if we
-      // receive a well-formed response, we can assume it's a static response,
-      // because all data is static in this mode.
-      isOutputExportMode
+    const { stream: prefetchStream, size: responseSize } =
+      await createNonTaskyPrefetchResponseStream(response.body)
+    closed.resolve()
+    setSizeInCacheMap(entry, responseSize)
+    const serverData = await createFromNextReadableStream<RootTreePrefetch>(
+      prefetchStream,
+      headers,
+      { allowPartialStream: true }
+    )
 
-    if (routeIsPPREnabled) {
-      const { stream: prefetchStream, size: responseSize } =
-        await createNonTaskyPrefetchResponseStream(response.body)
-      closed.resolve()
-      setSizeInCacheMap(entry, responseSize)
-      const serverData = await createFromNextReadableStream<RootTreePrefetch>(
-        prefetchStream,
-        headers,
-        { allowPartialStream: true }
-      )
-
-      if (
-        (response.headers.get(NEXT_NAV_DEPLOYMENT_ID_HEADER) ??
-          serverData.buildId) !== getNavigationBuildId()
-      ) {
-        // The server build does not match the client. Treat as a 404. During
-        // an actual navigation, the router will trigger an MPA navigation.
-        // TODO: We should cache the fact that this is an MPA navigation.
-        rejectRouteCacheEntry(entry, Date.now() + 10 * 1000)
-        return null
-      }
-
-      // Get the params that were used to render the target page. These may
-      // be different from the params in the request URL, if the page
-      // was rewritten.
-      const renderedPathname = getRenderedPathname(response)
-      const renderedSearch = getRenderedSearch(response)
-
-      // Convert the server-sent data into the RouteTree format used by the
-      // client cache.
-      //
-      // During this traversal, we accumulate additional data into this
-      // "accumulator" object.
-      const acc: RouteTreeAccumulator = { metadataVaryPath: null }
-      const routeTree = convertRootTreePrefetchToRouteTree(
-        serverData,
-        renderedPathname,
-        renderedSearch,
-        acc
-      )
-      const metadataVaryPath = acc.metadataVaryPath
-      if (metadataVaryPath === null) {
-        rejectRouteCacheEntry(entry, Date.now() + 10 * 1000)
-        return null
-      }
-
-      discoverKnownRoute(
-        Date.now(),
-        pathname,
-        search,
-        nextUrl,
-        entry,
-        routeTree,
-        metadataVaryPath,
-        couldBeIntercepted,
-        canonicalUrl,
-        routeIsPPREnabled,
-        false // hasDynamicRewrite
-      )
-    } else {
-      // PPR is not enabled for this route. The server responds with a
-      // different format (FlightRouterState) that we need to convert.
-      // TODO: We will unify the responses eventually. I'm keeping the types
-      // separate for now because FlightRouterState has so many
-      // overloaded concerns.
-      const { stream: prefetchStream, size: responseSize } =
-        await createNonTaskyPrefetchResponseStream(response.body)
-      closed.resolve()
-      setSizeInCacheMap(entry, responseSize)
-      const serverData =
-        await createFromNextReadableStream<NavigationFlightResponse>(
-          prefetchStream,
-          headers,
-          { allowPartialStream: true }
-        )
-
-      if (
-        (response.headers.get(NEXT_NAV_DEPLOYMENT_ID_HEADER) ??
-          serverData.b) !== getNavigationBuildId()
-      ) {
-        // The server build does not match the client. Treat as a 404. During
-        // an actual navigation, the router will trigger an MPA navigation.
-        // TODO: We should cache the fact that this is an MPA navigation.
-        rejectRouteCacheEntry(entry, Date.now() + 10 * 1000)
-        return null
-      }
-
-      // Read head vary params synchronously (unioning in the response-level
-      // root params). Individual segments carry their own iterables in
-      // CacheNodeSeedData; the root iterable is threaded down so each segment
-      // unions it too.
-      const headVaryParams = readVaryParams(serverData.h, serverData.r)
-      writeDynamicTreeResponseIntoCache(
-        Date.now(),
-        // The non-PPR response format is what we'd get if we prefetched these segments
-        // using the LoadingBoundary fetch strategy, so mark their cache entries accordingly.
-        FetchStrategy.LoadingBoundary,
-        response as RSCResponse<NavigationFlightResponse>,
-        serverData,
-        entry,
-        couldBeIntercepted,
-        canonicalUrl,
-        routeIsPPREnabled,
-        headVaryParams,
-        serverData.r ?? null,
-        pathname,
-        search,
-        nextUrl
-      )
+    if (
+      (response.headers.get(NEXT_NAV_DEPLOYMENT_ID_HEADER) ??
+        serverData.buildId) !== getNavigationBuildId()
+    ) {
+      rejectRouteCacheEntry(entry, Date.now() + 10 * 1000)
+      return null
     }
+
+    const renderedPathname = getRenderedPathname(response)
+    const renderedSearch = getRenderedSearch(response)
+    const acc: RouteTreeAccumulator = { metadataVaryPath: null }
+    const routeTree = convertRootTreePrefetchToRouteTree(
+      serverData,
+      renderedPathname,
+      renderedSearch,
+      acc
+    )
+    const metadataVaryPath = acc.metadataVaryPath
+    if (metadataVaryPath === null) {
+      rejectRouteCacheEntry(entry, Date.now() + 10 * 1000)
+      return null
+    }
+
+    discoverKnownRoute(
+      Date.now(),
+      pathname,
+      search,
+      nextUrl,
+      entry,
+      routeTree,
+      metadataVaryPath,
+      couldBeIntercepted,
+      canonicalUrl,
+      true,
+      false // hasDynamicRewrite
+    )
 
     if (!couldBeIntercepted) {
       // This route will never be intercepted. So we can use this entry for all
@@ -2466,10 +2392,7 @@ async function retryUpgradeableFallbackPrefetch(
 export async function fetchSegmentPrefetchesUsingDynamicRequest(
   task: PrefetchTask,
   route: FulfilledRouteCacheEntry,
-  fetchStrategy:
-    | FetchStrategy.LoadingBoundary
-    | FetchStrategy.PPRRuntime
-    | FetchStrategy.RuntimeShell,
+  fetchStrategy: FetchStrategy.PPRRuntime | FetchStrategy.RuntimeShell,
   dynamicRequestTree: FlightRouterState,
   spawnedEntries: Map<SegmentRequestKey, PendingSegmentCacheEntry>
 ): Promise<PrefetchSubtaskResult<null> | null> {
@@ -2504,10 +2427,6 @@ export async function fetchSegmentPrefetchesUsingDynamicRequest(
     }
     case FetchStrategy.RuntimeShell: {
       headers[NEXT_ROUTER_PREFETCH_HEADER] = '3'
-      break
-    }
-    case FetchStrategy.LoadingBoundary: {
-      headers[NEXT_ROUTER_PREFETCH_HEADER] = '1'
       break
     }
     default: {
@@ -2669,7 +2588,6 @@ export async function fetchSegmentPrefetchesUsingDynamicRequest(
     // marks the response as '~' (Partial). RuntimeShell additionally omits
     // every dynamic suspense boundary below the App Shell, so its segments
     // are always partial regardless of what the server marker says.
-    // LoadingBoundary prefetches are complete up to their loading boundary.
     const isResponsePartial =
       fetchStrategy === FetchStrategy.RuntimeShell ||
       (fetchStrategy === FetchStrategy.PPRRuntime &&
@@ -2736,106 +2654,6 @@ export async function fetchSegmentPrefetchesUsingDynamicRequest(
   }
 }
 
-function writeDynamicTreeResponseIntoCache(
-  now: number,
-  fetchStrategy: FetchStrategy.LoadingBoundary | FetchStrategy.PPRRuntime,
-  response: RSCResponse<NavigationFlightResponse>,
-  serverData: NavigationFlightResponse,
-  entry: PendingRouteCacheEntry,
-  couldBeIntercepted: boolean,
-  canonicalUrl: string,
-  routeIsPPREnabled: boolean,
-  headVaryParams: VaryParams | null,
-  rootVaryParamsIterable: VaryParamsIterable | null,
-  originalPathname: string,
-  originalSearch: NormalizedSearch,
-  nextUrl: string | null
-): void {
-  const renderedSearch = getRenderedSearch(response)
-
-  const normalizedFlightDataResult = normalizeFlightData(serverData.f)
-  if (
-    // A string result means navigating to this route will result in an
-    // MPA navigation.
-    typeof normalizedFlightDataResult === 'string' ||
-    normalizedFlightDataResult.length !== 1
-  ) {
-    rejectRouteCacheEntry(entry, now + 10 * 1000)
-    return
-  }
-  const flightData = normalizedFlightDataResult[0]
-  if (!flightData.isRootRender) {
-    // Unexpected response format.
-    rejectRouteCacheEntry(entry, now + 10 * 1000)
-    return
-  }
-
-  const flightRouterState = flightData.tree
-  // If the response was postponed, segments may contain dynamic holes.
-  // The head has its own partiality flag (flightDataEntry.isHeadPartial)
-  // which is handled separately in writeDynamicRenderResponseIntoCache.
-  const isResponsePartial =
-    response.headers.get(NEXT_DID_POSTPONE_HEADER) === '1'
-
-  // Convert the server-sent data into the RouteTree format used by the
-  // client cache.
-  //
-  // During this traversal, we accumulate additional data into this
-  // "accumulator" object.
-  const acc: RouteTreeAccumulator = { metadataVaryPath: null }
-  const routeTree = convertRootFlightRouterStateToRouteTree(
-    flightRouterState,
-    renderedSearch,
-    acc
-  )
-  const metadataVaryPath = acc.metadataVaryPath
-  if (metadataVaryPath === null) {
-    rejectRouteCacheEntry(entry, now + 10 * 1000)
-    return
-  }
-
-  discoverKnownRoute(
-    now,
-    originalPathname,
-    originalSearch,
-    nextUrl,
-    entry,
-    routeTree,
-    metadataVaryPath,
-    couldBeIntercepted,
-    canonicalUrl,
-    routeIsPPREnabled,
-    false // hasDynamicRewrite
-  )
-
-  // If the server sent segment data as part of the response, we should write
-  // it into the cache to prevent a second, redundant prefetch request.
-  // TODO: This is a leftover branch from before Client Segment Cache was
-  // enabled everywhere. Tree prefetches should never include segment data.  We
-  // can delete it. Leaving for a subsequent PR.
-  const navigationSeed = convertServerPatchToFullTree(
-    now,
-    flightRouterState,
-    normalizedFlightDataResult,
-    renderedSearch,
-    UnknownDynamicStaleTime
-  )
-  const buildId =
-    response.headers.get(NEXT_NAV_DEPLOYMENT_ID_HEADER) ?? serverData.b
-  writeDynamicRenderResponseIntoCache(
-    now,
-    fetchStrategy,
-    normalizedFlightDataResult,
-    buildId,
-    isResponsePartial,
-    headVaryParams,
-    rootVaryParamsIterable,
-    getStaleAtFromHeader(now, response),
-    navigationSeed,
-    null
-  )
-}
-
 function rejectSegmentEntriesIfStillPending(
   entries: Map<SegmentRequestKey, SegmentCacheEntry>,
   staleAt: number
@@ -2854,7 +2672,6 @@ function rejectSegmentEntriesIfStillPending(
 export function writeDynamicRenderResponseIntoCache(
   now: number,
   fetchStrategy:
-    | FetchStrategy.LoadingBoundary
     | FetchStrategy.PPR
     | FetchStrategy.PPRRuntime
     | FetchStrategy.RuntimeShell,
@@ -2951,14 +2768,7 @@ export function writeDynamicRenderResponseIntoCache(
       )
     }
   }
-  // Any entry that's still pending was intentionally not rendered by the
-  // server, because it was inside the loading boundary. Mark them as rejected
-  // so we know not to fetch them again.
-  // TODO: If PPR is enabled on some routes but not others, then it's possible
-  // that a different page is able to do a per-segment prefetch of one of the
-  // segments we're marking as rejected here. We should mark on the segment
-  // somehow that the reason for the rejection is because of a non-PPR prefetch.
-  // That way a per-segment prefetch knows to disregard the rejection.
+  // Reject entries the runtime response intentionally did not render.
   if (spawnedEntries !== null) {
     const fulfilledEntries = rejectSegmentEntriesIfStillPending(
       spawnedEntries,
@@ -2972,7 +2782,6 @@ export function writeDynamicRenderResponseIntoCache(
 function writeSeedDataIntoCache(
   now: number,
   fetchStrategy:
-    | FetchStrategy.LoadingBoundary
     | FetchStrategy.PPR
     | FetchStrategy.PPRRuntime
     | FetchStrategy.RuntimeShell,
@@ -3032,7 +2841,6 @@ function writeSeedDataIntoCache(
 function fulfillEntrySpawnedByRuntimePrefetch(
   now: number,
   fetchStrategy:
-    | FetchStrategy.LoadingBoundary
     | FetchStrategy.PPR
     | FetchStrategy.PPRRuntime
     | FetchStrategy.RuntimeShell,
@@ -3276,7 +3084,6 @@ function addSegmentPathToUrlInOutputExportMode(
  * Checks whether the new fetch strategy is likely to provide more content than the old one.
  *
  * Generally, when an app uses dynamic data, a "more specific" fetch strategy is expected to provide more content:
- * - `LoadingBoundary` only provides static layouts
  * - `PPR` can provide shells for each segment (even for segments that use dynamic data)
  * - `PPRRuntime` can additionally include cacheable content that uses
  *   searchParams, params, or cookies
@@ -3289,9 +3096,6 @@ function addSegmentPathToUrlInOutputExportMode(
  * Because of this, when comparing two segments, we should also check if the existing segment is partial.
  * If it's not partial, then there's no need to prefetch it again, even using a "more specific" strategy.
  * There's currently no way to know if `PPRRuntime` will yield more data that `PPR`, so we have to assume it will.
- *
- * In practice, `LoadingBoundary` is not compared with `PPR` or `PPRRuntime`
- * because a non-PPR route does not use those strategies.
  */
 export function canNewFetchStrategyProvideMoreContent(
   currentStrategy: FetchStrategy,
