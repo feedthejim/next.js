@@ -59,7 +59,7 @@ import {
   getActionNotFoundError,
   getInvalidServerReferenceIdError,
 } from './manifests-singleton'
-import { isNodeNextRequest, isWebNextRequest } from '../base-http/helpers'
+import { isNodeNextRequest } from '../base-http/helpers'
 import { normalizeFilePath } from './segment-explorer-path'
 import {
   extractInfoFromServerReferenceId,
@@ -83,15 +83,12 @@ import { computeCacheBustingSearchParam } from '../../shared/lib/router/utils/ca
 const INLINE_ACTION_PREFIX = '$$RSC_SERVER_ACTION_'
 
 /**
- * Checks if the app has any server actions defined in any runtime.
+ * Checks if the app has any server actions defined.
  */
 function hasServerActions() {
   const serverActionsManifest = getServerActionsManifest()
 
-  return (
-    Object.keys(serverActionsManifest.node).length > 0 ||
-    Object.keys(serverActionsManifest.edge).length > 0
-  )
+  return Object.keys(serverActionsManifest.node).length > 0
 }
 
 function nodeHeadersToRecord(
@@ -249,28 +246,10 @@ async function createForwardedActionResponse(
   const fetchUrl = new URL(`${origin}${basePath}${workerPathname}`)
 
   try {
-    let body: BodyInit | ReadableStream<Uint8Array> | undefined
-    if (
-      // The type check here ensures that `req` is correctly typed, and the
-      // environment variable check provides dead code elimination.
-      process.env.NEXT_RUNTIME === 'edge' &&
-      isWebNextRequest(req)
-    ) {
-      if (!req.body) {
-        throw new Error('Invariant: missing request body.')
-      }
-
-      body = req.body
-    } else if (
-      // The type check here ensures that `req` is correctly typed, and the
-      // environment variable check provides dead code elimination.
-      process.env.NEXT_RUNTIME !== 'edge' &&
-      isNodeNextRequest(req)
-    ) {
-      body = req.stream()
-    } else {
+    if (!isNodeNextRequest(req)) {
       throw new Error('Invariant: Unknown request type.')
     }
+    const body = req.stream()
 
     // Forward the request to the new worker
     const response = await fetch(fetchUrl, {
@@ -786,130 +765,59 @@ export async function handleAction({
               ).parse(bodySizeLimit)
             : 1024 * 1024 // 1 MB
 
-        if (
-          // The type check here ensures that `req` is correctly typed, and the
-          // environment variable check provides dead code elimination.
-          process.env.NEXT_RUNTIME === 'edge' &&
-          isWebNextRequest(req)
-        ) {
-          if (!req.body) {
-            throw new Error('invariant: Missing request body.')
-          }
+        if (!isNodeNextRequest(req)) {
+          throw new Error('Invariant: Unknown request type.')
+        }
 
-          // Use react-server-dom-webpack/server
-          const {
-            createTemporaryReferenceSet,
-            decodeReply,
-            decodeAction,
-            decodeFormState,
-          } = ComponentMod
+        // Use react-server-dom-webpack/server.node which supports streaming.
+        const {
+          createTemporaryReferenceSet,
+          decodeReply,
+          decodeReplyFromBusboy,
+          decodeAction,
+          decodeFormState,
+        } =
+          require('./react-server.node') as typeof import('./react-server.node')
 
-          temporaryReferences = createTemporaryReferenceSet()
+        temporaryReferences = createTemporaryReferenceSet()
 
-          if (isMultipartAction) {
-            // TODO-APP: Add streaming support
-            // Read the body stream with size tracking to enforce bodySizeLimitBytes.
-            // We cannot call req.request.formData() directly as that would bypass
-            // the body size limit entirely.
-            const edgeChunks: Uint8Array[] = []
-            let edgeBodySize = 0
-            const edgeReader = req.body.getReader()
-            while (true) {
-              const { done, value } = await edgeReader.read()
-              if (done) break
-              edgeBodySize += value.byteLength
-              if (edgeBodySize > bodySizeLimitBytes) {
-                const { ApiError } =
-                  require('../api-utils') as typeof import('../api-utils')
-                throw new ApiError(
+        const { PassThrough, Readable, Transform } =
+          require('node:stream') as typeof import('node:stream')
+        const { pipeline } =
+          require('node:stream/promises') as typeof import('node:stream/promises')
+
+        // If actionBody was stashed in request meta (from parsing the postponed
+        // state prefix in minimal mode), use it instead of req.body.
+        const actionBodyFromMeta = getRequestMeta(req, 'actionBody')
+        const body: import('node:stream').Readable = actionBodyFromMeta
+          ? Readable.from(actionBodyFromMeta)
+          : req.body
+
+        let size = 0
+        const sizeLimitTransform = new Transform({
+          transform(chunk, encoding, callback) {
+            size += Buffer.byteLength(chunk, encoding)
+            if (size > bodySizeLimitBytes) {
+              const { ApiError } =
+                require('../api-utils') as typeof import('../api-utils')
+
+              callback(
+                new ApiError(
                   413,
                   `Body exceeded ${bodySizeLimit} limit.\n` +
                     `To configure the body size limit for Server Actions, see: https://nextjs.org/docs/app/api-reference/next-config-js/serverActions#bodysizelimit`
                 )
-              }
-              edgeChunks.push(value)
-            }
-            // Reconstruct a Blob from the buffered chunks and parse formData from it.
-            // Note: we must pass the original Content-Type as an explicit header
-            // rather than relying on the Blob's `type`. The Blob constructor
-            // normalizes `type` to ASCII lowercase per the File API spec, which
-            // would lowercase the multipart boundary parameter (e.g.
-            // `boundary=----WebKitFormBoundaryAbCdEf`). The body bytes contain the
-            // original mixed-case boundary delimiter, so a lowercased boundary
-            // would fail to match and `formData()` would throw. An explicit header
-            // on the Request takes precedence over the Blob's normalized type.
-            const edgeBodyBlob = new Blob(edgeChunks as BlobPart[])
-            const formData = await new Request('http://n/', {
-              method: 'POST',
-              headers: { 'content-type': req.headers['content-type'] ?? '' },
-              body: edgeBodyBlob,
-            }).formData()
-            if (isFetchAction) {
-              // A fetch action with a multipart body.
-
-              try {
-                actionModId = getActionModIdOrError(actionId, serverModuleMap)
-              } catch (err) {
-                return handleUnrecognizedFetchAction(err)
-              }
-
-              boundActionArguments = await decodeReply<unknown[]>(
-                formData,
-                serverModuleMap,
-                { temporaryReferences }
               )
-            } else {
-              // Multipart POST, but not a fetch action.
-              // Potentially an MPA action, we have to try decoding it to check.
-              if (areAllActionIdsValid(formData, serverModuleMap) === false) {
-                // TODO: This can be from skew or manipulated input. We should handle this case
-                // more gracefully but this preserves the prior behavior where decodeAction would throw instead.
-                throw new Error(
-                  `Failed to find Server Action. This request might be from an older or newer deployment.\nRead more: https://nextjs.org/docs/messages/failed-to-find-server-action`
-                )
-              }
-
-              const action = await decodeAction(formData, serverModuleMap)
-              if (typeof action === 'function') {
-                // an MPA action.
-
-                // Only warn if it's a server action, otherwise skip for other post requests
-                warnBadServerActionRequest()
-
-                const { actionResult } = await executeActionAndPrepareForRender(
-                  action as () => Promise<unknown>,
-                  [],
-                  workStore,
-                  requestStore,
-                  actionWasForwarded
-                )
-
-                const formState = await decodeFormState(
-                  actionResult,
-                  formData,
-                  serverModuleMap
-                )
-
-                // Skip the fetch path.
-                // We need to render a full HTML version of the page for the response, we'll handle that in app-render.
-                return {
-                  type: 'done',
-                  result: undefined,
-                  formState,
-                }
-              } else {
-                // We couldn't decode an action, so this POST request turned out not to be a server action request.
-                return null
-              }
+              return
             }
-          } else {
-            // POST with non-multipart body.
 
-            // If it's not multipart AND not a fetch action,
-            // then it can't be an action request.
-            if (!isFetchAction) {
-              return null
-            }
+            callback(null, chunk)
+          },
+        })
+
+        if (isMultipartAction) {
+          if (isFetchAction) {
+            // A fetch action with a multipart body.
 
             try {
               actionModId = getActionModIdOrError(actionId, serverModuleMap)
@@ -917,241 +825,124 @@ export async function handleAction({
               return handleUnrecognizedFetchAction(err)
             }
 
-            // A fetch action with a non-multipart body.
-            // In practice, this happens if `encodeReply` returned a string instead of FormData,
-            // which can happen for very simple JSON-like values that don't need multiple flight rows.
+            const busboy = (
+              require('next/dist/compiled/busboy') as typeof import('next/dist/compiled/busboy')
+            )({
+              defParamCharset: 'utf8',
+              headers: req.headers,
+              limits: { fieldSize: bodySizeLimitBytes },
+            })
 
-            const chunks: Buffer[] = []
-            let nonMultipartBodySize = 0
-            const reader = req.body.getReader()
-            while (true) {
-              const { done, value } = await reader.read()
-              if (done) {
-                break
-              }
-
-              nonMultipartBodySize += value.byteLength
-              if (nonMultipartBodySize > bodySizeLimitBytes) {
-                const { ApiError } =
-                  require('../api-utils') as typeof import('../api-utils')
-                throw new ApiError(
-                  413,
-                  `Body exceeded ${bodySizeLimit} limit.\n` +
-                    `To configure the body size limit for Server Actions, see: https://nextjs.org/docs/app/api-reference/next-config-js/serverActions#bodysizelimit`
-                )
-              }
-              chunks.push(value)
-            }
-
-            const actionData = Buffer.concat(chunks).toString('utf-8')
-
-            boundActionArguments = await decodeReply<unknown[]>(
-              actionData,
-              serverModuleMap,
-              { temporaryReferences }
-            )
-          }
-        } else if (
-          // The type check here ensures that `req` is correctly typed, and the
-          // environment variable check provides dead code elimination.
-          process.env.NEXT_RUNTIME !== 'edge' &&
-          isNodeNextRequest(req)
-        ) {
-          // Use react-server-dom-webpack/server.node which supports streaming
-          const {
-            createTemporaryReferenceSet,
-            decodeReply,
-            decodeReplyFromBusboy,
-            decodeAction,
-            decodeFormState,
-          } = require(
-            `./react-server.node`
-          ) as typeof import('./react-server.node')
-
-          temporaryReferences = createTemporaryReferenceSet()
-
-          const { PassThrough, Readable, Transform } =
-            require('node:stream') as typeof import('node:stream')
-          const { pipeline } =
-            require('node:stream/promises') as typeof import('node:stream/promises')
-
-          // If actionBody was stashed in request meta (from parsing the postponed
-          // state prefix in minimal mode), use it instead of req.body
-          const actionBodyFromMeta = getRequestMeta(req, 'actionBody')
-          const body: import('node:stream').Readable = actionBodyFromMeta
-            ? Readable.from(actionBodyFromMeta)
-            : req.body
-
-          let size = 0
-          const sizeLimitTransform = new Transform({
-            transform(chunk, encoding, callback) {
-              size += Buffer.byteLength(chunk, encoding)
-              if (size > bodySizeLimitBytes) {
-                const { ApiError } =
-                  require('../api-utils') as typeof import('../api-utils')
-
-                callback(
-                  new ApiError(
-                    413,
-                    `Body exceeded ${bodySizeLimit} limit.\n` +
-                      `To configure the body size limit for Server Actions, see: https://nextjs.org/docs/app/api-reference/next-config-js/serverActions#bodysizelimit`
-                  )
-                )
-                return
-              }
-
-              callback(null, chunk)
-            },
-          })
-
-          if (isMultipartAction) {
-            if (isFetchAction) {
-              // A fetch action with a multipart body.
-
-              try {
-                actionModId = getActionModIdOrError(actionId, serverModuleMap)
-              } catch (err) {
-                return handleUnrecognizedFetchAction(err)
-              }
-
-              const busboy = (
-                require('next/dist/compiled/busboy') as typeof import('next/dist/compiled/busboy')
-              )({
-                defParamCharset: 'utf8',
-                headers: req.headers,
-                limits: { fieldSize: bodySizeLimitBytes },
-              })
-
-              const abortController = new AbortController()
-              try {
-                ;[, boundActionArguments] = await Promise.all([
-                  pipeline(body, sizeLimitTransform, busboy, {
-                    signal: abortController.signal,
-                  }),
-                  decodeReplyFromBusboy<unknown[]>(busboy, serverModuleMap, {
-                    temporaryReferences,
-                  }),
-                ])
-              } catch (err) {
-                abortController.abort()
-                throw err
-              }
-            } else {
-              // Multipart POST, but not a fetch action.
-              // Potentially an MPA action, we have to try decoding it to check.
-
-              const sizeLimitedBody = new PassThrough()
-
-              // React doesn't yet publish a busboy version of decodeAction
-              // so we polyfill the parsing of FormData.
-              const fakeRequest = new Request('http://localhost', {
-                method: 'POST',
-                // @ts-expect-error
-                headers: { 'Content-Type': contentType },
-                body: Readable.toWeb(
-                  sizeLimitedBody
-                ) as ReadableStream<Uint8Array>,
-                duplex: 'half',
-              })
-
-              let formData: FormData
-              const abortController = new AbortController()
-              try {
-                ;[, formData] = await Promise.all([
-                  pipeline(body, sizeLimitTransform, sizeLimitedBody, {
-                    signal: abortController.signal,
-                  }),
-                  fakeRequest.formData(),
-                ])
-              } catch (err) {
-                abortController.abort()
-                throw err
-              }
-
-              if (areAllActionIdsValid(formData, serverModuleMap) === false) {
-                // TODO: This can be from skew or manipulated input. We should handle this case
-                // more gracefully but this preserves the prior behavior where decodeAction would throw instead.
-                throw new Error(
-                  `Failed to find Server Action. This request might be from an older or newer deployment.\nRead more: https://nextjs.org/docs/messages/failed-to-find-server-action`
-                )
-              }
-
-              // TODO: Refactor so it is harder to accidentally decode an action before you have validated that the
-              // action referred to is available.
-              const action = await decodeAction(formData, serverModuleMap)
-              if (typeof action === 'function') {
-                // an MPA action.
-
-                // Only warn if it's a server action, otherwise skip for other post requests
-                warnBadServerActionRequest()
-
-                const { actionResult } = await executeActionAndPrepareForRender(
-                  action as () => Promise<unknown>,
-                  [],
-                  workStore,
-                  requestStore,
-                  actionWasForwarded
-                )
-
-                const formState = await decodeFormState(
-                  actionResult,
-                  formData,
-                  serverModuleMap
-                )
-
-                // Skip the fetch path.
-                // We need to render a full HTML version of the page for the response, we'll handle that in app-render.
-                return {
-                  type: 'done',
-                  result: undefined,
-                  formState,
-                }
-              } else {
-                // We couldn't decode an action, so this POST request turned out not to be a server action request.
-                return null
-              }
+            const abortController = new AbortController()
+            try {
+              ;[, boundActionArguments] = await Promise.all([
+                pipeline(body, sizeLimitTransform, busboy, {
+                  signal: abortController.signal,
+                }),
+                decodeReplyFromBusboy<unknown[]>(busboy, serverModuleMap, {
+                  temporaryReferences,
+                }),
+              ])
+            } catch (err) {
+              abortController.abort()
+              throw err
             }
           } else {
-            // POST with non-multipart body.
-
-            // If it's not multipart AND not a fetch action,
-            // then it can't be an action request.
-            if (!isFetchAction) {
-              return null
-            }
-
-            try {
-              actionModId = getActionModIdOrError(actionId, serverModuleMap)
-            } catch (err) {
-              return handleUnrecognizedFetchAction(err)
-            }
-
-            // A fetch action with a non-multipart body.
-            // In practice, this happens if `encodeReply` returned a string instead of FormData,
-            // which can happen for very simple JSON-like values that don't need multiple flight rows.
+            // Multipart POST, but not a fetch action.
+            // Potentially an MPA action, we have to try decoding it to check.
 
             const sizeLimitedBody = new PassThrough()
 
-            const chunks: Buffer[] = []
-            await Promise.all([
-              pipeline(body, sizeLimitTransform, sizeLimitedBody),
-              (async () => {
-                for await (const chunk of sizeLimitedBody) {
-                  chunks.push(Buffer.from(chunk))
-                }
-              })(),
-            ])
+            // React doesn't yet publish a busboy version of decodeAction
+            // so we polyfill the parsing of FormData.
+            const fakeRequest = new Request('http://localhost', {
+              method: 'POST',
+              // @ts-expect-error
+              headers: { 'Content-Type': contentType },
+              body: Readable.toWeb(
+                sizeLimitedBody
+              ) as ReadableStream<Uint8Array>,
+              duplex: 'half',
+            })
 
-            const actionData = Buffer.concat(chunks).toString('utf-8')
+            let formData: FormData
+            const abortController = new AbortController()
+            try {
+              ;[, formData] = await Promise.all([
+                pipeline(body, sizeLimitTransform, sizeLimitedBody, {
+                  signal: abortController.signal,
+                }),
+                fakeRequest.formData(),
+              ])
+            } catch (err) {
+              abortController.abort()
+              throw err
+            }
 
-            boundActionArguments = await decodeReply<unknown[]>(
-              actionData,
-              serverModuleMap,
-              { temporaryReferences }
-            )
+            if (areAllActionIdsValid(formData, serverModuleMap) === false) {
+              throw new Error(
+                `Failed to find Server Action. This request might be from an older or newer deployment.\nRead more: https://nextjs.org/docs/messages/failed-to-find-server-action`
+              )
+            }
+
+            const action = await decodeAction(formData, serverModuleMap)
+            if (typeof action === 'function') {
+              warnBadServerActionRequest()
+
+              const { actionResult } = await executeActionAndPrepareForRender(
+                action as () => Promise<unknown>,
+                [],
+                workStore,
+                requestStore,
+                actionWasForwarded
+              )
+
+              const formState = await decodeFormState(
+                actionResult,
+                formData,
+                serverModuleMap
+              )
+
+              return {
+                type: 'done',
+                result: undefined,
+                formState,
+              }
+            }
+
+            return null
           }
         } else {
-          throw new Error('Invariant: Unknown request type.')
+          // POST with non-multipart body.
+          if (!isFetchAction) {
+            return null
+          }
+
+          try {
+            actionModId = getActionModIdOrError(actionId, serverModuleMap)
+          } catch (err) {
+            return handleUnrecognizedFetchAction(err)
+          }
+
+          const sizeLimitedBody = new PassThrough()
+
+          const chunks: Buffer[] = []
+          await Promise.all([
+            pipeline(body, sizeLimitTransform, sizeLimitedBody),
+            (async () => {
+              for await (const chunk of sizeLimitedBody) {
+                chunks.push(Buffer.from(chunk))
+              }
+            })(),
+          ])
+
+          const actionData = Buffer.concat(chunks).toString('utf-8')
+
+          boundActionArguments = await decodeReply<unknown[]>(
+            actionData,
+            serverModuleMap,
+            { temporaryReferences }
+          )
         }
 
         // actions.js
@@ -1186,16 +977,13 @@ export async function handleAction({
           actionType !== 'use-cache'
         ) {
           const serverActionsManifest = getServerActionsManifest()
-          const runtime = process.env.NEXT_RUNTIME === 'edge' ? 'edge' : 'node'
-          const actionInfo = serverActionsManifest[runtime]?.[actionId!]
+          const actionInfo = serverActionsManifest.node[actionId!]
 
           if (actionInfo) {
             const isInlineAction =
               actionInfo.exportedName?.startsWith(INLINE_ACTION_PREFIX)
 
-            const projectDir =
-              ctx.renderOpts.dir ||
-              (process.env.NEXT_RUNTIME === 'edge' ? '' : process.cwd())
+            const projectDir = ctx.renderOpts.dir || process.cwd()
             const location = normalizeFilePath(projectDir, actionInfo.filename)
 
             // Format function name for display

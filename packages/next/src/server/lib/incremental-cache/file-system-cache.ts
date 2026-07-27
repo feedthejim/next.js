@@ -117,7 +117,7 @@ export default class FileSystemCache implements CacheHandler {
     }
 
     // let's check the disk for seed data
-    if (!data && process.env.NEXT_RUNTIME !== 'edge') {
+    if (!data) {
       try {
         if (kind === IncrementalCacheKind.APP_ROUTE) {
           const filePath = this.getFilePath(

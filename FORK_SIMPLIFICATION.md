@@ -107,7 +107,11 @@
   Route-level `revalidate` is absent from the same segment, compiler, build,
   renderer, Route Handler, type-generation, and language-service surfaces.
   Explicit per-fetch `next.revalidate`, Cache Components lifetimes, tags, and
-  Server Action invalidation remain the caching model.
+  Server Action invalidation remain the caching model. The App renderer,
+  Server Actions, resume-data cache, incremental-cache integration, and App
+  Route compiled-module dispatcher now have one Node.js implementation. Their
+  Edge request, stream, compression, manifest, module-map, and runtime-selection
+  branches are absent.
   `fork-metrics.json` is the current scorecard, including static complexity,
   validation cost, and relevant runtime performance guardrails.
 - **Constraints:** Backward compatibility is out of scope. Do not add migration
@@ -119,8 +123,7 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Collapse the 33 dead Edge-runtime guards in the Node-only
-  App renderer and delete the unreachable App Edge webpack entry chain. Keep
+- **Next action:** Delete the unreachable App Edge webpack entry chain. Keep
   the shared Edge compiler transition until Proxy/middleware and
   instrumentation have an explicit platform policy. Then remove
   `experimental_ppr`.
@@ -130,16 +133,49 @@
   performance metrics; each slice is committed; the worktree is clean; and no
   required follow-up is implicit.
 - **Last verified:** 2026-07-27 on `feedthejim/simplify-next-rendering`.
-  App Router `revalidate` configuration is absent from JavaScript and Rust
-  schemas, rendering, Route Handlers, static-path generation, generated types,
-  language-service metadata, and App fixtures. Core types, `next-core`, the
-  30-case RSC diagnostic contract, five direct JavaScript assertions, the
-  56-test fast contract, the full bootstrap, and the core release build passed.
-  The rebuilt native binding passed five production resume-cache and Server
-  Action assertions plus two Partial Prefetching navigation assertions,
-  preserving explicit fetch revalidation and tag invalidation.
+  The Node-only App renderer has no scoped Edge runtime or module-map
+  references. Core types, 37 direct cache and action assertions, the 56-test
+  fast contract, the core release build, and 19 production browser assertions
+  passed. The browser contract covers PPR shell hydration, resume-cache
+  restoration, Server Action rerenders and invalidation, and Partial
+  Prefetching navigation.
 
 ## History
+
+### 2026-07-27: One Node-only App renderer
+
+Removed the Edge request, Web Stream, compression, manifest, module-map, and
+runtime-selection branches from the App renderer, Server Action handler,
+resume-data cache, incremental-cache integration, use-cache wrapper, and App
+Route compiled-module dispatcher. These paths now directly use the Node.js
+request, stream, zlib, filesystem, and RSC implementations required by the
+fork's only App runtime.
+
+This does not remove the shared Edge compiler transition. Middleware and
+instrumentation still consume that transition and require an explicit platform
+policy before it can be deleted. Pages Router Edge machinery is also deferred
+to the Pages Router removal.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** Scoped App-renderer Edge runtime, request, and module-map
+  references fell from 65 to zero. The renderer and its adjacent cache and
+  action subsystems no longer maintain parallel Node and Edge algorithms.
+- **Leanness:** Authored framework source fell by 359 lines and 15,386 bytes,
+  including 318 lines and 13,865 bytes under `server/app-render`. The comparable
+  core distribution fell by 239,195 bytes overall and 43,886 JavaScript bytes.
+  Rust, test-suite, and dependency counts were unchanged.
+- **Runtime performance:** The three retained production fixtures were ready in
+  at most 94 milliseconds. Partial Prefetching runtime caching completed in
+  611 milliseconds. PPR hydration, resume-cache restoration, and Server Action
+  invalidation also passed. These are warm-local guardrails, not improvement
+  claims.
+- **Iteration efficiency:** Three faster agents removed disjoint renderer,
+  action, and cache surfaces concurrently; validation remained centralized.
+  Types took 13.73 seconds, 37 direct assertions took 1.51 seconds, and the
+  56-test fast contract took 1.77 seconds. The core release took 31.65 seconds,
+  and the 19-assertion browser selection took 62.58 seconds with a 55.44-second
+  Jest body. The successful validation path totaled 111.24 seconds.
 
 ### 2026-07-27: Cache lifetimes without route-level revalidate
 

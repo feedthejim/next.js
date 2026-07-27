@@ -57,7 +57,7 @@ export interface CacheHandlerValue {
 
 function toHex(buffer: ArrayBufferView | ArrayBuffer): string {
   // Hex-encode body bytes losslessly: decoding as UTF-8 would collapse
-  // distinct bytes (0xff/0xfe to U+FFFD) and collide; Buffer isn't on edge.
+  // distinct bytes (0xff/0xfe to U+FFFD) and collide.
   const bytes = isArrayBuffer(buffer)
     ? new Uint8Array(buffer)
     : new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength)
@@ -69,9 +69,6 @@ function toHex(buffer: ArrayBufferView | ArrayBuffer): string {
 }
 
 type Body = NonNullable<RequestInit['body'] | Request['body']>
-
-// Duck typing to support Edge runtime
-// TODO: Switch to instanceof checks once Edge runtime is removed.
 
 function isArrayBuffer(
   buffer: ArrayBuffer | ArrayBufferView
@@ -125,14 +122,8 @@ export class CacheHandler {
 }
 
 async function hashString(cacheString: string): Promise<string> {
-  if (process.env.NEXT_RUNTIME === 'edge') {
-    const encoder = new TextEncoder()
-    const buffer = encoder.encode(cacheString)
-    return toHex(await crypto.subtle.digest('SHA-256', buffer))
-  } else {
-    const crypto = require('crypto') as typeof import('crypto')
-    return crypto.createHash('sha256').update(cacheString).digest('hex')
-  }
+  const crypto = require('crypto') as typeof import('crypto')
+  return crypto.createHash('sha256').update(cacheString).digest('hex')
 }
 
 // this should be bumped anytime a fix is made to cache entries

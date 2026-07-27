@@ -41,29 +41,21 @@ export class ReactServerResult {
       return tee[1]
     }
 
-    if (process.env.NEXT_RUNTIME === 'edge') {
-      throw new InvariantError(
-        'Node.js Readable cannot be teed in the edge runtime'
-      )
+    let Readable: typeof import('node:stream').Readable
+    if (process.env.TURBOPACK) {
+      Readable = (require('node:stream') as typeof import('node:stream'))
+        .Readable
     } else {
-      let Readable: typeof import('node:stream').Readable
-      if (process.env.TURBOPACK) {
-        Readable = (require('node:stream') as typeof import('node:stream'))
-          .Readable
-      } else {
-        Readable = (
-          __non_webpack_require__('node:stream') as typeof import('node:stream')
-        ).Readable
-      }
-      const webStream = Readable.toWeb(
-        this._stream
-      ) as ReadableStream<Uint8Array>
-      const tee = webStream.tee()
-      this._stream = Readable.fromWeb(
-        tee[0] as import('stream/web').ReadableStream
-      )
-      return Readable.fromWeb(tee[1] as import('stream/web').ReadableStream)
+      Readable = (
+        __non_webpack_require__('node:stream') as typeof import('node:stream')
+      ).Readable
     }
+    const webStream = Readable.toWeb(this._stream) as ReadableStream<Uint8Array>
+    const tee = webStream.tee()
+    this._stream = Readable.fromWeb(
+      tee[0] as import('stream/web').ReadableStream
+    )
+    return Readable.fromWeb(tee[1] as import('stream/web').ReadableStream)
   }
 
   consume(): AnyStream {
@@ -155,22 +147,16 @@ export class ReplayableNodeStream {
     }
 
     let ReadableCtor: typeof import('node:stream').Readable
-    if (process.env.NEXT_RUNTIME === 'edge') {
-      throw new InvariantError(
-        'Node.js Readable cannot be teed in the edge runtime'
-      )
+    if (
+      process.env.__NEXT_BUNDLER === 'Webpack' ||
+      process.env.__NEXT_BUNDLER === 'Rspack'
+    ) {
+      ReadableCtor = (
+        __non_webpack_require__('node:stream') as typeof import('node:stream')
+      ).Readable
     } else {
-      if (
-        process.env.__NEXT_BUNDLER === 'Webpack' ||
-        process.env.__NEXT_BUNDLER === 'Rspack'
-      ) {
-        ReadableCtor = (
-          __non_webpack_require__('node:stream') as typeof import('node:stream')
-        ).Readable
-      } else {
-        ReadableCtor = (require('node:stream') as typeof import('node:stream'))
-          .Readable
-      }
+      ReadableCtor = (require('node:stream') as typeof import('node:stream'))
+        .Readable
     }
 
     const bufferedChunks = this._chunks.slice()

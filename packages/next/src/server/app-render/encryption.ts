@@ -26,8 +26,6 @@ import {
 import { createHangingInputAbortSignal } from './dynamic-rendering'
 import React from 'react'
 
-const isEdgeRuntime = process.env.NEXT_RUNTIME === 'edge'
-
 const textEncoder = new TextEncoder()
 const textDecoder = new TextDecoder()
 
@@ -267,8 +265,7 @@ export async function decryptActionBoundArgs(
     decrypted = await decodeActionBoundArg(actionId, encrypted)
   }
 
-  const { edgeRscModuleMapping, rscModuleMapping } =
-    getClientReferenceManifest()
+  const { rscModuleMapping } = getClientReferenceManifest()
 
   // Using Flight to deserialize the args from the string.
   const deserialized = await createFromReadableStream(
@@ -320,7 +317,7 @@ export async function decryptActionBoundArgs(
         // to be added to the current execution. Instead, we'll wait for any ClientReference
         // to be emitted which themselves will handle the preloading.
         moduleLoading: null,
-        moduleMap: isEdgeRuntime ? edgeRscModuleMapping : rscModuleMapping,
+        moduleMap: rscModuleMapping,
         serverModuleMap: getServerModuleMap(),
       },
     }

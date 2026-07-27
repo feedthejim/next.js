@@ -103,94 +103,88 @@ function warnAboutTimers() {
  *
  * */
 export function createAtomicTimerGroup(delayMs = 0) {
-  if (process.env.NEXT_RUNTIME === 'edge') {
-    throw new InvariantError(
-      'createAtomicTimerGroup cannot be called in the edge runtime'
-    )
-  } else {
-    let isFirstCallback = true
-    let firstTimerIdleStart: number | null = null
-    let didFirstTimerRun = false
+  let isFirstCallback = true
+  let firstTimerIdleStart: number | null = null
+  let didFirstTimerRun = false
 
-    // As a sanity check, we schedule an immediate from the first timeout
-    // to check if the execution was interrupted (i.e. if it ran between the timeouts).
-    // Note that we're deliberately bypassing the "fast setImmediate" patch here --
-    // otherwise, this check would always fail, because the immediate
-    // would always run before the second timeout.
-    let didImmediateRun = false
-    function runFirstCallback(callback: () => void) {
-      didFirstTimerRun = true
-      if (shouldAttemptPatching) {
-        unpatchedSetImmediate(() => {
-          didImmediateRun = true
-        })
-      }
-      return callback()
+  // As a sanity check, we schedule an immediate from the first timeout
+  // to check if the execution was interrupted (i.e. if it ran between the timeouts).
+  // Note that we're deliberately bypassing the "fast setImmediate" patch here --
+  // otherwise, this check would always fail, because the immediate
+  // would always run before the second timeout.
+  let didImmediateRun = false
+  function runFirstCallback(callback: () => void) {
+    didFirstTimerRun = true
+    if (shouldAttemptPatching) {
+      unpatchedSetImmediate(() => {
+        didImmediateRun = true
+      })
     }
+    return callback()
+  }
 
-    function runSubsequentCallback(callback: () => void) {
-      if (shouldAttemptPatching) {
-        if (didImmediateRun) {
-          // If the immediate managed to run between the timers, then we're not
-          // able to provide the guarantees that we're supposed to
-          shouldAttemptPatching = false
-          warnAboutTimers()
-        }
-      }
-      return callback()
-    }
-
-    return function scheduleTimeout(callback: () => void) {
-      if (didFirstTimerRun) {
-        throw new InvariantError(
-          'Cannot schedule more timers into a group that already executed'
-        )
-      }
-
-      const timer = setTimeout(
-        isFirstCallback ? runFirstCallback : runSubsequentCallback,
-        delayMs,
-        callback
-      )
-      isFirstCallback = false
-
-      if (!shouldAttemptPatching) {
-        // We already tried patching some timers, and it didn't work.
-        // No point trying again.
-        return timer
-      }
-
-      // NodeJS timers have a `_idleStart` property, but it doesn't exist e.g. in Bun.
-      // If it's not present, we'll warn and try to continue.
-      try {
-        if ('_idleStart' in timer && typeof timer._idleStart === 'number') {
-          // If this is the first timer that was scheduled, save its `_idleStart`.
-          // We'll copy it onto subsequent timers to guarantee that they'll all be
-          // considered expired in the same iteration of the event loop
-          // and thus will all be executed in the same timer phase.
-          if (firstTimerIdleStart === null) {
-            firstTimerIdleStart = timer._idleStart
-          } else {
-            timer._idleStart = firstTimerIdleStart
-          }
-        } else {
-          shouldAttemptPatching = false
-          warnAboutTimers()
-        }
-      } catch (err) {
-        // This should never fail in current Node, but it might start failing in the future.
-        // We might be okay even without tweaking the timers, so warn and try to continue.
-        console.error(
-          new InvariantError(
-            'An unexpected error occurred while adjusting `_idleStart` on an atomic timer',
-            { cause: err }
-          )
-        )
+  function runSubsequentCallback(callback: () => void) {
+    if (shouldAttemptPatching) {
+      if (didImmediateRun) {
+        // If the immediate managed to run between the timers, then we're not
+        // able to provide the guarantees that we're supposed to
         shouldAttemptPatching = false
         warnAboutTimers()
       }
+    }
+    return callback()
+  }
 
+  return function scheduleTimeout(callback: () => void) {
+    if (didFirstTimerRun) {
+      throw new InvariantError(
+        'Cannot schedule more timers into a group that already executed'
+      )
+    }
+
+    const timer = setTimeout(
+      isFirstCallback ? runFirstCallback : runSubsequentCallback,
+      delayMs,
+      callback
+    )
+    isFirstCallback = false
+
+    if (!shouldAttemptPatching) {
+      // We already tried patching some timers, and it didn't work.
+      // No point trying again.
       return timer
     }
+
+    // NodeJS timers have a `_idleStart` property, but it doesn't exist e.g. in Bun.
+    // If it's not present, we'll warn and try to continue.
+    try {
+      if ('_idleStart' in timer && typeof timer._idleStart === 'number') {
+        // If this is the first timer that was scheduled, save its `_idleStart`.
+        // We'll copy it onto subsequent timers to guarantee that they'll all be
+        // considered expired in the same iteration of the event loop
+        // and thus will all be executed in the same timer phase.
+        if (firstTimerIdleStart === null) {
+          firstTimerIdleStart = timer._idleStart
+        } else {
+          timer._idleStart = firstTimerIdleStart
+        }
+      } else {
+        shouldAttemptPatching = false
+        warnAboutTimers()
+      }
+    } catch (err) {
+      // This should never fail in current Node, but it might start failing in the future.
+      // We might be okay even without tweaking the timers, so warn and try to continue.
+      console.error(
+        new InvariantError(
+          'An unexpected error occurred while adjusting `_idleStart` on an atomic timer',
+          { cause: err }
+        )
+      )
+      shouldAttemptPatching = false
+      warnAboutTimers()
+    }
+
+    return timer
   }
 }

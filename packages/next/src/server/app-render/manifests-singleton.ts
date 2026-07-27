@@ -65,13 +65,15 @@ interface RegisteredClientReferenceManifest {
   readonly clientReferenceManifest: DeepReadonly<ClientReferenceManifest>
 }
 
+type NodeActionManifest = Pick<ActionManifest, 'encryptionKey' | 'node'>
+
 interface ManifestsSingleton {
   readonly clientReferenceManifestsPerRoute: Map<
     string,
     RegisteredClientReferenceManifest
   >
   readonly proxiedClientReferenceManifest: DeepReadonly<ClientReferenceManifest>
-  serverActionsManifest: DeepReadonly<ActionManifest>
+  serverActionsManifest: DeepReadonly<NodeActionManifest>
   serverModuleMap: ServerModuleMap
 }
 
@@ -82,9 +84,7 @@ type GlobalThisWithManifests = typeof globalThis & {
 type ClientReferenceManifestMappingProp =
   | 'clientModules'
   | 'rscModuleMapping'
-  | 'edgeRscModuleMapping'
   | 'ssrModuleMapping'
-  | 'edgeSSRModuleMapping'
 
 const globalThisWithManifests = globalThis as GlobalThisWithManifests
 
@@ -204,9 +204,7 @@ function createProxiedClientReferenceManifest(
           }
           case 'clientModules':
           case 'rscModuleMapping':
-          case 'edgeRscModuleMapping':
-          case 'ssrModuleMapping':
-          case 'edgeSSRModuleMapping': {
+          case 'ssrModuleMapping': {
             let proxy = mappingProxies.get(prop)
 
             if (!proxy) {
@@ -250,10 +248,7 @@ function createServerModuleMap(): ServerModuleMap {
         throw getInvalidServerReferenceIdError(id)
       }
 
-      const workers =
-        getServerActionsManifest()[
-          process.env.NEXT_RUNTIME === 'edge' ? 'edge' : 'node'
-        ]?.[id]?.workers
+      const workers = getServerActionsManifest().node[id]?.workers
 
       if (!workers) {
         throw getActionNotFoundError(id)
@@ -316,10 +311,7 @@ export function selectWorkerForForwarding(
   pageName: string
 ): string | undefined {
   const serverActionsManifest = getServerActionsManifest()
-  const workers =
-    serverActionsManifest[
-      process.env.NEXT_RUNTIME === 'edge' ? 'edge' : 'node'
-    ][actionId]?.workers
+  const workers = serverActionsManifest.node[actionId]?.workers
 
   // There are no workers to handle this action, nothing to forward to.
   if (!workers) {
@@ -342,17 +334,16 @@ export function setManifestsSingleton({
 }: {
   page: string
   clientReferenceManifest: DeepReadonly<ClientReferenceManifest>
-  serverActionsManifest: DeepReadonly<ActionManifest>
+  serverActionsManifest: DeepReadonly<NodeActionManifest>
 }) {
   const existingSingleton = globalThisWithManifests[MANIFESTS_SINGLETON]
   const route = normalizeAppPath(page)
 
-  const serverActionsManifest: DeepReadonly<ActionManifest> = {
+  const serverActionsManifest: DeepReadonly<NodeActionManifest> = {
     encryptionKey: rawServerActionsManifest.encryptionKey,
     // Use null-prototypes for the action objects to prevent prototype pollution
     // from affecting action ID lookups.
     node: Object.assign(Object.create(null), rawServerActionsManifest.node),
-    edge: Object.assign(Object.create(null), rawServerActionsManifest.edge),
   }
 
   if (existingSingleton) {
@@ -395,7 +386,7 @@ export function getClientReferenceManifest(): DeepReadonly<ClientReferenceManife
   return getManifestsSingleton().proxiedClientReferenceManifest
 }
 
-export function getServerActionsManifest(): DeepReadonly<ActionManifest> {
+export function getServerActionsManifest(): DeepReadonly<NodeActionManifest> {
   return getManifestsSingleton().serverActionsManifest
 }
 

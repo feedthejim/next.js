@@ -9,8 +9,6 @@ import { workUnitAsyncStorage } from './work-unit-async-storage.external'
 import { InvariantError } from '../../shared/lib/invariant-error'
 import { getClientReferenceManifest } from './manifests-singleton'
 
-const isEdgeRuntime = process.env.NEXT_RUNTIME === 'edge'
-
 const INLINE_FLIGHT_PAYLOAD_BOOTSTRAP = 0
 const INLINE_FLIGHT_PAYLOAD_DATA = 1
 const INLINE_FLIGHT_PAYLOAD_FORM_STATE = 2
@@ -44,8 +42,7 @@ export function getFlightStream<T>(
     return response
   }
 
-  const { moduleLoading, edgeSSRModuleMapping, ssrModuleMapping } =
-    getClientReferenceManifest()
+  const { moduleLoading, ssrModuleMapping } = getClientReferenceManifest()
 
   let newResponse: Promise<T>
   if (flightStream instanceof ReadableStream) {
@@ -54,7 +51,7 @@ export function getFlightStream<T>(
       throw new InvariantError('Expected debug stream to be a ReadableStream')
     }
 
-    // react-server-dom-webpack/client.edge must not be hoisted for require cache clearing to work correctly
+    // The Flight client must not be hoisted for require cache clearing to work correctly.
     const { createFromReadableStream } =
       // eslint-disable-next-line import/no-extraneous-dependencies
       require('react-server-dom-webpack/client') as typeof import('react-server-dom-webpack/client')
@@ -63,7 +60,7 @@ export function getFlightStream<T>(
       findSourceMapURL,
       serverConsumerManifest: {
         moduleLoading,
-        moduleMap: isEdgeRuntime ? edgeSSRModuleMapping : ssrModuleMapping,
+        moduleMap: ssrModuleMapping,
         serverModuleMap: null,
       },
       nonce,
@@ -71,81 +68,70 @@ export function getFlightStream<T>(
       endTime: debugEndTime,
     })
   } else {
-    if (process.env.NEXT_RUNTIME === 'edge') {
-      throw new InvariantError(
-        'getFlightStream should always receive a ReadableStream when using the edge runtime'
-      )
-    } else {
-      const { Readable } =
-        require('node:stream') as typeof import('node:stream')
+    const { Readable } = require('node:stream') as typeof import('node:stream')
 
-      // Convert debug stream to Readable if it's a ReadableStream.
-      // When __NEXT_USE_NODE_STREAMS is enabled, the debug channel produces
-      // Node Readables natively. Otherwise, it produces web ReadableStreams.
-      let nodeDebugStream: Readable | undefined
-      if (debugStream) {
-        if (debugStream instanceof Readable) {
-          nodeDebugStream = debugStream
-        } else {
-          type WebReadableStream = import('stream/web').ReadableStream
-          nodeDebugStream = Readable.fromWeb(debugStream as WebReadableStream)
-        }
+    // Convert debug stream to Readable if it's a ReadableStream.
+    // When __NEXT_USE_NODE_STREAMS is enabled, the debug channel produces
+    // Node Readables natively. Otherwise, it produces web ReadableStreams.
+    let nodeDebugStream: Readable | undefined
+    if (debugStream) {
+      if (debugStream instanceof Readable) {
+        nodeDebugStream = debugStream
+      } else {
+        type WebReadableStream = import('stream/web').ReadableStream
+        nodeDebugStream = Readable.fromWeb(debugStream as WebReadableStream)
       }
-
-      // react-server-dom-webpack/client.edge must not be hoisted for require cache clearing to work correctly
-      const { createFromNodeStream } =
-        // eslint-disable-next-line import/no-extraneous-dependencies
-        require('react-server-dom-webpack/client') as typeof import('react-server-dom-webpack/client')
-
-      newResponse = createFromNodeStream<T>(
-        flightStream,
-        {
-          moduleLoading,
-          moduleMap: isEdgeRuntime ? edgeSSRModuleMapping : ssrModuleMapping,
-          serverModuleMap: null,
-        },
-        {
-          findSourceMapURL,
-          nonce,
-          debugChannel: nodeDebugStream,
-          endTime: debugEndTime,
-        }
-      )
     }
+
+    // The Flight client must not be hoisted for require cache clearing to work correctly.
+    const { createFromNodeStream } =
+      // eslint-disable-next-line import/no-extraneous-dependencies
+      require('react-server-dom-webpack/client') as typeof import('react-server-dom-webpack/client')
+
+    newResponse = createFromNodeStream<T>(
+      flightStream,
+      {
+        moduleLoading,
+        moduleMap: ssrModuleMapping,
+        serverModuleMap: null,
+      },
+      {
+        findSourceMapURL,
+        nonce,
+        debugChannel: nodeDebugStream,
+        endTime: debugEndTime,
+      }
+    )
   }
 
-  // Edge pages are never prerendered so they necessarily cannot have a workUnitStore type
-  // that requires the nextTick behavior. This is why it is safe to access a node only API here
-  if (process.env.NEXT_RUNTIME !== 'edge') {
-    const workUnitStore = workUnitAsyncStorage.getStore()
+  const workUnitStore = workUnitAsyncStorage.getStore()
 
-    if (!workUnitStore) {
-      throw new InvariantError('Expected workUnitAsyncStorage to have a store.')
-    }
+  if (!workUnitStore) {
+    throw new InvariantError('Expected workUnitAsyncStorage to have a store.')
+  }
 
-    switch (workUnitStore.type) {
-      case 'prerender-client':
-      case 'validation-client':
-        const responseOnNextTick = new Promise<T>((resolve) => {
-          process.nextTick(() => {
-            resolve(newResponse)
-          })
+  switch (workUnitStore.type) {
+    case 'prerender-client':
+    case 'validation-client':
+      const responseOnNextTick = new Promise<T>((resolve) => {
+        process.nextTick(() => {
+          resolve(newResponse)
         })
-        flightResponses.set(flightStream, responseOnNextTick)
-        return responseOnNextTick
-      case 'prerender':
-      case 'prerender-runtime':
-      case 'prerender-ppr':
-      case 'prerender-legacy':
-      case 'request':
-      case 'cache':
-      case 'private-cache':
-      case 'unstable-cache':
-      case 'generate-static-params':
-        break
-      default:
-        workUnitStore satisfies never
-    }
+      })
+      flightResponses.set(flightStream, responseOnNextTick)
+      return responseOnNextTick
+    case 'prerender':
+    case 'prerender-runtime':
+    case 'prerender-ppr':
+    case 'prerender-legacy':
+    case 'request':
+    case 'cache':
+    case 'private-cache':
+    case 'unstable-cache':
+    case 'generate-static-params':
+      break
+    default:
+      workUnitStore satisfies never
   }
 
   flightResponses.set(flightStream, newResponse)

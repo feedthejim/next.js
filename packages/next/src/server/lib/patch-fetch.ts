@@ -38,8 +38,6 @@ import { RenderStage } from '../app-render/staged-rendering'
 import { encodeCacheTag } from './encode-cache-tag'
 import type { Span } from './trace/tracer'
 
-const isEdgeRuntime = process.env.NEXT_RUNTIME === 'edge'
-
 type Fetcher = typeof fetch
 
 type PatchedFetcher = Fetcher & {
@@ -1055,9 +1053,6 @@ export function createPatchedFetcher(
           typeof init === 'object'
         ) {
           const { cache } = init
-
-          // Delete `cache` property as Cloudflare Workers will throw an error
-          if (isEdgeRuntime) delete init.cache
 
           if (cache === 'no-store') {
             // If enabled, we should bail out of static generation.

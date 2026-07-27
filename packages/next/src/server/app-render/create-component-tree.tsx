@@ -372,10 +372,7 @@ async function createComponentTreeInternal(
 
   // Resolve the segment param
   const isSegmentViewEnabled = !!process.env.__NEXT_DEV_SERVER
-  const dir =
-    (process.env.NEXT_RUNTIME === 'edge'
-      ? process.env.__NEXT_EDGE_PROJECT_DIR
-      : ctx.renderOpts.dir) || ''
+  const dir = ctx.renderOpts.dir || ''
 
   const [notFoundElement, notFoundFilePath] =
     await createBoundaryConventionElement({
@@ -1010,10 +1007,7 @@ async function createBoundaryConventionElement({
     componentMod: { createElement, Fragment },
   } = ctx
   const isSegmentViewEnabled = !!process.env.__NEXT_DEV_SERVER
-  const dir =
-    (process.env.NEXT_RUNTIME === 'edge'
-      ? process.env.__NEXT_EDGE_PROJECT_DIR
-      : ctx.renderOpts.dir) || ''
+  const dir = ctx.renderOpts.dir || ''
   const { SegmentViewNode } = ctx.componentMod
   const element = Component
     ? createElement(Fragment, null, createElement(Component, null), styles)

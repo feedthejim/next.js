@@ -16,7 +16,7 @@ export function normalizeFilePath(
   // Turbopack project path is formed as: "<project root>/<cwd>".
   // When project root is not the working directory, we can extract the relative project root path.
   // This is mostly used for running Next.js inside a monorepo.
-  const cwd = process.env.NEXT_RUNTIME === 'edge' ? '' : process.cwd()
+  const cwd = process.cwd()
   const relativeProjectRoot = projectDir.replace(cwd, '').replace(/^[\\/]/, '')
 
   let relativePath = (filePath || '')

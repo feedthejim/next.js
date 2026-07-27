@@ -2553,12 +2553,7 @@ async function renderToHTMLOrFlightImpl(
     installGlobalModuleLoadingHandlers(ComponentMod, isTracingEnabled)
   }
 
-  if (
-    // The type check here ensures that `req` is correctly typed, and the
-    // environment variable check provides dead code elimination.
-    process.env.NEXT_RUNTIME !== 'edge' &&
-    isNodeNextRequest(req)
-  ) {
+  if (isNodeNextRequest(req)) {
     res.onClose(() => {
       // We stop tracking fetch metrics when the response closes, since we
       // report them at that time.
@@ -2648,8 +2643,6 @@ async function renderToHTMLOrFlightImpl(
       requestId = Buffer.from(
         await crypto.subtle.digest('SHA-1', Buffer.from(req.url))
       ).toString('hex')
-    } else if (process.env.NEXT_RUNTIME === 'edge') {
-      requestId = crypto.randomUUID()
     } else {
       requestId = (
         require('next/dist/compiled/nanoid') as typeof import('next/dist/compiled/nanoid')
@@ -2855,10 +2848,7 @@ async function renderToHTMLOrFlightImpl(
           isAppShellPrefetchRequest
         )
       } else {
-        if (
-          process.env.__NEXT_DEV_SERVER &&
-          process.env.NEXT_RUNTIME !== 'edge'
-        ) {
+        if (process.env.__NEXT_DEV_SERVER) {
           // MARK: RSC devCacheComponents
           return generateDynamicFlightRenderResultWithStagesInDev(
             req,
@@ -3331,11 +3321,7 @@ async function renderToStream(
     const { clientModules } = getClientReferenceManifest()
 
     try {
-      if (
-        process.env.__NEXT_DEV_SERVER &&
-        // Edge routes never prerender so we don't have a Prerender environment for anything in edge runtime
-        process.env.NEXT_RUNTIME !== 'edge'
-      ) {
+      if (process.env.__NEXT_DEV_SERVER) {
         let debugChannelClientStream: ReplayableNodeStream | undefined
 
         // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -9460,10 +9446,7 @@ const getGlobalErrorStyles = async (
   let globalErrorStyles: ReactNode = styles
 
   if (process.env.__NEXT_DEV_SERVER) {
-    const dir =
-      (process.env.NEXT_RUNTIME === 'edge'
-        ? process.env.__NEXT_EDGE_PROJECT_DIR
-        : ctx.renderOpts.dir) || ''
+    const dir = ctx.renderOpts.dir || ''
 
     const globalErrorModulePath = normalizeConventionFilePath(
       dir,
@@ -9513,18 +9496,16 @@ async function collectSegmentData(
   // generating the initial page HTML. The Flight stream for the whole page is
   // decomposed into a separate stream per segment.
 
-  const { clientModules, edgeRscModuleMapping, rscModuleMapping } =
-    getClientReferenceManifest()
+  const { clientModules, rscModuleMapping } = getClientReferenceManifest()
 
   // Manifest passed to the Flight client for reading the full-page Flight
   // stream. Based off similar code in use-cache-wrapper.ts.
-  const isEdgeRuntime = process.env.NEXT_RUNTIME === 'edge'
   const serverConsumerManifest = {
     // moduleLoading must be null because we don't want to trigger preloads of ClientReferences
     // to be added to the consumer. Instead, we'll wait for any ClientReference to be emitted
     // which themselves will handle the preloading.
     moduleLoading: null,
-    moduleMap: isEdgeRuntime ? edgeRscModuleMapping : rscModuleMapping,
+    moduleMap: rscModuleMapping,
     serverModuleMap: getServerModuleMap(),
   }
 

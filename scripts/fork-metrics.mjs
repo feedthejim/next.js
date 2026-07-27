@@ -227,6 +227,17 @@ const appRevalidateModeFiles = [
     ].filter(existsSync)
   ),
 ]
+const appRendererRuntimeFiles = [
+  ...frameworkSourceFiles.filter((file) =>
+    file.startsWith('packages/next/src/server/app-render/')
+  ),
+  'packages/next/src/server/use-cache/use-cache-wrapper.ts',
+  'packages/next/src/server/resume-data-cache/resume-data-cache.ts',
+  'packages/next/src/server/lib/incremental-cache/index.ts',
+  'packages/next/src/server/lib/incremental-cache/file-system-cache.ts',
+  'packages/next/src/server/lib/patch-fetch.ts',
+  'packages/next/src/server/route-modules/app-route/module.compiled.js',
+].filter(existsSync)
 const appEntryFiles = [
   'crates/next-api/src/app.rs',
   'crates/next-core/src/next_app/app_page_entry.rs',
@@ -377,6 +388,10 @@ const metrics = {
     appRevalidateTestModeReferences: countMatches(
       appRouterTestSourceFiles,
       /\bexport\s+const\s+revalidate\s*=|\b(?:segment|config|variable)-revalidate\b|\brevalidate-(?:0|[1-9]\d*)\b/g
+    ),
+    appRendererEdgeRuntimeReferences: countMatches(
+      appRendererRuntimeFiles,
+      /\bNEXT_RUNTIME\b[^;\n]*\bedge\b|\bisEdgeRuntime\b|\bedge(?:Rsc|SSR)ModuleMapping\b|\b__NEXT_EDGE_PROJECT_DIR\b|\bisWebNextRequest\b/g
     ),
   },
   packageDependencies: {

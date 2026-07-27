@@ -1,4 +1,3 @@
-import { InvariantError } from '../../shared/lib/invariant-error'
 import {
   type UseCacheCacheStore,
   type FetchCacheStore,
@@ -165,38 +164,32 @@ type ResumeStoreSerialized = {
 export async function stringifyResumeDataCache(
   resumeDataCache: ResumeDataCache
 ): Promise<string> {
-  if (process.env.NEXT_RUNTIME === 'edge') {
-    throw new InvariantError(
-      '`stringifyResumeDataCache` should not be called in edge runtime.'
-    )
-  } else {
-    if (resumeDataCache.fetch.size === 0 && resumeDataCache.cache.size === 0) {
-      return 'null'
-    }
-
-    const json: ResumeStoreSerialized = {
-      store: {
-        fetch: Object.fromEntries(Array.from(resumeDataCache.fetch.entries())),
-        cache: Object.fromEntries(
-          (
-            await serializeUseCacheCacheStore(resumeDataCache.cache.entries())
-          ).filter(
-            (entry): entry is [string, UseCacheCacheStoreSerialized] =>
-              entry !== null
-          )
-        ),
-        encryptedBoundArgs: Object.fromEntries(
-          Array.from(resumeDataCache.encryptedBoundArgs.entries())
-        ),
-      },
-    }
-
-    // Compress the JSON string using zlib. As the data we already want to
-    // decompress is in memory, we use the synchronous deflateSync function.
-    const { deflateSync } = require('node:zlib') as typeof import('node:zlib')
-
-    return deflateSync(JSON.stringify(json)).toString('base64')
+  if (resumeDataCache.fetch.size === 0 && resumeDataCache.cache.size === 0) {
+    return 'null'
   }
+
+  const json: ResumeStoreSerialized = {
+    store: {
+      fetch: Object.fromEntries(Array.from(resumeDataCache.fetch.entries())),
+      cache: Object.fromEntries(
+        (
+          await serializeUseCacheCacheStore(resumeDataCache.cache.entries())
+        ).filter(
+          (entry): entry is [string, UseCacheCacheStoreSerialized] =>
+            entry !== null
+        )
+      ),
+      encryptedBoundArgs: Object.fromEntries(
+        Array.from(resumeDataCache.encryptedBoundArgs.entries())
+      ),
+    },
+  }
+
+  // Compress the JSON string using zlib. As the data we already want to
+  // decompress is in memory, we use the synchronous deflateSync function.
+  const { deflateSync } = require('node:zlib') as typeof import('node:zlib')
+
+  return deflateSync(JSON.stringify(json)).toString('base64')
 }
 
 /**
@@ -256,74 +249,66 @@ export function createRenderResumeDataCache(
   resumeDataCacheOrPersistedCache: ResumeDataCache | string,
   maxPostponedStateSizeBytes?: number | undefined
 ): RenderResumeDataCache {
-  if (process.env.NEXT_RUNTIME === 'edge') {
-    throw new InvariantError(
-      '`createRenderResumeDataCache` should not be called in edge runtime.'
-    )
-  } else {
-    if (typeof resumeDataCacheOrPersistedCache !== 'string') {
-      // If the cache is already read-only, return it directly. Otherwise we
-      // perform a type change by overriding the discriminator — the underlying
-      // Map references are still shared, but callers should treat the result
-      // as immutable.
-      if (!resumeDataCacheOrPersistedCache.mutable) {
-        return resumeDataCacheOrPersistedCache
-      }
-      return { ...resumeDataCacheOrPersistedCache, mutable: false }
+  if (typeof resumeDataCacheOrPersistedCache !== 'string') {
+    // If the cache is already read-only, return it directly. Otherwise we
+    // perform a type change by overriding the discriminator — the underlying
+    // Map references are still shared, but callers should treat the result
+    // as immutable.
+    if (!resumeDataCacheOrPersistedCache.mutable) {
+      return resumeDataCacheOrPersistedCache
     }
+    return { ...resumeDataCacheOrPersistedCache, mutable: false }
+  }
 
-    if (resumeDataCacheOrPersistedCache === 'null') {
-      return {
-        mutable: false,
-        cache: new Map(),
-        fetch: new Map(),
-        encryptedBoundArgs: new Map(),
-        decryptedBoundArgs: new Map(),
-        imageResponses: new Map(),
-      }
-    }
-
-    // This should be a compressed string. Let's decompress it using zlib.
-    // As the data we already want to decompress is in memory, we use the
-    // synchronous inflateSync function.
-    const { inflateSync } = require('node:zlib') as typeof import('node:zlib')
-
-    // Limit decompressed size to prevent zipbomb attacks. This is 5x the
-    // configured maxPostponedStateSize, allowing reasonable compression
-    // ratios while preventing extreme decompression bombs.
-    // Default is 500MB (5x the default 100MB compressed limit).
-    const maxDecompressedSize = maxPostponedStateSizeBytes
-      ? maxPostponedStateSizeBytes * 5
-      : 500 * 1024 * 1024
-
-    let json: ResumeStoreSerialized
-    try {
-      json = JSON.parse(
-        inflateSync(Buffer.from(resumeDataCacheOrPersistedCache, 'base64'), {
-          maxOutputLength: maxDecompressedSize,
-        }).toString('utf-8')
-      )
-    } catch (err: unknown) {
-      if (
-        err instanceof RangeError &&
-        (err as NodeJS.ErrnoException).code === 'ERR_BUFFER_TOO_LARGE'
-      ) {
-        throw new Error(
-          `Decompressed resume data cache exceeded ${maxDecompressedSize} byte limit`
-        )
-      }
-      throw err
-    }
-
+  if (resumeDataCacheOrPersistedCache === 'null') {
     return {
       mutable: false,
-      cache: parseUseCacheCacheStore(Object.entries(json.store.cache)),
-      fetch: new Map(Object.entries(json.store.fetch)),
-      encryptedBoundArgs: new Map(
-        Object.entries(json.store.encryptedBoundArgs)
-      ),
+      cache: new Map(),
+      fetch: new Map(),
+      encryptedBoundArgs: new Map(),
       decryptedBoundArgs: new Map(),
       imageResponses: new Map(),
     }
+  }
+
+  // This should be a compressed string. Let's decompress it using zlib.
+  // As the data we already want to decompress is in memory, we use the
+  // synchronous inflateSync function.
+  const { inflateSync } = require('node:zlib') as typeof import('node:zlib')
+
+  // Limit decompressed size to prevent zipbomb attacks. This is 5x the
+  // configured maxPostponedStateSize, allowing reasonable compression
+  // ratios while preventing extreme decompression bombs.
+  // Default is 500MB (5x the default 100MB compressed limit).
+  const maxDecompressedSize = maxPostponedStateSizeBytes
+    ? maxPostponedStateSizeBytes * 5
+    : 500 * 1024 * 1024
+
+  let json: ResumeStoreSerialized
+  try {
+    json = JSON.parse(
+      inflateSync(Buffer.from(resumeDataCacheOrPersistedCache, 'base64'), {
+        maxOutputLength: maxDecompressedSize,
+      }).toString('utf-8')
+    )
+  } catch (err: unknown) {
+    if (
+      err instanceof RangeError &&
+      (err as NodeJS.ErrnoException).code === 'ERR_BUFFER_TOO_LARGE'
+    ) {
+      throw new Error(
+        `Decompressed resume data cache exceeded ${maxDecompressedSize} byte limit`
+      )
+    }
+    throw err
+  }
+
+  return {
+    mutable: false,
+    cache: parseUseCacheCacheStore(Object.entries(json.store.cache)),
+    fetch: new Map(Object.entries(json.store.fetch)),
+    encryptedBoundArgs: new Map(Object.entries(json.store.encryptedBoundArgs)),
+    decryptedBoundArgs: new Map(),
+    imageResponses: new Map(),
   }
 }
