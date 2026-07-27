@@ -518,7 +518,7 @@ async function exportAppImpl(
       prefetchInlining: nextConfig.experimental.prefetchInlining ?? false,
       authInterrupts: !!nextConfig.experimental.authInterrupts,
       useCacheTimeout: nextConfig.experimental.useCacheTimeout,
-      cachedNavigations: nextConfig.experimental.cachedNavigations ?? false,
+      cachedNavigations: true,
       maxPostponedStateSizeBytes: parseMaxPostponedStateSize(
         nextConfig.experimental.maxPostponedStateSize
       ),

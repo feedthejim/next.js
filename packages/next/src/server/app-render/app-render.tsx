@@ -8209,8 +8209,6 @@ async function prerenderToStream(
     cacheComponents,
   } = renderOpts
 
-  const { cachedNavigations } = renderOpts.experimental
-
   const renderFlightStream = process.env.__NEXT_USE_NODE_STREAMS
     ? renderToNodeFlightStream
     : renderToWebFlightStream
@@ -8774,11 +8772,8 @@ async function prerenderToStream(
       }
     )
 
-    let staleTimeIterable: StaleTimeIterable | undefined
-    if (cachedNavigations) {
-      staleTimeIterable = new StaleTimeIterable()
-      finalServerPayload.s = staleTimeIterable
-    }
+    const staleTimeIterable = new StaleTimeIterable()
+    finalServerPayload.s = staleTimeIterable
 
     if (shouldGenerateStaticFlightData(workStore)) {
       // Embed the runtime data access tracking in the payload so
@@ -8816,13 +8811,11 @@ async function prerenderToStream(
       isFallbackUpgradeable: renderOpts.isFallbackUpgradeable === true,
     })
 
-    if (staleTimeIterable !== undefined) {
-      trackStaleTime(
-        finalServerPrerenderStore,
-        staleTimeIterable,
-        selectStaleTime
-      )
-    }
+    trackStaleTime(
+      finalServerPrerenderStore,
+      staleTimeIterable,
+      selectStaleTime
+    )
 
     const streamState = createStreamPendingState()
     const collectedChunks = createPrerenderChunksAccumulator()
@@ -8866,9 +8859,7 @@ async function prerenderToStream(
       // finish the accumulators. However, it seems like in `--debug-prerender`
       // the stream will stay open if we don't settle these here.
       if (process.env.NODE_ENV === 'development') {
-        if (staleTimeIterable !== undefined) {
-          staleTimeIterable.close()
-        }
+        staleTimeIterable.close()
         runtimeDataAccessed.resolve(false)
         finishAccumulatingVaryParams(varyParamsAccumulator)
       }
@@ -8954,9 +8945,7 @@ async function prerenderToStream(
         // into the stream. The timing here is important: both were
         // included in the Flight payload, but they can only be serialized
         // at the very end, after all the components have finished.
-        if (staleTimeIterable !== undefined) {
-          staleTimeIterable.close()
-        }
+        staleTimeIterable.close()
         // Idempotent: a no-op if a runtime data access already resolved it
         // `true`. The `false` row lands here, after all stage content.
         runtimeDataAccessed.resolve(false)
@@ -9002,18 +8991,14 @@ async function prerenderToStream(
 
     if (shouldGenerateStaticFlightData(workStore)) {
       metadata.flightData = Buffer.concat(
-        cachedNavigations
-          ? prependIsPartialByteToChunks(
-              reactServerResult.asChunks(),
-              resultIsPartial
-            )
-          : reactServerResult.asChunks()
+        prependIsPartialByteToChunks(
+          reactServerResult.asChunks(),
+          resultIsPartial
+        )
       )
 
       // collectSegmentData needs the raw flight data without the marker byte.
-      const flightData = cachedNavigations
-        ? metadata.flightData.subarray(1)
-        : metadata.flightData
+      const flightData = metadata.flightData.subarray(1)
 
       await collectSegmentData(
         flightData,

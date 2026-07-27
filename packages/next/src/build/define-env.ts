@@ -179,9 +179,7 @@ export function getDefineEnv({
     ),
     'process.env.__NEXT_PPR': isPPREnabled,
     'process.env.__NEXT_CACHE_COMPONENTS': isCacheComponentsEnabled,
-    'process.env.__NEXT_EXPERIMENTAL_CACHED_NAVIGATIONS': Boolean(
-      config.experimental.cachedNavigations
-    ),
+    'process.env.__NEXT_EXPERIMENTAL_CACHED_NAVIGATIONS': true,
     'process.env.__NEXT_INSTANT_NAV_TOGGLE': isCacheComponentsEnabled,
     'process.env.__NEXT_EXPERIMENTAL_COLD_CACHE_BADGE': Boolean(
       config.experimental.coldCacheBadge

@@ -12,7 +12,8 @@
   principles, supported-behavior map, and phased checklist. Configuration,
   Flight router-state construction, resume-cache serialization, runtime
   prefetch setup, render-option types, and the normal static-generation
-  pipeline now use one Cache Components and Partial Prefetching model.
+  pipeline now use one Cache Components, Partial Prefetching, and cached
+  navigation model.
   `fork-metrics.json` is the current scorecard.
 - **Constraints:** Backward compatibility is out of scope. Do not add migration
   layers or special removed-feature errors. Preserve only behavior in the fork
@@ -36,6 +37,18 @@
   hydration assertions passed.
 
 ## History
+
+### 2026-07-27: Cached navigation prerender defaults
+
+Made cached navigation explicit in the base server, export worker, and bundled
+environment, then removed false-mode handling from prerender stale-time and
+Flight-data construction. Authored framework source fell by 18 lines and 692
+bytes, App Router renderer source fell by 15 lines and 465 bytes, and Cache
+Components references fell by one. Type checking, 26 focused unit tests, the
+core package build, and all 12 production Turbopack PPR partial hydration
+assertions pass. Build timing remained near 22 seconds. Dist size is marked
+non-comparable because the required watcher left development artifacts before
+the release build.
 
 ### 2026-07-27: One normal prerender path
 

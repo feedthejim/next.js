@@ -590,8 +590,8 @@ export default abstract class Server<
       isExperimentalCompile: this.nextConfig.experimental.isExperimentalCompile,
       // `htmlLimitedBots` is passed to server as serialized config in string format
       htmlLimitedBots: this.nextConfig.htmlLimitedBots,
-      cacheComponents: this.nextConfig.cacheComponents ?? false,
-      partialPrefetching: this.nextConfig.partialPrefetching,
+      cacheComponents: true,
+      partialPrefetching: true,
       validationLevel:
         this.nextConfig.experimental.instantInsights.validationLevel,
       experimental: {
@@ -610,8 +610,7 @@ export default abstract class Server<
         serverComponentsHmrCancellation:
           this.nextConfig.experimental.serverComponentsHmrCancellation,
         useCacheTimeout: this.nextConfig.experimental.useCacheTimeout,
-        cachedNavigations:
-          this.nextConfig.experimental.cachedNavigations ?? false,
+        cachedNavigations: true,
         maxPostponedStateSizeBytes: parseMaxPostponedStateSize(
           this.nextConfig.experimental.maxPostponedStateSize
         ),
