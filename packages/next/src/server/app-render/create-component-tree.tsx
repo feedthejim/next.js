@@ -15,7 +15,6 @@ import { parseLoaderTree } from '../../shared/lib/router/utils/parse-loader-tree
 import type { AppRenderContext, GetDynamicParamFromSegment } from './app-render'
 import { createComponentStylesAndScripts } from './create-component-styles-and-scripts'
 import { getLayerAssets } from './get-layer-assets'
-import { hasLoadingComponentInTree } from './has-loading-component-in-tree'
 import { validateRevalidate } from '../lib/patch-fetch'
 import { PARALLEL_ROUTE_DEFAULT_PATH } from '../../client/components/builtin/default'
 import { getTracer } from '../lib/trace/tracer'
@@ -112,7 +111,7 @@ async function createComponentTreeInternal(
   isRoot: boolean
 ): Promise<CacheNodeSeedData> {
   const {
-    renderOpts: { nextConfigOutput, experimental, cacheComponents },
+    renderOpts: { nextConfigOutput },
     workStore,
     componentMod: {
       createElement,
@@ -124,15 +123,11 @@ async function createComponentTreeInternal(
       ClientPageRoot,
       ClientSegmentRoot,
       createServerSearchParamsForServerPage,
-      createPrerenderSearchParamsForClientPage,
       createServerParamsForServerSegment,
-      createPrerenderParamsForClientSegment,
-      serverHooks: { DynamicServerError },
       Postpone,
     },
     pagePath,
     getDynamicParamFromSegment,
-    isPrefetch,
     query,
   } = ctx
 
@@ -271,18 +266,6 @@ async function createComponentTreeInternal(
       workStore.dynamicShouldError = true
     } else if (dynamic === 'force-dynamic') {
       workStore.forceDynamic = true
-
-      // TODO: (PPR) remove this bailout once PPR is the default
-      if (workStore.isStaticGeneration && !experimental.isRoutePPREnabled) {
-        // If the postpone API isn't available, we can't postpone the render and
-        // therefore we can't use the dynamic API.
-        const err = new DynamicServerError(
-          `Page with \`dynamic = "force-dynamic"\` won't be rendered statically.`
-        )
-        workStore.dynamicUsageDescription = err.message
-        workStore.dynamicUsageStack = err.stack
-        throw err
-      }
     } else {
       workStore.dynamicShouldError = false
       workStore.forceStatic = dynamic === 'force-static'
@@ -326,20 +309,6 @@ async function createComponentTreeInternal(
         default:
           workUnitStore satisfies never
       }
-    }
-
-    if (
-      !workStore.forceStatic &&
-      workStore.isStaticGeneration &&
-      defaultRevalidate === 0 &&
-      // If the postpone API isn't available, we can't postpone the render and
-      // therefore we can't use the dynamic API.
-      !experimental.isRoutePPREnabled
-    ) {
-      const dynamicUsageDescription = `revalidate: 0 configured ${segment}`
-      workStore.dynamicUsageDescription = dynamicUsageDescription
-
-      throw new DynamicServerError(dynamicUsageDescription)
     }
   }
 
@@ -387,10 +356,10 @@ async function createComponentTreeInternal(
 
   const isStaticGeneration = workStore.isStaticGeneration
 
-  // Assume the segment we're rendering contains only partial data if PPR is
-  // enabled and this is a statically generated response. This is used by the
-  // client Segment Cache after a prefetch to determine if it can skip the
-  // second request to fill in the dynamic data.
+  // Assume the segment we're rendering contains only partial data for a
+  // statically generated response. This is used by the client Segment Cache
+  // after a prefetch to determine if it can skip the second request to fill in
+  // the dynamic data.
   //
   // It's OK for this to be `true` when the data is actually fully static, but
   // it's not OK for this to be `false` when the data possibly contains holes.
@@ -400,8 +369,7 @@ async function createComponentTreeInternal(
   //
   // For dynamic requests, this must always be `false` because dynamic responses
   // are never partial.
-  const isPossiblyPartialResponse =
-    isStaticGeneration && experimental.isRoutePPREnabled === true
+  const isPossiblyPartialResponse = isStaticGeneration
 
   const LayoutOrPage: ComponentType<any> | undefined = layoutOrPageMod
     ? interopDefault(layoutOrPageMod)
@@ -527,84 +495,41 @@ async function createComponentTreeInternal(
           ? unauthorizedElement
           : undefined
 
-        // if we're prefetching and that there's a Loading component, we bail out
-        // otherwise we keep rendering for the prefetch.
-        // We also want to bail out if there's no Loading component in the tree.
         let childCacheNodeSeedData: CacheNodeSeedData | null = null
 
-        if (
-          // Before PPR, the way instant navigations work in Next.js is we
-          // prefetch everything up to the first route segment that defines a
-          // loading.tsx boundary. (We do the same if there's no loading
-          // boundary in the entire tree, because we don't want to prefetch too
-          // much) The rest of the tree is deferred until the actual navigation.
-          // It does not take into account whether the data is dynamic — even if
-          // the tree is completely static, it will still defer everything
-          // inside the loading boundary.
-          //
-          // This behavior predates PPR and is only relevant if the
-          // PPR flag is not enabled.
-          isPrefetch &&
-          (Loading || !hasLoadingComponentInTree(parallelRoute)) &&
-          // The approach with PPR is different — loading.tsx behaves like a
-          // regular Suspense boundary and has no special behavior.
-          //
-          // With PPR, we prefetch as deeply as possible, and only defer when
-          // dynamic data is accessed. If so, we only defer the nearest parent
-          // Suspense boundary of the dynamic data access, regardless of whether
-          // the boundary is defined by loading.tsx or a normal <Suspense>
-          // component in userspace.
-          //
-          // NOTE: In practice this usually means we'll end up prefetching more
-          // than we were before PPR, which may or may not be considered a
-          // performance regression by some apps. The plan is to address this
-          // before General Availability of PPR by introducing granular
-          // per-segment fetching, so we can reuse as much of the tree as
-          // possible during both prefetches and dynamic navigations. But during
-          // the beta period, we should be clear about this trade off in our
-          // communications.
-          !experimental.isRoutePPREnabled
-        ) {
-          // Don't prefetch this child. This will trigger a lazy fetch by the
-          // client router.
-        } else {
-          // Create the child component
-
-          if (process.env.NODE_ENV === 'development' && missingSlots) {
-            // When we detect the default fallback (which triggers a 404), we collect the missing slots
-            // to provide more helpful debug information during development mode.
-            const parsedTree = parseLoaderTree(parallelRoute)
-            if (
-              parsedTree.conventionPath?.endsWith(PARALLEL_ROUTE_DEFAULT_PATH)
-            ) {
-              missingSlots.add(parallelRouteKey)
-            }
+        if (process.env.NODE_ENV === 'development' && missingSlots) {
+          // When we detect the default fallback (which triggers a 404), we collect the missing slots
+          // to provide more helpful debug information during development mode.
+          const parsedTree = parseLoaderTree(parallelRoute)
+          if (
+            parsedTree.conventionPath?.endsWith(PARALLEL_ROUTE_DEFAULT_PATH)
+          ) {
+            missingSlots.add(parallelRouteKey)
           }
+        }
 
-          if (childCacheNodeSeedData === null) {
-            const seedData = await createComponentTreeInternal(
-              {
-                loaderTree: parallelRoute,
-                parentParams: currentParams,
-                parentOptionalCatchAllParamName: optionalCatchAllParamName,
-                rootLayoutIncluded: rootLayoutIncludedAtThisLevelOrAbove,
-                injectedCSS: injectedCSSWithCurrentLayout,
-                injectedJS: injectedJSWithCurrentLayout,
-                injectedFontPreloadTags:
-                  injectedFontPreloadTagsWithCurrentLayout,
-                ctx,
-                missingSlots,
-                preloadCallbacks,
-                authInterrupts,
-                // `StreamingMetadataOutlet` is used to conditionally throw. In the case of parallel routes we will have more than one page
-                // but we only want to throw on the first one.
-                MetadataOutlet: isChildrenRouteKey ? MetadataOutlet : null,
-              },
-              false
-            )
+        if (childCacheNodeSeedData === null) {
+          const seedData = await createComponentTreeInternal(
+            {
+              loaderTree: parallelRoute,
+              parentParams: currentParams,
+              parentOptionalCatchAllParamName: optionalCatchAllParamName,
+              rootLayoutIncluded: rootLayoutIncludedAtThisLevelOrAbove,
+              injectedCSS: injectedCSSWithCurrentLayout,
+              injectedJS: injectedJSWithCurrentLayout,
+              injectedFontPreloadTags: injectedFontPreloadTagsWithCurrentLayout,
+              ctx,
+              missingSlots,
+              preloadCallbacks,
+              authInterrupts,
+              // `StreamingMetadataOutlet` is used to conditionally throw. In the case of parallel routes we will have more than one page
+              // but we only want to throw on the first one.
+              MetadataOutlet: isChildrenRouteKey ? MetadataOutlet : null,
+            },
+            false
+          )
 
-            childCacheNodeSeedData = seedData
-          }
+          childCacheNodeSeedData = seedData
         }
 
         const templateNode = createElement(
@@ -767,11 +692,7 @@ async function createComponentTreeInternal(
   // along the parent path of a force-dynamic segment will hit this condition effectively making the entire
   // render force-dynamic. We should refactor this function so that we can correctly track which segments
   // need to be dynamic
-  if (
-    workStore.isStaticGeneration &&
-    workStore.forceDynamic &&
-    experimental.isRoutePPREnabled
-  ) {
+  if (workStore.isStaticGeneration && workStore.forceDynamic) {
     return createSeedData(
       ctx,
       createElement(
@@ -797,12 +718,10 @@ async function createComponentTreeInternal(
 
   const isClientComponent = isClientReference(layoutOrPageMod)
 
-  const varyParamsAccumulator =
-    isClientComponent && cacheComponents
-      ? // Client components with Cache Components enabled don't receive params
-        // from the server, so they have an empty vary params set.
-        emptyVaryParamsAccumulator
-      : createVaryParamsAccumulator()
+  const varyParamsAccumulator = isClientComponent
+    ? // Client components don't receive params from the server.
+      emptyVaryParamsAccumulator
+    : createVaryParamsAccumulator()
 
   if (
     process.env.NODE_ENV === 'development' &&
@@ -820,34 +739,10 @@ async function createComponentTreeInternal(
     // Assign searchParams to props if this is a page
     let pageElement: React.ReactNode
     if (isClientComponent) {
-      if (cacheComponents) {
-        // Params are omitted when Cache Components is enabled
-        pageElement = createElement(ClientPageRoot, {
-          Component: PageComponent,
-          serverProvidedParams: null,
-        })
-      } else if (isStaticGeneration) {
-        const promiseOfParams =
-          createPrerenderParamsForClientSegment(currentParams)
-        const promiseOfSearchParams = createPrerenderSearchParamsForClientPage()
-        pageElement = createElement(ClientPageRoot, {
-          Component: PageComponent,
-          serverProvidedParams: {
-            searchParams: query,
-            params: currentParams,
-            promises: [promiseOfSearchParams, promiseOfParams],
-          },
-        })
-      } else {
-        pageElement = createElement(ClientPageRoot, {
-          Component: PageComponent,
-          serverProvidedParams: {
-            searchParams: query,
-            params: currentParams,
-            promises: null,
-          },
-        })
-      }
+      pageElement = createElement(ClientPageRoot, {
+        Component: PageComponent,
+        serverProvidedParams: null,
+      })
     } else {
       // If we are passing params to a server component Page we need to track
       // their usage in case the current render mode tracks dynamic API usage.
@@ -928,35 +823,11 @@ async function createComponentTreeInternal(
 
     if (isClientComponent) {
       let clientSegment: React.ReactNode
-      if (cacheComponents) {
-        // Params are omitted when Cache Components is enabled
-        clientSegment = createElement(ClientSegmentRoot, {
-          Component: SegmentComponent,
-          slots: parallelRouteProps,
-          serverProvidedParams: null,
-        })
-      } else if (isStaticGeneration) {
-        const promiseOfParams =
-          createPrerenderParamsForClientSegment(currentParams)
-
-        clientSegment = createElement(ClientSegmentRoot, {
-          Component: SegmentComponent,
-          slots: parallelRouteProps,
-          serverProvidedParams: {
-            params: currentParams,
-            promises: [promiseOfParams],
-          },
-        })
-      } else {
-        clientSegment = createElement(ClientSegmentRoot, {
-          Component: SegmentComponent,
-          slots: parallelRouteProps,
-          serverProvidedParams: {
-            params: currentParams,
-            promises: null,
-          },
-        })
-      }
+      clientSegment = createElement(ClientSegmentRoot, {
+        Component: SegmentComponent,
+        slots: parallelRouteProps,
+        serverProvidedParams: null,
+      })
 
       if (isRootLayoutWithChildrenSlotAndAtLeastOneMoreSlot) {
         let notfoundClientSegment: React.ReactNode

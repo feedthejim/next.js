@@ -16,7 +16,8 @@
   navigation model. Dynamic RSC requests now use only the staged development
   and production renderers, validation has one Partial Prefetching mode, and
   application-level PPR is unconditional. App Page route kind now directly
-  selects PPR without application or per-route configuration helpers.
+  selects PPR without application or per-route configuration helpers. App Page
+  component-tree generation has one Cache Components and PPR path.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -32,7 +33,7 @@
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
 - **Next action:** Remove remaining App Page `isRoutePPREnabled` booleans from
-  component-tree, runtime-template, response-cache, and build protocols, then
+  tree walking, runtime-template, response-cache, and build protocols, then
   collapse the client to one segment-cache prefetch protocol.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
@@ -45,6 +46,22 @@
   assertions passed.
 
 ## History
+
+### 2026-07-27: One App Page component-tree path
+
+Deleted non-PPR static-generation bailouts, legacy loading-boundary prefetch
+traversal, and non-Cache client prop construction from the App Page
+component-tree producer. Authored framework and App Router renderer source each
+fell by 129 lines and 5,605 bytes. Cache Components references fell by four and
+route-PPR references fell by five. The prior artifact snapshot was not
+comparable, so the 26,346 JavaScript-byte reduction is directional only. The
+16-test fast allowlist passed in 1.76 seconds, types passed in 14.30 seconds,
+the successful core build passed in 23.06 seconds, and all 12 production PPR
+partial-hydration assertions passed in 24.06 seconds on the latest run. Earlier
+browser observations were 30.98 and 27.19 seconds, so the timing remains
+directional. The production server reported ready in 80 milliseconds and the
+first browser load took 108 milliseconds. An initial core build hit the known
+stopped-watcher output race before the clean retry.
 
 ### 2026-07-27: App Page route kind selects PPR
 
