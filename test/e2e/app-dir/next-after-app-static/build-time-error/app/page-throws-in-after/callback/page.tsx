@@ -2,8 +2,6 @@ import * as React from 'react'
 import { after } from 'next/server'
 import { setTimeout } from 'timers/promises'
 
-export const dynamic = 'error'
-
 export default function Index() {
   after(async () => {
     await setTimeout(500)

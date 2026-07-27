@@ -23,21 +23,6 @@ const API_DOCS: Record<
     insertText?: string
   }
 > = {
-  dynamic: {
-    description:
-      'The `dynamic` option provides a few ways to opt in or out of dynamic behavior.',
-    options: {
-      '"auto"':
-        "Heuristic to cache as much as possible but doesn't prevent any component to opt-in to dynamic behavior.",
-      '"force-dynamic"':
-        'This disables all caching of fetches and always revalidates. (This is equivalent to `getServerSideProps`.)',
-      '"error"':
-        'This errors if any dynamic Hooks or fetches are used. (This is equivalent to `getStaticProps`.)',
-      '"force-static"':
-        'This forces caching of all fetches and returns empty values from `cookies`, `headers` and `useSearchParams`.',
-    } satisfies DocsOptionsObject<FullAppSegmentConfig['dynamic']>,
-    link: 'https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#dynamic',
-  },
   fetchCache: {
     description:
       "The `fetchCache` option controls how Next.js statically caches fetches. By default it statically caches fetches reachable before any dynamic Hooks are used, and it doesn't cache fetches that are discovered after that.",

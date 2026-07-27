@@ -2517,10 +2517,7 @@ export default async function build(
                               )
                             }
 
-                            // Mark the app as static if:
-                            // - It has no dynamic param
-                            // - It doesn't have generateStaticParams but `dynamic` is set to
-                            //   `error` or `force-static`
+                            // Mark an app route without dynamic params as static.
                             if (!isDynamic) {
                               staticPaths.set(originalAppPath, [
                                 {
@@ -2534,13 +2531,6 @@ export default async function build(
                                   throwOnEmptyStaticShell: true,
                                 },
                               ])
-                              isStatic = true
-                            } else if (
-                              !hasGenerateStaticParams &&
-                              (appConfig.dynamic === 'error' ||
-                                appConfig.dynamic === 'force-static')
-                            ) {
-                              staticPaths.set(originalAppPath, [])
                               isStatic = true
                             }
                           }
@@ -3062,15 +3052,11 @@ export default async function build(
               // TODO: output manifest specific to app paths and their
               // revalidate periods
               sortedStaticPaths.forEach(([originalAppPath, routes]) => {
-                const appConfig = appDefaultConfigs.get(originalAppPath)
-                const isDynamicError = appConfig?.dynamic === 'error'
-
                 routes.forEach((route) => {
                   defaultMap[route.pathname] = {
                     page: originalAppPath,
                     _ssgPath: route.encodedPathname,
                     _fallbackRouteParams: route.fallbackRouteParams,
-                    _isDynamicError: isDynamicError,
                     _isAppDir: true,
                     _allowEmptyStaticShell: !route.throwOnEmptyStaticShell,
                     // A fallback shell can only be upgraded if at least one of

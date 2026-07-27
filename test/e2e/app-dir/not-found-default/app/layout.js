@@ -24,5 +24,3 @@ export default function Root({ children }) {
     </html>
   )
 }
-
-export const dynamic = 'force-dynamic'

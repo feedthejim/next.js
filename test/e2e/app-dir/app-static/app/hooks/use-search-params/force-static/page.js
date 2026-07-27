@@ -1,5 +1,3 @@
-export const dynamic = 'force-static'
-
 import Link from 'next/link'
 import { Suspense } from 'react'
 import UseSearchParams from '../search-params'

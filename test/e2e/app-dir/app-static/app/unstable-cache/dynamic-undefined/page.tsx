@@ -1,8 +1,6 @@
 import { updateTag, unstable_cache } from 'next/cache'
 import { RevalidateButton } from '../revalidate-button'
 
-export const dynamic = 'force-dynamic'
-
 export default async function Page() {
   async function revalidate() {
     'use server'

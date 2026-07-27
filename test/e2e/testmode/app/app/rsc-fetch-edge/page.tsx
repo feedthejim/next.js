@@ -1,5 +1,4 @@
 // We want to trace this fetch in runtime
-export const dynamic = 'force-dynamic'
 export const runtime = 'edge'
 
 export async function generateMetadata() {

@@ -13,5 +13,3 @@ export default async function CatchAll({
 export async function generateStaticParams(): Promise<Params[]> {
   return [expectedParams]
 }
-
-export const dynamic = 'force-dynamic'

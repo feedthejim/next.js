@@ -1,7 +1,5 @@
 import Link from 'next/link'
 
-export const dynamic = 'force-static'
-
 export function generateStaticParams() {
   return [{ slug: 'first' }, { slug: 'second' }]
 }

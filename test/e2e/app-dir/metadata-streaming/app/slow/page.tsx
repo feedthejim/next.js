@@ -17,5 +17,3 @@ export async function generateMetadata() {
     robots: 'index, follow',
   }
 }
-
-export const dynamic = 'force-dynamic'

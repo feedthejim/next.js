@@ -3,7 +3,6 @@
 import { Suspense } from 'react'
 
 // in parent layout
-export const dynamic = 'force-static'
 
 export function generateStaticParams() {
   return [{ slug: 'first' }, { slug: 'second' }]

@@ -186,7 +186,9 @@ Track at least:
   Cache Components and `use cache` mode fields at the JavaScript/Rust seam
 - App endpoint Rust source files, lines, and bytes
 - App Router route-config mode fields, edge-entry wrappers, and residual
-  runtime-selection branches until App rendering has one platform entry path
+  runtime-selection branches until App rendering has one platform entry path,
+  plus fixture exports and semantic test references for removed route-config
+  modes until their test matrix is pruned
 - public `NextConfig` and `ExperimentalConfig` member counts
 - legacy rendering-mode and feature-gate references
 - webpack-path and Pages Router-path source proxies until those systems are

@@ -7,5 +7,3 @@ export default function Root({ children }: { children: ReactNode }) {
     </html>
   )
 }
-
-export const dynamic = 'force-dynamic'

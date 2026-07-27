@@ -57,28 +57,6 @@ use crate::{
     Decode,
 )]
 #[serde(rename_all = "kebab-case")]
-pub enum NextSegmentDynamic {
-    #[default]
-    Auto,
-    ForceDynamic,
-    Error,
-    ForceStatic,
-}
-
-#[derive(
-    Default,
-    PartialEq,
-    Eq,
-    Clone,
-    Copy,
-    Debug,
-    TraceRawVcs,
-    Deserialize,
-    NonLocalValue,
-    Encode,
-    Decode,
-)]
-#[serde(rename_all = "kebab-case")]
 pub enum NextSegmentFetchCache {
     #[default]
     Auto,
@@ -105,7 +83,6 @@ pub enum NextRevalidate {
 #[turbo_tasks::value(shared)]
 #[derive(Debug, Default, Clone)]
 pub struct NextSegmentConfig {
-    pub dynamic: Option<NextSegmentDynamic>,
     pub revalidate: Option<NextRevalidate>,
     pub fetch_cache: Option<NextSegmentFetchCache>,
     pub runtime: Option<NextRuntime>,
@@ -139,14 +116,12 @@ impl NextSegmentConfig {
     /// the parent's values.
     pub fn apply_parent_config(&mut self, parent: &Self) {
         let NextSegmentConfig {
-            dynamic,
             revalidate,
             fetch_cache,
             runtime,
             preferred_region,
             ..
         } = self;
-        *dynamic = dynamic.or(parent.dynamic);
         *revalidate = revalidate.or(parent.revalidate);
         *fetch_cache = fetch_cache.or(parent.fetch_cache);
         *runtime = runtime.or(parent.runtime);
@@ -176,14 +151,12 @@ impl NextSegmentConfig {
             Ok(())
         }
         let Self {
-            dynamic,
             revalidate,
             fetch_cache,
             runtime,
             preferred_region,
             ..
         } = self;
-        merge_parallel(dynamic, &parallel_config.dynamic, "dynamic")?;
         merge_parallel(revalidate, &parallel_config.revalidate, "revalidate")?;
         merge_parallel(fetch_cache, &parallel_config.fetch_cache, "fetchCache")?;
         merge_parallel(runtime, &parallel_config.runtime, "runtime")?;
@@ -736,48 +709,6 @@ async fn parse_config_value(
                     }
                 }
             }
-        }
-        "dynamic" => {
-            let Some(value) = get_value() else {
-                return invalid_config(
-                    source,
-                    "dynamic",
-                    span,
-                    rcstr!("It mustn't be reexported."),
-                    None,
-                    IssueSeverity::Error,
-                )
-                .await;
-            };
-            if matches!(value, JsValue::Constant(ConstantValue::Undefined)) {
-                return Ok(());
-            }
-            let Some(val) = value.as_str() else {
-                return invalid_config(
-                    source,
-                    "dynamic",
-                    span,
-                    rcstr!("It needs to be a static string."),
-                    Some(&value),
-                    IssueSeverity::Error,
-                )
-                .await;
-            };
-
-            config.dynamic = match serde_json::from_value(Value::String(val.to_string())) {
-                Ok(dynamic) => Some(dynamic),
-                Err(err) => {
-                    return invalid_config(
-                        source,
-                        "dynamic",
-                        span,
-                        format!("It has an invalid value: {err}.").into(),
-                        Some(&value),
-                        IssueSeverity::Error,
-                    )
-                    .await;
-                }
-            };
         }
         "revalidate" => {
             let Some(value) = get_value() else {

@@ -1,7 +1,5 @@
 import { cookies } from 'next/headers'
 
-export const dynamic = 'force-static'
-
 export default async function Page(props) {
   const params = await props.params
   if (params.id.includes('static-bailout')) {

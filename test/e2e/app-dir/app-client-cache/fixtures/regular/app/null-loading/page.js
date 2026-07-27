@@ -1,5 +1,3 @@
-export const dynamic = 'force-dynamic'
-
 export default async function Page() {
   const randomNumber = await new Promise((resolve) => {
     setTimeout(() => {

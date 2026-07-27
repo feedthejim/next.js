@@ -780,12 +780,6 @@ function makeErroringParams(
         Object.defineProperty(augmentedUnderlying, prop, {
           get() {
             const expression = describeStringPropertyAccess('params', prop)
-            // In most dynamic APIs we also throw if `dynamic = "error"` however
-            // for params is only dynamic when we're generating a fallback shell
-            // and even when `dynamic = "error"` we still support generating dynamic
-            // fallback shells
-            // TODO remove this comment when cacheComponents is the default since there
-            // will be no `dynamic = "error"`
             if (prerenderStore.type === 'prerender-ppr') {
               // PPR Prerender (no cacheComponents)
               postponeWithTracking(

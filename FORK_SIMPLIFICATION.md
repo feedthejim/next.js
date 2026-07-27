@@ -93,6 +93,12 @@
   `generateStaticParams` seeds known paths, while other values use the
   canonical App Page partial fallback or App Route blocking fallback. The
   inherited `dynamicParams` mode and its special build errors are absent.
+  App rendering also has no `dynamic` route-config mode. Request data now
+  follows the canonical Cache Components tracking path without force-dynamic,
+  force-static, dynamic-error work-store state, request-data shims, or
+  configuration-driven postponement. Mode-only suites and the fully skipped
+  legacy `ppr-full` application are absent, while remaining semantic test debt
+  is measured explicitly.
   `fork-metrics.json` is the current scorecard, including static complexity,
   validation cost, and relevant runtime performance guardrails.
 - **Constraints:** Backward compatibility is out of scope. Do not add migration
@@ -104,9 +110,8 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Remove the `dynamic` App Router configuration and its
-  rendering branches, then continue with `fetchCache`, `revalidate`, and
-  `experimental_ppr`.
+- **Next action:** Remove the `fetchCache` App Router configuration and its
+  rendering branches, then continue with `revalidate` and `experimental_ppr`.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -144,9 +149,57 @@
   assertions, `next-api` check, 56-test fast contract, rebuilt native binding,
   and core release build passed. A production Turbopack E2E also proved that
   an ungenerated parameter returns successfully under the fork's Partial
-  Prefetching configuration.
+  Prefetching configuration. App Router `dynamic` configuration is now absent
+  from JavaScript and Rust schemas, rendering, Route Handlers, request APIs,
+  fetch behavior, output export, generated types, and language-service
+  metadata. Core types, `next-core`, the 31-case RSC diagnostic contract, eight
+  TypeScript-plugin and generated-type assertions, the 56-test fast contract,
+  and the core release build passed. The converted App Route request-data
+  journey passed in Turbopack development. The 35-assertion production browser
+  pack passed PPR hydration, resume-cache and Server Action behavior, HTTP
+  fallback recovery, and Partial Prefetching navigation. The production form
+  of the converted upstream App Route fixture is still blocked by existing
+  public declaration export errors, so that journey remains a development
+  check until the dense conformance application replaces the shared fixture.
 
 ## History
+
+### 2026-07-27: One request-derived rendering model
+
+Removed the App Router `dynamic` route configuration from the JavaScript and
+Rust segment schemas, generated types, language service, build analysis,
+metadata generation, output export, App Page rendering, Route Handlers,
+request APIs, fetch patching, and work-store state. Request data now uses the
+same Cache Components tracking path in every supported route. The
+force-static request and URL shims, dynamic-error proxies, force-dynamic
+postponement, and special removed-feature diagnostics are gone.
+
+Pruned mode-only export, dynamic-error, and request-API cases, plus the fully
+skipped legacy `ppr-full` application and their test-manifest entries. The
+remaining semantic test debt is intentionally visible in the scorecard rather
+than hidden behind inert fixture exports. The browser allowlist now prefers a
+rebuilt fork-native SWC binding automatically.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** Exact implementation references fell from 66 to zero.
+  Fixture exports fell from 198 to zero. Semantic test-mode references fell
+  from 436 to 143 and remain the explicit cleanup queue.
+- **Leanness:** Authored framework source fell by 667 lines and 26,704 bytes,
+  while App rendering fell by 99 lines and tracked Rust compiler source fell
+  by 73 lines. Four test suites are gone. The comparable core distribution
+  fell by 387,989 bytes overall and 107,791 JavaScript bytes.
+- **Runtime performance:** The converted Turbopack development fixture was
+  ready in 197 milliseconds and served its first compiled request in 808
+  milliseconds. The production browser contract started in at most 84
+  milliseconds, and its Partial Prefetching navigation assertion completed in
+  501 milliseconds. These are warm-local guardrails, not benchmark claims.
+- **Iteration efficiency:** Types took 15.05 seconds, direct Rust and compiler
+  checks took 17.68 seconds, the fast contract plus converted development E2E
+  took 5.09 seconds, and the core release took 22.49 seconds. The full
+  35-assertion production browser pack took 105.28 seconds, for 185.59 seconds
+  of successful validation. This is broader coverage than the previous slice,
+  so the total is not a comparable speed regression.
 
 ### 2026-07-27: One dynamic parameter model
 

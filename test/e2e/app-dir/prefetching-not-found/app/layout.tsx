@@ -1,5 +1,4 @@
 // we want the layout to opt-out of static prefetching
-export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 

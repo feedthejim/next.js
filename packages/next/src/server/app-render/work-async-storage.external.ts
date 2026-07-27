@@ -36,11 +36,8 @@ export interface WorkStore {
   readonly isOnDemandRevalidate?: boolean
   readonly isBuildTimePrerendering?: boolean
 
-  forceDynamic?: boolean
   fetchCache?: AppSegmentConfig['fetchCache']
 
-  forceStatic?: boolean
-  dynamicShouldError?: boolean
   pendingRevalidates?: Record<string, Promise<any>>
   pendingRevalidateWrites?: Array<Promise<void>> // This is like pendingRevalidates but isn't used for deduping.
   readonly afterContext: AfterContext

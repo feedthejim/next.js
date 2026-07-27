@@ -894,7 +894,7 @@ impl ReactServerComponentValidator {
                         possibly_invalid_exports
                             .insert(export_name.clone(), (InvalidExportKind::Metadata, *span));
                     }
-                    "runtime" | "dynamic" | "fetchCache" | "revalidate" | "experimental_ppr" => {
+                    "runtime" | "fetchCache" | "revalidate" | "experimental_ppr" => {
                         possibly_invalid_exports.insert(
                             export_name.clone(),
                             (InvalidExportKind::RouteSegmentConfig, *span),

@@ -41,10 +41,7 @@ import {
   describeHasCheckingStringProperty,
   wellKnownProperties,
 } from '../../shared/lib/utils/reflect-utils'
-import {
-  throwWithStaticGenerationBailoutErrorWithDynamicError,
-  throwForSearchParamsAccessInUseCache,
-} from './utils'
+import { throwForSearchParamsAccessInUseCache } from './utils'
 
 export type SearchParams = { [key: string]: string | string[] | undefined }
 
@@ -166,12 +163,6 @@ export function createPrerenderSearchParamsForClientPage(): Promise<SearchParams
   if (!workStore) {
     throw new InvariantError('Expected workStore to be initialized')
   }
-  if (workStore.forceStatic) {
-    // When using forceStatic we override all other logic and always just return an empty
-    // dictionary object.
-    return Promise.resolve({})
-  }
-
   const workUnitStore = workUnitAsyncStorage.getStore()
   if (workUnitStore) {
     switch (workUnitStore.type) {
@@ -218,12 +209,6 @@ function createStaticPrerenderSearchParams(
   workStore: WorkStore,
   prerenderStore: StaticPrerenderStore
 ): Promise<SearchParams> {
-  if (workStore.forceStatic) {
-    // When using forceStatic we override all other logic and always just return an empty
-    // dictionary object.
-    return Promise.resolve({})
-  }
-
   switch (prerenderStore.type) {
     case 'prerender':
     case 'prerender-client':
@@ -300,12 +285,6 @@ function createRenderSearchParams(
   }
 
   // No staged rendering = no cacheComponents, or cacheComponents prod without cachedNavigations
-
-  if (workStore.forceStatic) {
-    // When using forceStatic we override all other logic and always just return an empty
-    // dictionary object.
-    return Promise.resolve({})
-  }
 
   if (process.env.NODE_ENV === 'development') {
     // Semantically we only need the dev tracking when running in `next dev`
@@ -488,12 +467,7 @@ function makeErroringSearchParams(
       if (typeof prop === 'string' && prop === 'then') {
         const expression =
           '`await searchParams`, `searchParams.then`, or similar'
-        if (workStore.dynamicShouldError) {
-          throwWithStaticGenerationBailoutErrorWithDynamicError(
-            workStore.route,
-            expression
-          )
-        } else if (prerenderStore.type === 'prerender-ppr') {
+        if (prerenderStore.type === 'prerender-ppr') {
           // PPR Prerender (no cacheComponents)
           postponeWithTracking(
             workStore.route,
@@ -596,32 +570,10 @@ function makeUntrackedSearchParamsWithDevWarningsImpl(
   workStore: WorkStore,
   requestStore: RequestStore
 ): Promise<SearchParams> {
-  const promiseInitialized = { current: false }
-  const proxiedUnderlying = instrumentSearchParamsObjectWithDevWarnings(
-    underlyingSearchParams,
-    workStore,
-    promiseInitialized
-  )
-
   const promise = makeDevtoolsIOAwarePromise(
-    proxiedUnderlying,
+    underlyingSearchParams,
     requestStore,
     RENDER_STAGES_BY_DATA_KIND.runtimeLinkData
-  )
-
-  promise.then(
-    () => {
-      promiseInitialized.current = true
-    },
-    // If we're in staged rendering, this promise will reject if the render
-    // is aborted before it can reach the runtime stage.
-    // In that case, we have to prevent an unhandled rejection from the promise
-    // created by this `.then()` call.
-    // This does not affect the `promiseInitialized` logic above,
-    // because `proxiedUnderlying` will not be used to resolve the promise,
-    // so there's no risk of any of its properties being accessed and triggering
-    // an undesireable warning.
-    ignoreReject
   )
 
   return instrumentSearchParamsPromiseWithDevWarnings(
@@ -632,59 +584,6 @@ function makeUntrackedSearchParamsWithDevWarningsImpl(
 }
 
 function ignoreReject() {}
-
-function instrumentSearchParamsObjectWithDevWarnings(
-  underlyingSearchParams: SearchParams,
-  workStore: WorkStore,
-  promiseInitialized: { current: boolean }
-) {
-  // We have an unfortunate sequence of events that requires this initialization logic. We want to instrument the underlying
-  // searchParams object to detect if you are accessing values in dev. This is used for warnings and for things like the static prerender
-  // indicator. However when we pass this proxy to our Promise.resolve() below the VM checks if the resolved value is a promise by looking
-  // at the `.then` property. To our dynamic tracking logic this is indistinguishable from a `then` searchParam and so we would normally trigger
-  // dynamic tracking. However we know that this .then is not real dynamic access, it's just how thenables resolve in sequence. So we introduce
-  // this initialization concept so we omit the dynamic check until after we've constructed our resolved promise.
-  return new Proxy(underlyingSearchParams, {
-    get(target, prop, receiver) {
-      if (typeof prop === 'string' && promiseInitialized.current) {
-        if (workStore.dynamicShouldError) {
-          const expression = describeStringPropertyAccess('searchParams', prop)
-          throwWithStaticGenerationBailoutErrorWithDynamicError(
-            workStore.route,
-            expression
-          )
-        }
-      }
-      return ReflectAdapter.get(target, prop, receiver)
-    },
-    has(target, prop) {
-      if (typeof prop === 'string') {
-        if (workStore.dynamicShouldError) {
-          const expression = describeHasCheckingStringProperty(
-            'searchParams',
-            prop
-          )
-          throwWithStaticGenerationBailoutErrorWithDynamicError(
-            workStore.route,
-            expression
-          )
-        }
-      }
-      return Reflect.has(target, prop)
-    },
-    ownKeys(target) {
-      if (workStore.dynamicShouldError) {
-        const expression =
-          '`{...searchParams}`, `Object.keys(searchParams)`, or similar'
-        throwWithStaticGenerationBailoutErrorWithDynamicError(
-          workStore.route,
-          expression
-        )
-      }
-      return Reflect.ownKeys(target)
-    },
-  })
-}
 
 function instrumentSearchParamsPromiseWithDevWarnings(
   underlyingSearchParams: SearchParams,
@@ -705,13 +604,6 @@ function instrumentSearchParamsPromiseWithDevWarnings(
 
   return new Proxy(promise, {
     get(target, prop, receiver) {
-      if (prop === 'then' && workStore.dynamicShouldError) {
-        const expression = '`searchParams.then`'
-        throwWithStaticGenerationBailoutErrorWithDynamicError(
-          workStore.route,
-          expression
-        )
-      }
       if (typeof prop === 'string') {
         if (
           !wellKnownProperties.has(prop) &&

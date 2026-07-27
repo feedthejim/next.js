@@ -2,25 +2,18 @@
    ,-[input.js:1:1]
  1 | export const runtime = 'edge'
    :              ^^^^^^^
- 2 | export const dynamic = 'force-dynamic'
-   `----
-  x Route segment config "dynamic" is not supported by the App Router. Please remove it.
-   ,-[input.js:2:1]
- 1 | export const runtime = 'edge'
- 2 | export const dynamic = 'force-dynamic'
-   :              ^^^^^^^
- 3 | export const fetchCache = 'force-no-store'
+ 2 | export const fetchCache = 'force-no-store'
    `----
   x Route segment config "fetchCache" is not supported by the App Router. Please remove it.
-   ,-[input.js:3:1]
- 2 | export const dynamic = 'force-dynamic'
- 3 | export const fetchCache = 'force-no-store'
+   ,-[input.js:2:1]
+ 1 | export const runtime = 'edge'
+ 2 | export const fetchCache = 'force-no-store'
    :              ^^^^^^^^^^
- 4 | export const revalidate = 1
+ 3 | export const revalidate = 1
    `----
   x Route segment config "revalidate" is not supported by the App Router. Please remove it.
-   ,-[input.js:4:1]
- 3 | export const fetchCache = 'force-no-store'
- 4 | export const revalidate = 1
+   ,-[input.js:3:1]
+ 2 | export const fetchCache = 'force-no-store'
+ 3 | export const revalidate = 1
    :              ^^^^^^^^^^
    `----

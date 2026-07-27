@@ -1,8 +1,6 @@
 import { after } from 'next/server'
 import { setTimeout } from 'timers/promises'
 
-export const dynamic = 'error'
-
 export async function GET() {
   after(async () => {
     await setTimeout(500)

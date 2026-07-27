@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-export const revalidate = 1
-
 export function generateStaticParams() {
   console.log('generateStaticParams static/[slug]')
   return [{ slug: 'first' }, { slug: 'second' }]

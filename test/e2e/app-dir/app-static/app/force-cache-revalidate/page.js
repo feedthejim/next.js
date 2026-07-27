@@ -1,5 +1,4 @@
 // we want to bail out of ISR, but still leverage fetch caching
-export const dynamic = 'force-dynamic'
 
 export default async function Page() {
   const dataForceCache = await fetch(

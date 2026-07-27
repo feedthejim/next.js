@@ -118,8 +118,6 @@ export function GET() {
     },
   })
 }
-
-export const dynamic = 'force-static'
 `
   return code
 }

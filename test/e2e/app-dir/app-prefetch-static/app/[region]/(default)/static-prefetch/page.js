@@ -1,5 +1,3 @@
-export const dynamic = 'force-dynamic'
-
 export default function StaticPrefetchPage(props) {
   return (
     <div id="static-prefetch-page">

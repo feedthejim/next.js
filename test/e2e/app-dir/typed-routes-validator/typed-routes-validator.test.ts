@@ -83,7 +83,6 @@ describe('typed-routes-validator', () => {
       return <div>Test Page</div>
     }
 
-    export const dynamic = 'force-static'
     export const metadata = { title: 'Test' }
             `
       )
@@ -172,7 +171,6 @@ describe('typed-routes-validator', () => {
       return new Response('Created', { status: 201 })
     }
 
-    export const dynamic = 'force-dynamic'
             `
       )
 
@@ -189,7 +187,6 @@ describe('typed-routes-validator', () => {
       return new Response('Created', { status: 201 })
     }
 
-    export const dynamic = 'force-dynamic'
             `
       )
 

@@ -206,10 +206,6 @@ async function makeErroringRootParamPromise(
   apiName: string
 ): Promise<ParamValue> {
   const expression = describeStringPropertyAccess(apiName, paramName)
-  // In most dynamic APIs, we also throw if `dynamic = "error"`.
-  // However, root params are only dynamic when we're generating a fallback shell,
-  // and even with `dynamic = "error"` we still support generating dynamic fallback shells.
-  // TODO: remove this comment when cacheComponents is the default since there will be no `dynamic = "error"`
   switch (prerenderStore.type) {
     case 'prerender-ppr': {
       return postponeWithTracking(

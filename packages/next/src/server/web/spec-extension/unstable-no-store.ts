@@ -26,8 +26,6 @@ export function unstable_noStore() {
     // unstable_noStore in contexts outside of `react-server` condition but since we historically
     // have not errored here previously, we maintain that behavior for now.
     return
-  } else if (store.forceStatic) {
-    return
   } else {
     store.isUnstableNoStore = true
     if (workUnitStore) {

@@ -1,7 +1,6 @@
 import { get } from 'node:https'
 
 // We want to trace this fetch in runtime
-export const dynamic = 'force-dynamic'
 
 export async function generateMetadata() {
   return {}

@@ -169,6 +169,39 @@ const appRouteConfigFiles = [
   'crates/next-core/src/segment_config.rs',
   'crates/next-custom-transforms/src/transforms/react_server_components.rs',
 ].filter(existsSync)
+const appDynamicModeFiles = [
+  ...new Set(
+    [
+      ...appRouteConfigFiles,
+      'packages/next/src/build/index.ts',
+      'packages/next/src/build/utils.ts',
+      'packages/next/src/build/webpack/loaders/next-metadata-route-loader.ts',
+      'packages/next/src/export/routes/app-page.ts',
+      'packages/next/src/export/worker.ts',
+      'packages/next/src/server/config-schema.ts',
+      'packages/next/src/server/config-shared.ts',
+      'packages/next/src/server/app-render/dev-validation-worker-globals.ts',
+      'packages/next/src/server/app-render/dev-validation-worker-snapshot.ts',
+      'packages/next/src/server/app-render/app-render.tsx',
+      'packages/next/src/server/app-render/create-component-tree.tsx',
+      'packages/next/src/server/app-render/dynamic-rendering.ts',
+      'packages/next/src/server/app-render/work-async-storage.external.ts',
+      'packages/next/src/server/lib/patch-fetch.ts',
+      'packages/next/src/server/request/connection.ts',
+      'packages/next/src/server/request/cookies.ts',
+      'packages/next/src/server/request/draft-mode.ts',
+      'packages/next/src/server/request/headers.ts',
+      'packages/next/src/server/request/params.ts',
+      'packages/next/src/server/request/root-params.ts',
+      'packages/next/src/server/request/search-params.ts',
+      'packages/next/src/server/request/utils.ts',
+      'packages/next/src/server/route-modules/app-route/helpers/is-static-gen-enabled.ts',
+      'packages/next/src/server/route-modules/app-route/module.ts',
+      'packages/next/src/server/web/spec-extension/unstable-no-store.ts',
+      'crates/next-core/src/next_app/metadata/route.rs',
+    ].filter(existsSync)
+  ),
+]
 const appEntryFiles = [
   'crates/next-api/src/app.rs',
   'crates/next-core/src/next_app/app_page_entry.rs',
@@ -195,6 +228,7 @@ const pagesRouterFiles = frameworkSourceFiles.filter(
 const testFiles = worktreeFiles('test').filter((file) =>
   /\.(test|spec)\.[cm]?[jt]sx?$/.test(file)
 )
+const testSourceFiles = worktreeFiles('test').filter(isSourceFile)
 
 const nextPackage = JSON.parse(
   readFileSync('packages/next/package.json', 'utf8')
@@ -274,6 +308,18 @@ const metrics = {
     appDynamicParamsModeReferences: countMatches(
       appRouteConfigFiles,
       /\bdynamicParams\b|\bdynamic_params\b/g
+    ),
+    appDynamicModeReferences: countMatches(
+      appDynamicModeFiles,
+      /\bNextSegmentDynamic\b|\bdynamicShouldError\b|\bforceDynamic\b|\bforceStatic\b|\b_isDynamicError\b|\b(?:appConfig|layoutOrPageMod|userland|liveUserland|config|segmentConfig|mod)\??\.dynamic\b/g
+    ),
+    appDynamicFixtureExports: countMatches(
+      testSourceFiles,
+      /\bexport\s+const\s+dynamic\s*=/g
+    ),
+    appDynamicTestModeReferences: countMatches(
+      testSourceFiles,
+      /\bdynamic\s*=\s*["'](?:error|force-dynamic|force-static)["']|\bforce-(?:dynamic|static)\b/g
     ),
   },
   packageDependencies: {

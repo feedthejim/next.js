@@ -8,7 +8,6 @@ import {
   throwToInterruptStaticGeneration,
   trackDynamicDataInDynamicRender,
 } from '../app-render/dynamic-rendering'
-import { StaticGenBailoutError } from '../../client/components/static-generation-bailout'
 import {
   makeDynamicHangingPromise,
   makeDevtoolsIOAwarePromise,
@@ -32,18 +31,6 @@ export function connection(): Promise<void> {
     if (workUnitStore && !isRequestApiAllowedInCurrentPhase(workUnitStore)) {
       throw new Error(
         `Route ${workStore.route} used \`connection()\` inside \`after()\` while rendering. The \`connection()\` function is used to indicate the subsequent code must only run when there is an actual Request, but \`after()\` executes after the request, so this function is not allowed in this scope. See more info here: https://nextjs.org/docs/app/api-reference/functions/after`
-      )
-    }
-
-    if (workStore.forceStatic) {
-      // When using forceStatic, we override all other logic and always just
-      // return a resolving promise without tracking.
-      return Promise.resolve(undefined)
-    }
-
-    if (workStore.dynamicShouldError) {
-      throw new StaticGenBailoutError(
-        `Route ${workStore.route} with \`dynamic = "error"\` couldn't be rendered statically because it used \`connection()\`. See more info here: https://nextjs.org/docs/app/building-your-application/rendering/static-and-dynamic#dynamic-rendering`
       )
     }
 

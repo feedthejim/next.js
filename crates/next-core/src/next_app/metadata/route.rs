@@ -189,8 +189,6 @@ async fn static_route_source(mode: NextMode, path: FileSystemPath) -> Result<Vc<
                     }},
                 }})
             }}
-
-            export const dynamic = 'force-static'
         "#,
         content_type = StringifyJs(&content_type),
         cache_control = StringifyJs(cache_control),

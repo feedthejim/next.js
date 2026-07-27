@@ -2,8 +2,6 @@ import Link from 'next/link'
 import { INVALID_URL } from '../invalid-url'
 import { Delay } from '../delay'
 
-export const dynamic = 'force-dynamic'
-
 export default function Page() {
   return (
     <>

@@ -7,5 +7,3 @@ export default async function Page() {
   await foo()
   return <>server</>
 }
-
-export const dynamic = 'force-dynamic'

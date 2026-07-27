@@ -1,4 +1,4 @@
-export const dynamic = 'force-static'
+export const fetchCache = 'force-cache'
 
 export const generateMetadata = async () => {
   const metadataTitle = 'Expandable hover'

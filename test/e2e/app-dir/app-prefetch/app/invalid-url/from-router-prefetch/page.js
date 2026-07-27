@@ -4,8 +4,6 @@ import { INVALID_URL } from '../invalid-url'
 import { Delay } from '../delay'
 import { useRouter } from 'next/navigation'
 
-export const dynamic = 'force-dynamic'
-
 export default function Page() {
   const router = useRouter()
   useEffect(() => {

@@ -3,4 +3,3 @@ export default function HomePage() {
 }
 
 // Ensures that the flight requests are always handled by the server.
-export const dynamic = 'force-dynamic'

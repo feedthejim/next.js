@@ -408,7 +408,6 @@ export interface Endpoint {
 }
 
 interface EndpointConfig {
-  dynamic?: 'auto' | 'force-dynamic' | 'error' | 'force-static'
   revalidate?: 'never' | 'force-cache' | number
   fetchCache?:
     | 'auto'

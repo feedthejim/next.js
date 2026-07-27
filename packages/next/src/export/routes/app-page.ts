@@ -48,7 +48,6 @@ export async function exportAppPage(
   partialRenderOpts: Omit<RenderOpts, keyof RequestLifecycleOpts>,
   htmlFilepath: string,
   debugOutput: boolean,
-  isDynamicError: boolean,
   fileWriter: MultiFileWriter,
   sharedContext: AppSharedContext
 ): Promise<ExportRouteResult> {
@@ -106,11 +105,6 @@ export async function exportAppPage(
     } = metadata
 
     if (cacheControl.revalidate === 0) {
-      if (isDynamicError) {
-        throw new Error(
-          `Page with dynamic = "error" encountered dynamic data method on ${path}.`
-        )
-      }
       const { staticBailoutInfo = {} } = metadata
 
       if (debugOutput && staticBailoutInfo?.description) {

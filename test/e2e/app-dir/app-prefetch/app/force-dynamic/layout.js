@@ -1,7 +1,5 @@
 import React from 'react'
 
-export const dynamic = 'force-dynamic'
-
 export default async function Layout({ children }) {
   console.log('re-fetching in layout')
   const data = await fetch(

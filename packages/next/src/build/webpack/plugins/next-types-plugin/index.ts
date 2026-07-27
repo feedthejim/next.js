@@ -75,7 +75,6 @@ checkFields<Diff<{
   prefetch?: Prefetch
   unstable_dynamicStaleTime?: number
   revalidate?: RevalidateRange<TEntry> | false
-  dynamic?: 'auto' | 'force-dynamic' | 'error' | 'force-static'
   fetchCache?: 'auto' | 'force-no-store' | 'only-no-store' | 'default-no-store' | 'default-cache' | 'only-cache' | 'force-cache'
   /** @deprecated The \`preferredRegion\` config is deprecated. Remove this export. */
   preferredRegion?: 'auto' | 'global' | 'home' | string | string[]

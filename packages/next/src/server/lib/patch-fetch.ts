@@ -517,17 +517,6 @@ export function createPatchedFetcher(
           pageFetchCacheMode === 'force-no-store' ||
           pageFetchCacheMode === 'only-no-store'
 
-        // If no explicit fetch cache mode is set, but dynamic = `force-dynamic` is set,
-        // we shouldn't consider caching the fetch. This is because the `dynamic` cache
-        // is considered a "top-level" cache mode, whereas something like `fetchCache` is more
-        // fine-grained. Top-level modes are responsible for setting reasonable defaults for the
-        // other configurations.
-        const noFetchConfigAndForceDynamic =
-          !pageFetchCacheMode &&
-          !currentFetchCacheConfig &&
-          !currentFetchRevalidate &&
-          workStore.forceDynamic
-
         if (
           // force-cache was specified without a revalidate value. We set the revalidate value to false
           // which will signal the cache to not revalidate
@@ -535,10 +524,7 @@ export function createPatchedFetcher(
           typeof currentFetchRevalidate === 'undefined'
         ) {
           currentFetchRevalidate = false
-        } else if (
-          hasExplicitFetchCacheOptOut ||
-          noFetchConfigAndForceDynamic
-        ) {
+        } else if (hasExplicitFetchCacheOptOut) {
           currentFetchRevalidate = 0
         }
 
@@ -727,9 +713,6 @@ export function createPatchedFetcher(
         }
 
         if (
-          // when force static is configured we don't bail from
-          // `revalidate: 0` values
-          !(workStore.forceStatic && finalRevalidate === 0) &&
           // we don't consider autoNoCache to switch to dynamic for ISR
           !autoNoCache &&
           // If the revalidate value isn't currently set or the value is less
@@ -1254,9 +1237,7 @@ export function createPatchedFetcher(
               )
             }
 
-            if (!workStore.forceStatic || next.revalidate !== 0) {
-              revalidateStore.revalidate = next.revalidate
-            }
+            revalidateStore.revalidate = next.revalidate
           }
           if (hasNextConfig) delete init.next
         }

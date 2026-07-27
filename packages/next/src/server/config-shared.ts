@@ -690,7 +690,7 @@ export interface ExperimentalConfig {
 
   /**
    * Type-checks props and return values of pages.
-   * Requires literal values for segment config (e.g. `export const dynamic = 'force-static' as const`).
+   * Requires literal values for segment config (e.g. `export const fetchCache = 'force-cache' as const`).
    */
   strictRouteTypes?: boolean
 
@@ -1413,11 +1413,6 @@ export type ExportPathMap = {
      * @internal
      */
     _isAppDir?: boolean
-
-    /**
-     * @internal
-     */
-    _isDynamicError?: boolean
 
     /**
      * When true, the page is prerendered as a fallback shell, while allowing

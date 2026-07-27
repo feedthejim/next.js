@@ -79,57 +79,6 @@ describe('nextjs APIs in after()', () => {
       })
     })
 
-    describe('cannot be called in a prerendered page', () => {
-      it.each([
-        {
-          title: 'with `dynamic = "error"`',
-          path: '/request-apis/page-dynamic-error',
-        },
-        {
-          title: 'with `dynamic = "force-static"`',
-          path: '/request-apis/page-force-static',
-        },
-      ])('$title', async ({ path }) => {
-        await next.render(path)
-        await retry(() => {
-          const logs = isNextDev ? getLogs() : buildLogs // in `next start` the error was logged at build time
-
-          expect(logs).not.toContain(`[${path}] headers(): ok`)
-          expect(logs).toContain(
-            `[${path}] headers(): error: Error: Route ${path} used \`headers()\` inside \`after()\` while rendering. This is not supported.`
-          )
-
-          expect(logs).not.toContain(`[${path}] cookies(): ok`)
-          expect(logs).toContain(
-            `[${path}] cookies(): error: Error: Route ${path} used \`cookies()\` inside \`after()\` while rendering. This is not supported.`
-          )
-
-          expect(logs).not.toContain(`[${path}] connection(): ok`)
-          expect(logs).toContain(
-            `[${path}] connection(): error: Error: Route ${path} used \`connection()\` inside \`after()\` while rendering.`
-          )
-        })
-        await retry(() => {
-          const logs = isNextDev ? getLogs() : buildLogs // in `next start` the error was logged at build time
-
-          expect(logs).not.toContain(`[${path}] nested headers(): ok`)
-          expect(logs).toContain(
-            `[${path}] nested headers(): error: Error: Route ${path} used \`headers()\` inside \`after()\` while rendering. This is not supported.`
-          )
-
-          expect(logs).not.toContain(`[${path}] nested cookies(): ok`)
-          expect(logs).toContain(
-            `[${path}] nested cookies(): error: Error: Route ${path} used \`cookies()\` inside \`after()\` while rendering. This is not supported.`
-          )
-
-          expect(logs).not.toContain(`[${path}] nested connection(): ok`)
-          expect(logs).toContain(
-            `[${path}] nested connection(): error: Error: Route ${path} used \`connection()\` inside \`after()\` while rendering.`
-          )
-        })
-      })
-    })
-
     it('can be called in a server action', async () => {
       const path = '/request-apis/server-action'
       const browser = await next.browser(path)
@@ -160,60 +109,6 @@ describe('nextjs APIs in after()', () => {
 
         expect(logs).toContain(`[${path}] connection(): ok`)
         expect(logs).toContain(`[${path}] nested connection(): ok`)
-      })
-    })
-
-    it('can be called in a prerendered route handler with `dynamic = "force-static"`', async () => {
-      const path = '/request-apis/route-handler-force-static'
-      await next.render(path)
-      await retry(() => {
-        const logs = isNextDev ? getLogs() : buildLogs // in `next start` the error was logged at build time
-        expect(logs).toContain(`[${path}] headers(): ok`)
-        expect(logs).toContain(`[${path}] nested headers(): ok`)
-
-        expect(logs).toContain(`[${path}] cookies(): ok`)
-        expect(logs).toContain(`[${path}] nested cookies(): ok`)
-
-        expect(logs).toContain(`[${path}] connection(): ok`)
-        expect(logs).toContain(`[${path}] nested connection(): ok`)
-      })
-    })
-
-    it('can be called in a prerendered route handler with `dynamic = "error" (but throw, because dynamic should error)`', async () => {
-      const path = '/request-apis/route-handler-dynamic-error'
-      await next.render(path)
-      await retry(() => {
-        const logs = isNextDev ? getLogs() : buildLogs // in `next start` the error was logged at build time
-
-        expect(logs).not.toContain(`[${path}] headers(): ok`)
-        expect(logs).toContain(
-          `[${path}] headers(): error: Error: Route ${path} with \`dynamic = "error"\` couldn't be rendered statically because it used \`headers()\`.`
-        )
-
-        expect(logs).not.toContain(`[${path}] nested headers(): ok`)
-        expect(logs).toContain(
-          `[${path}] nested headers(): error: Error: Route ${path} with \`dynamic = "error"\` couldn't be rendered statically because it used \`headers()\`.`
-        )
-
-        expect(logs).not.toContain(`[${path}] cookies(): ok`)
-        expect(logs).toContain(
-          `[${path}] cookies(): error: Error: Route ${path} with \`dynamic = "error"\` couldn't be rendered statically because it used \`cookies()\`.`
-        )
-
-        expect(logs).not.toContain(`[${path}] nested cookies(): ok`)
-        expect(logs).toContain(
-          `[${path}] nested cookies(): error: Error: Route ${path} with \`dynamic = "error"\` couldn't be rendered statically because it used \`cookies()\`.`
-        )
-
-        expect(logs).not.toContain(`[${path}] connection(): ok`)
-        expect(logs).toContain(
-          `[${path}] connection(): error: Error: Route ${path} with \`dynamic = "error"\` couldn't be rendered statically because it used \`connection()\`.`
-        )
-
-        expect(logs).not.toContain(`[${path}] nested connection(): ok`)
-        expect(logs).toContain(
-          `[${path}] nested connection(): error: Error: Route ${path} with \`dynamic = "error"\` couldn't be rendered statically because it used \`connection()\`.`
-        )
       })
     })
   })

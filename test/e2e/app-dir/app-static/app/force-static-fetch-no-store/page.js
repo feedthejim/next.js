@@ -1,5 +1,3 @@
-export const dynamic = 'force-static'
-
 export default async function Page() {
   const data = await fetch(
     'https://next-data-api-endpoint.vercel.app/api/random?page',

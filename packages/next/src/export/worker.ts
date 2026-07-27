@@ -106,9 +106,6 @@ async function exportPageImpl(
     // Check if this is an `app/` page.
     _isAppDir: isAppDir = false,
 
-    // Check if this should error when dynamic usage is detected.
-    _isDynamicError: isDynamicError = false,
-
     // Configure the rendering of the page to allow that an empty static shell
     // is generated while rendering using PPR and Cache Components.
     _allowEmptyStaticShell: allowEmptyStaticShell = false,
@@ -296,7 +293,6 @@ async function exportPageImpl(
       renderOpts as WorkerRenderOpts<AppPageModule>,
       htmlFilepath,
       debugOutput,
-      isDynamicError,
       fileWriter,
       sharedContext
     )

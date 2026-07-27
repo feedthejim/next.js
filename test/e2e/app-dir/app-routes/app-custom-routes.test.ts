@@ -617,8 +617,8 @@ describe('app-custom-routes', () => {
     })
   })
 
-  describe('dynamic = "force-static"', () => {
-    it('strips search, headers, and domain from request', async () => {
+  describe('request data', () => {
+    it('exposes search, headers, and cookies through the canonical request path', async () => {
       const res = await next.fetch(basePath + '/dynamic?query=true', {
         headers: {
           accept: 'application/json',
@@ -626,22 +626,22 @@ describe('app-custom-routes', () => {
         },
       })
 
-      const url = 'http://localhost:3000/dynamic'
+      const url = new URL('/dynamic?query=true', next.url).toString()
 
       expect(res.status).toEqual(200)
       expect(await res.json()).toEqual({
         nextUrl: {
           href: url,
-          search: '',
-          searchParams: null,
+          search: '?query=true',
+          searchParams: 'true',
           clone: url,
         },
         req: {
           url,
-          headers: null,
+          headers: 'application/json',
         },
-        headers: null,
-        cookies: null,
+        headers: 'application/json',
+        cookies: 'true',
       })
     })
   })

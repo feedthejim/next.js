@@ -1,7 +1,5 @@
 import { get } from 'node:https'
 
-export const dynamic = 'force-dynamic'
-
 export async function GET() {
   const text = await new Promise<string>((resolve, reject) => {
     get('https://example.com', (res) => {

@@ -24,12 +24,7 @@ import { getTracer } from '../../lib/trace/tracer'
 import { AppRouteRouteHandlersSpan } from '../../lib/trace/constants'
 import * as Log from '../../../build/output/log'
 import { autoImplementMethods } from './helpers/auto-implement-methods'
-import {
-  appendMutableCookies,
-  type ReadonlyRequestCookies,
-} from '../../web/spec-extension/adapters/request-cookies'
-import { HeadersAdapter } from '../../web/spec-extension/adapters/headers'
-import { RequestCookiesAdapter } from '../../web/spec-extension/adapters/request-cookies'
+import { appendMutableCookies } from '../../web/spec-extension/adapters/request-cookies'
 import { parsedUrlQueryToParams } from './helpers/parsed-url-query-to-params'
 import {
   Phase,
@@ -54,9 +49,6 @@ import {
 } from '../../app-render/action-async-storage.external'
 import * as sharedModules from './shared-modules'
 import { getIsPossibleServerAction } from '../../lib/server-action-request-meta'
-import { RequestCookies } from 'next/dist/compiled/@edge-runtime/cookies'
-import { cleanURL } from './helpers/clean-url'
-import { StaticGenBailoutError } from '../../../client/components/static-generation-bailout'
 import { isStaticGenEnabled } from './helpers/is-static-gen-enabled'
 import {
   abortAndThrowOnSynchronousRequestDataAccess,
@@ -164,7 +156,7 @@ export type AppRouteHandlers = {
  * routes. This contains all the user generated code.
  */
 export type AppRouteUserlandModule = AppRouteHandlers &
-  Pick<AppSegmentConfig, 'dynamic' | 'revalidate' | 'fetchCache'> &
+  Pick<AppSegmentConfig, 'revalidate' | 'fetchCache'> &
   Pick<AppSegment, 'generateStaticParams'>
 
 /**
@@ -233,8 +225,6 @@ export class AppRouteRouteModule extends RouteModule<
   private readonly _getUserland?: () => AppRouteUserlandModule
   private _methods!: Record<HTTP_METHOD, AppRouteHandlerFn>
   private _hasNonStaticMethods!: boolean
-  private _dynamic!: AppRouteUserlandModule['dynamic']
-
   override get userland(): AppRouteUserlandModule {
     return this._lazyUserland.assertLoaded()
   }
@@ -288,19 +278,11 @@ export class AppRouteRouteModule extends RouteModule<
     // Get the non-static methods for this route.
     this._hasNonStaticMethods = hasNonStaticMethods(userland)
 
-    // Get the dynamic property from the userland module.
-    this._dynamic = userland.dynamic
     if (this.nextConfigOutput === 'export') {
-      if (this._dynamic === 'force-dynamic') {
+      if (!isStaticGenEnabled(userland) && userland['GET']) {
         throw new Error(
-          `export const dynamic = "force-dynamic" on page "${this.definition.pathname}" cannot be used with "output: export". See more info here: https://nextjs.org/docs/advanced-features/static-html-export`
+          `Route "${this.definition.pathname}" must export revalidate or generateStaticParams with "output: export". See more info here: https://nextjs.org/docs/advanced-features/static-html-export`
         )
-      } else if (!isStaticGenEnabled(userland) && userland['GET']) {
-        throw new Error(
-          `export const dynamic = "force-static"/export const revalidate not configured on route "${this.definition.pathname}" with "output: export". See more info here: https://nextjs.org/docs/advanced-features/static-html-export`
-        )
-      } else {
-        this._dynamic = 'error'
       }
     }
 
@@ -818,53 +800,9 @@ export class AppRouteRouteModule extends RouteModule<
               }
             }
 
-            // We assume we can pass the original request through however we may end up
-            // proxying it in certain circumstances based on execution type and configuration
-            let request = req
-
-            // Use the live dynamic value when available so HMR changes to
-            // `export const dynamic` are reflected immediately.
-            const dynamic = liveUserland?.dynamic ?? this._dynamic
-
-            // Update the static generation store based on the dynamic property.
-            switch (dynamic) {
-              case 'force-dynamic': {
-                // Routes of generated paths should be dynamic
-                workStore.forceDynamic = true
-                if (workStore.isStaticGeneration) {
-                  const err = new DynamicServerError(
-                    'Route is configured with dynamic = error which cannot be statically generated.'
-                  )
-                  workStore.dynamicUsageDescription = err.message
-                  workStore.dynamicUsageStack = err.stack
-                  throw err
-                }
-                break
-              }
-              case 'force-static':
-                // The dynamic property is set to force-static, so we should
-                // force the page to be static.
-                workStore.forceStatic = true
-                // We also Proxy the request to replace dynamic data on the request
-                // with empty stubs to allow for safely executing as static
-                request = new Proxy(req, forceStaticRequestHandlers)
-                break
-              case 'error':
-                // The dynamic property is set to error, so we should throw an
-                // error if the page is being statically generated.
-                workStore.dynamicShouldError = true
-                if (workStore.isStaticGeneration)
-                  request = new Proxy(req, requireStaticRequestHandlers)
-                break
-              case undefined:
-              case 'auto':
-                // We proxy `NextRequest` to track dynamic access, and
-                // potentially bail out of static generation.
-                request = proxyNextRequest(req, workStore)
-                break
-              default:
-                dynamic satisfies never
-            }
+            // Track request access so static generation can postpone or bail
+            // out through the canonical Cache Components path.
+            const request = proxyNextRequest(req, workStore)
 
             const tracer = getTracer()
 
@@ -947,133 +885,14 @@ export function hasNonStaticMethods(handlers: AppRouteHandlers): boolean {
 const nextURLSymbol = Symbol('nextUrl')
 const requestCloneSymbol = Symbol('clone')
 const urlCloneSymbol = Symbol('clone')
-const searchParamsSymbol = Symbol('searchParams')
-const hrefSymbol = Symbol('href')
-const toStringSymbol = Symbol('toString')
-const headersSymbol = Symbol('headers')
-const cookiesSymbol = Symbol('cookies')
 
 type RequestSymbolTarget = {
-  [headersSymbol]?: Headers
-  [cookiesSymbol]?: RequestCookies | ReadonlyRequestCookies
   [nextURLSymbol]?: NextURL
   [requestCloneSymbol]?: () => NextRequest
 }
 
 type UrlSymbolTarget = {
-  [searchParamsSymbol]?: URLSearchParams
-  [hrefSymbol]?: string
-  [toStringSymbol]?: () => string
   [urlCloneSymbol]?: () => NextURL
-}
-
-/**
- * The general technique with these proxy handlers is to prioritize keeping them static
- * by stashing computed values on the Proxy itself. This is safe because the Proxy is
- * inaccessible to the consumer since all operations are forwarded
- */
-const forceStaticRequestHandlers = {
-  get(
-    target: NextRequest & RequestSymbolTarget,
-    prop: string | symbol,
-    receiver: any
-  ): unknown {
-    switch (prop) {
-      case 'headers':
-        return (
-          target[headersSymbol] ||
-          (target[headersSymbol] = HeadersAdapter.seal(new Headers({})))
-        )
-      case 'cookies':
-        return (
-          target[cookiesSymbol] ||
-          (target[cookiesSymbol] = RequestCookiesAdapter.seal(
-            new RequestCookies(new Headers({}))
-          ))
-        )
-      case 'nextUrl':
-        return (
-          target[nextURLSymbol] ||
-          (target[nextURLSymbol] = new Proxy(
-            target.nextUrl,
-            forceStaticNextUrlHandlers
-          ))
-        )
-      case 'url':
-        // we don't need to separately cache this we can just read the nextUrl
-        // and return the href since we know it will have been stripped of any
-        // dynamic parts. We access via the receiver to trigger the get trap
-        return receiver.nextUrl.href
-      case 'geo':
-      case 'ip':
-        return undefined
-      case 'clone':
-        return (
-          target[requestCloneSymbol] ||
-          (target[requestCloneSymbol] = () =>
-            new Proxy(
-              // This is vaguely unsafe but it's required since NextRequest does not implement
-              // clone. The reason we might expect this to work in this context is the Proxy will
-              // respond with static-amenable values anyway somewhat restoring the interface.
-              // @TODO we need to rethink NextRequest and NextURL because they are not sufficientlly
-              // sophisticated to adequately represent themselves in all contexts. A better approach is
-              // to probably embed the static generation logic into the class itself removing the need
-              // for any kind of proxying
-              target.clone() as NextRequest,
-              forceStaticRequestHandlers
-            ))
-        )
-      default:
-        return ReflectAdapter.get(target, prop, receiver)
-    }
-  },
-  // We don't need to proxy set because all the properties we proxy are ready only
-  // and will be ignored
-}
-
-const forceStaticNextUrlHandlers = {
-  get(
-    target: NextURL & UrlSymbolTarget,
-    prop: string | symbol,
-    receiver: any
-  ): unknown {
-    switch (prop) {
-      // URL properties
-      case 'search':
-        return ''
-      case 'searchParams':
-        return (
-          target[searchParamsSymbol] ||
-          (target[searchParamsSymbol] = new URLSearchParams())
-        )
-      case 'href':
-        return (
-          target[hrefSymbol] ||
-          (target[hrefSymbol] = cleanURL(target.href).href)
-        )
-      case 'toJSON':
-      case 'toString':
-        return (
-          target[toStringSymbol] ||
-          (target[toStringSymbol] = () => receiver.href)
-        )
-
-      // NextUrl properties
-      case 'url':
-        // Currently nextURL does not expose url but our Docs indicate that it is an available property
-        // I am forcing this to undefined here to avoid accidentally exposing a dynamic value later if
-        // the underlying nextURL ends up adding this property
-        return undefined
-      case 'clone':
-        return (
-          target[urlCloneSymbol] ||
-          (target[urlCloneSymbol] = () =>
-            new Proxy(target.clone(), forceStaticNextUrlHandlers))
-        )
-      default:
-        return ReflectAdapter.get(target, prop, receiver)
-    }
-  },
 }
 
 function proxyNextRequest(request: NextRequest, workStore: WorkStore) {
@@ -1164,86 +983,6 @@ function proxyNextRequest(request: NextRequest, workStore: WorkStore) {
   return new Proxy(request, nextRequestHandlers)
 }
 
-const requireStaticRequestHandlers = {
-  get(
-    target: NextRequest & RequestSymbolTarget,
-    prop: string | symbol,
-    receiver: any
-  ): unknown {
-    switch (prop) {
-      case 'nextUrl':
-        return (
-          target[nextURLSymbol] ||
-          (target[nextURLSymbol] = new Proxy(
-            target.nextUrl,
-            requireStaticNextUrlHandlers
-          ))
-        )
-      case 'headers':
-      case 'cookies':
-      case 'url':
-      case 'body':
-      case 'blob':
-      case 'json':
-      case 'text':
-      case 'arrayBuffer':
-      case 'formData':
-        throw new StaticGenBailoutError(
-          `Route ${target.nextUrl.pathname} with \`dynamic = "error"\` couldn't be rendered statically because it used \`request.${prop}\`.`
-        )
-      case 'clone':
-        return (
-          target[requestCloneSymbol] ||
-          (target[requestCloneSymbol] = () =>
-            new Proxy(
-              // This is vaguely unsafe but it's required since NextRequest does not implement
-              // clone. The reason we might expect this to work in this context is the Proxy will
-              // respond with static-amenable values anyway somewhat restoring the interface.
-              // @TODO we need to rethink NextRequest and NextURL because they are not sufficientlly
-              // sophisticated to adequately represent themselves in all contexts. A better approach is
-              // to probably embed the static generation logic into the class itself removing the need
-              // for any kind of proxying
-              target.clone() as NextRequest,
-              requireStaticRequestHandlers
-            ))
-        )
-      default:
-        return ReflectAdapter.get(target, prop, receiver)
-    }
-  },
-  // We don't need to proxy set because all the properties we proxy are ready only
-  // and will be ignored
-}
-
-const requireStaticNextUrlHandlers = {
-  get(
-    target: NextURL & UrlSymbolTarget,
-    prop: string | symbol,
-    receiver: any
-  ): unknown {
-    switch (prop) {
-      case 'search':
-      case 'searchParams':
-      case 'url':
-      case 'href':
-      case 'toJSON':
-      case 'toString':
-      case 'origin':
-        throw new StaticGenBailoutError(
-          `Route ${target.pathname} with \`dynamic = "error"\` couldn't be rendered statically because it used \`nextUrl.${prop}\`.`
-        )
-      case 'clone':
-        return (
-          target[urlCloneSymbol] ||
-          (target[urlCloneSymbol] = () =>
-            new Proxy(target.clone(), requireStaticNextUrlHandlers))
-        )
-      default:
-        return ReflectAdapter.get(target, prop, receiver)
-    }
-  },
-}
-
 function createCacheComponentsError(route: string) {
   return new DynamicServerError(
     `Route ${route} couldn't be rendered statically because it used IO that was not cached. See more info here: https://nextjs.org/docs/messages/cache-components`
@@ -1255,12 +994,6 @@ function trackDynamic(
   workUnitStore: undefined | WorkUnitStore,
   expression: string
 ): void {
-  if (store.dynamicShouldError) {
-    throw new StaticGenBailoutError(
-      `Route ${store.route} with \`dynamic = "error"\` couldn't be rendered statically because it used \`${expression}\`. See more info here: https://nextjs.org/docs/app/building-your-application/rendering/static-and-dynamic#dynamic-rendering`
-    )
-  }
-
   if (workUnitStore) {
     switch (workUnitStore.type) {
       case 'cache':

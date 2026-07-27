@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 
-export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-cache'
 
 export async function GET() {

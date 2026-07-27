@@ -1,5 +1,3 @@
-export const dynamic = 'force-dynamic'
-
 function getData() {
   const res = new Promise((resolve) => {
     setTimeout(() => {

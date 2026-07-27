@@ -1,4 +1,3 @@
-export const dynamic = 'force-static'
 export const revalidate = 3
 
 export async function GET() {

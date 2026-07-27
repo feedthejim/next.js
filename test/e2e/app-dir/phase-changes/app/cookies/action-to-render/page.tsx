@@ -1,8 +1,6 @@
 import { cookies } from 'next/headers'
 import * as React from 'react'
 
-export const dynamic = 'force-dynamic'
-
 async function action() {
   'use server'
   // make sure we return an updated version of the page in the response

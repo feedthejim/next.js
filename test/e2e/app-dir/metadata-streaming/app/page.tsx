@@ -8,5 +8,3 @@ export async function generateMetadata() {
     title: 'index page',
   }
 }
-
-export const dynamic = 'force-dynamic'

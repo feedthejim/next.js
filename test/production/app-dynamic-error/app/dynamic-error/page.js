@@ -1,7 +1,5 @@
 import { headers } from 'next/headers'
 
-export const dynamic = 'error'
-
 export default async function Page() {
   await headers()
   return (

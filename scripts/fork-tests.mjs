@@ -101,13 +101,22 @@ if (mode === 'fast') {
 
   let nativeDirectory = process.env.NEXT_TEST_NATIVE_DIR
   if (!nativeDirectory) {
-    const nativePackage = readdirSync('node_modules/@next').find((entry) =>
-      entry.startsWith('swc-')
-    )
-    if (!nativePackage) {
-      throw new Error('No local @next/swc native package is installed')
+    const localNativeDirectory = resolve('packages/next-swc/native')
+    const hasLocalNativeBinding =
+      existsSync(localNativeDirectory) &&
+      readdirSync(localNativeDirectory).some((entry) => entry.endsWith('.node'))
+
+    if (hasLocalNativeBinding) {
+      nativeDirectory = localNativeDirectory
+    } else {
+      const nativePackage = readdirSync('node_modules/@next').find((entry) =>
+        entry.startsWith('swc-')
+      )
+      if (!nativePackage) {
+        throw new Error('No local @next/swc native package is installed')
+      }
+      nativeDirectory = resolve('node_modules/@next', nativePackage)
     }
-    nativeDirectory = resolve('node_modules/@next', nativePackage)
   }
 
   execFileSync('pnpm', ['test-start-turbo', ...suites], {

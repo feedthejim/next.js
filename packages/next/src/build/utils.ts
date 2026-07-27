@@ -842,12 +842,6 @@ export async function isPageStatic({
             ? {}
             : reduceAppConfig(segments)
 
-        if (appConfig.dynamic === 'force-static' && pathIsEdgeRuntime) {
-          Log.warn(
-            `Page "${page}" is using runtime = 'edge' which is currently incompatible with dynamic = 'force-static'. Please remove either "runtime" or "force-static" for correct behavior`
-          )
-        }
-
         rootParamKeys = collectRootParamKeys(routeModule)
 
         isAppPage = routeModule.definition.kind === RouteKind.APP_PAGE
@@ -980,7 +974,7 @@ export async function isPageStatic({
 
 type ReducedAppConfig = Pick<
   AppSegmentConfig,
-  'revalidate' | 'dynamic' | 'fetchCache' | 'preferredRegion' | 'maxDuration'
+  'revalidate' | 'fetchCache' | 'preferredRegion' | 'maxDuration'
 >
 
 /**
@@ -996,7 +990,7 @@ export function reduceAppConfig(
   const config: ReducedAppConfig = {}
 
   for (const segment of segments) {
-    const { dynamic, fetchCache, preferredRegion, revalidate, maxDuration } =
+    const { fetchCache, preferredRegion, revalidate, maxDuration } =
       segment.config || {}
 
     // TODO: should conflicting configs here throw an error
@@ -1004,10 +998,6 @@ export function reduceAppConfig(
 
     if (typeof preferredRegion !== 'undefined') {
       config.preferredRegion = preferredRegion
-    }
-
-    if (typeof dynamic !== 'undefined') {
-      config.dynamic = dynamic
     }
 
     if (typeof fetchCache !== 'undefined') {

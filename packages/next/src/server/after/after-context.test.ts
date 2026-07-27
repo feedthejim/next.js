@@ -703,9 +703,6 @@ function waitForCallbackQueue() {
 const createMockWorkStore = (afterContext: AfterContext): WorkStore => {
   const partialStore: Partial<WorkStore> = {
     afterContext: afterContext,
-    forceStatic: false,
-    forceDynamic: false,
-    dynamicShouldError: false,
     isStaticGeneration: false,
     pendingRevalidatedTags: [],
     pendingRevalidates: undefined,

@@ -3,7 +3,6 @@ import { NextRequest } from 'next/server'
 
 export const runtime = 'nodejs'
 // Next thinks it can statically compile this route, which breaks the test.
-export const dynamic = 'force-dynamic'
 
 let streamable: ReturnType<typeof Streamable> | undefined
 

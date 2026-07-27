@@ -7,5 +7,3 @@ const AsyncFoo = dynamicApi(() => import('../../components/foo'))
 export default function Page() {
   return <AsyncFoo />
 }
-
-export const dynamic = 'force-dynamic'

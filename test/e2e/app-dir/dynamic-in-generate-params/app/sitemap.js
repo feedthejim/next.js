@@ -15,8 +15,6 @@ export default function sitemap() {
   ]
 }
 
-export const dynamic = 'force-dynamic'
-
 export async function generateSitemaps() {
   return [{ id: 0 }, { id: 1 }]
 }

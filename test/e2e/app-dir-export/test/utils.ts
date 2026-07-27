@@ -207,14 +207,12 @@ export async function getFiles(cwd) {
 }
 export function runTests({
   trailingSlash = true,
-  dynamicPage,
-  dynamicApiRoute,
+  pageRoute,
   generateStaticParamsOpt,
   expectedErrMsg,
 }: {
   trailingSlash?: boolean
-  dynamicPage?: string
-  dynamicApiRoute?: string
+  pageRoute?: boolean
   generateStaticParamsOpt?:
     | 'set noop'
     | 'set client'
@@ -241,26 +239,6 @@ export function runTests({
         content.replace(
           'trailingSlash: true,',
           `trailingSlash: ${trailingSlash},`
-        )
-      )
-    }
-
-    if (dynamicPage !== undefined) {
-      await next.patchFile('app/another/[slug]/page.js', (content) =>
-        content.replace(
-          `export const dynamic = 'force-static'`,
-          dynamicPage === 'undefined'
-            ? ''
-            : `export const dynamic = ${dynamicPage}`
-        )
-      )
-    }
-
-    if (dynamicApiRoute !== undefined) {
-      await next.patchFile('app/api/json/route.js', (content) =>
-        content.replace(
-          `export const dynamic = 'force-static'`,
-          `export const dynamic = ${dynamicApiRoute}`
         )
       )
     }
@@ -336,7 +314,7 @@ export function runTests({
   it('should work', async () => {
     if (expectedErrMsg) {
       if (isNextDev) {
-        const url = dynamicPage ? '/another/first' : '/api/json'
+        const url = pageRoute ? '/another/first' : '/api/json'
         const browser = await openBrowser(url)
         await waitForRedbox(browser)
         const header = await getRedboxHeader(browser)

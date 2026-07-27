@@ -15,5 +15,3 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ]
 }
-
-export const dynamic = 'force-dynamic'

@@ -2,8 +2,6 @@ import { Suspense } from 'react'
 import { after } from 'next/server'
 import { cliLog } from '../../../utils/log'
 
-export const dynamic = 'force-dynamic'
-
 export default async function Page() {
   after(() => {
     cliLog({ source: '[page] /delay (Page)' })

@@ -10,5 +10,3 @@ export async function generateMetadata() {
   await new Promise((resolve) => setTimeout(resolve, 500))
   notFound()
 }
-
-export const dynamic = 'force-dynamic'

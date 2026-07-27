@@ -1,6 +1,5 @@
 // This page is forced into dynamic rendering because POST requests to
 // a static/ISR page will cause an error when deployed.
-export const dynamic = 'force-dynamic'
 
 export default function Home() {
   return (

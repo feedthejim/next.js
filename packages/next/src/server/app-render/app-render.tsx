@@ -3104,9 +3104,7 @@ function applyMetadataFromPrerenderResult(
   metadata.headers ??= {}
   metadata.headers[NEXT_ROUTER_STALE_TIME_HEADER] = staleHeader
 
-  // If force static is specifically set to false, we should not revalidate
-  // the page.
-  if (workStore.forceStatic === false || response.collectedRevalidate === 0) {
+  if (response.collectedRevalidate === 0) {
     metadata.cacheControl = { revalidate: 0, expire: undefined }
   } else {
     // Copy the cache control value onto the render result metadata.
@@ -5964,7 +5962,6 @@ function buildDevValidationWorkStore(
     isStaticGeneration: false,
     page: message.page,
     route: message.route,
-    forceStatic: message.forceStatic,
     isDraftMode: message.request.isDraftMode,
     useCacheTimeout: message.nextConfigSerializable.useCacheTimeout,
     staticPageGenerationTimeout:
@@ -8846,12 +8843,6 @@ async function prerenderToStream(
       htmlStream = chainStreams(prelude, resumePrelude)
     }
 
-    if (workStore.forceDynamic) {
-      throw new StaticGenBailoutError(
-        'Invariant: a Page with `dynamic = "force-dynamic"` did not trigger the dynamic pathway. This is a bug in Next.js'
-      )
-    }
-
     const stream = await continueStaticPrerenderWithInlinedData(
       htmlStream,
       reactServerResult,
@@ -9261,12 +9252,6 @@ async function prerenderToStream(
           }
         )
         errorHtmlStream = chainStreams(prelude, resumePrelude)
-      }
-
-      if (workStore.forceDynamic) {
-        throw new StaticGenBailoutError(
-          'Invariant: a Page with `dynamic = "force-dynamic"` did not trigger the dynamic pathway. This is a bug in Next.js'
-        )
       }
 
       const stream = await continueStaticPrerenderWithInlinedData(

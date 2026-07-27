@@ -1,5 +1,3 @@
-export const dynamic = 'force-dynamic'
-
 export function generateMetadata() {
   throw new Error('Metadata error')
 }

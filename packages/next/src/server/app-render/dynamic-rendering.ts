@@ -196,17 +196,6 @@ export function markCurrentScopeAsDynamic(
     }
   }
 
-  // If we're forcing dynamic rendering or we're forcing static rendering, we
-  // don't need to do anything here because the entire page is already dynamic
-  // or it's static and it should not throw or postpone here.
-  if (store.forceDynamic || store.forceStatic) return
-
-  if (store.dynamicShouldError) {
-    throw new StaticGenBailoutError(
-      `Route ${store.route} with \`dynamic = "error"\` couldn't be rendered statically because it used \`${expression}\`. See more info here: https://nextjs.org/docs/app/building-your-application/rendering/static-and-dynamic#dynamic-rendering`
-    )
-  }
-
   if (workUnitStore) {
     switch (workUnitStore.type) {
       case 'prerender-ppr':
@@ -737,9 +726,6 @@ export function useDynamicSearchParams(expression: string) {
     }
     case 'prerender-legacy':
     case 'prerender-ppr': {
-      if (workStore.forceStatic) {
-        return
-      }
       throw new BailoutToCSRError(expression)
     }
     case 'prerender':

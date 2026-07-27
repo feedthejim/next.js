@@ -19,7 +19,6 @@ import { validateRevalidate } from '../lib/patch-fetch'
 import { PARALLEL_ROUTE_DEFAULT_PATH } from '../../client/components/builtin/default'
 import { getTracer } from '../lib/trace/tracer'
 import { NextNodeServerSpan } from '../lib/trace/constants'
-import { StaticGenBailoutError } from '../../client/components/static-generation-bailout'
 import type { Params } from '../request/params'
 import { workUnitAsyncStorage } from './work-unit-async-storage.external'
 import {
@@ -111,7 +110,6 @@ async function createComponentTreeInternal(
   isRoot: boolean
 ): Promise<CacheNodeSeedData> {
   const {
-    renderOpts: { nextConfigOutput },
     workStore,
     componentMod: {
       createElement,
@@ -124,7 +122,6 @@ async function createComponentTreeInternal(
       ClientSegmentRoot,
       createServerSearchParamsForServerPage,
       createServerParamsForServerSegment,
-      Postpone,
     },
     pagePath,
     getDynamicParamFromSegment,
@@ -244,33 +241,6 @@ async function createComponentTreeInternal(
           injectedJS: injectedJSWithCurrentLayout,
         })
       : []
-
-  let dynamic = layoutOrPageMod?.dynamic
-
-  if (nextConfigOutput === 'export') {
-    if (!dynamic || dynamic === 'auto') {
-      dynamic = 'error'
-    } else if (dynamic === 'force-dynamic') {
-      // force-dynamic is always incompatible with 'export'. We must interrupt the build
-      throw new StaticGenBailoutError(
-        `Page with \`dynamic = "force-dynamic"\` couldn't be exported. \`output: "export"\` requires all pages be renderable statically because there is no runtime server to dynamically render routes in this output format. Learn more: https://nextjs.org/docs/app/building-your-application/deploying/static-exports`
-      )
-    }
-  }
-
-  if (typeof dynamic === 'string') {
-    // the nested most config wins so we only force-static
-    // if it's configured above any parent that configured
-    // otherwise
-    if (dynamic === 'error') {
-      workStore.dynamicShouldError = true
-    } else if (dynamic === 'force-dynamic') {
-      workStore.forceDynamic = true
-    } else {
-      workStore.dynamicShouldError = false
-      workStore.forceStatic = dynamic === 'force-static'
-    }
-  }
 
   if (typeof layoutOrPageMod?.fetchCache === 'string') {
     workStore.fetchCache = layoutOrPageMod?.fetchCache
@@ -681,41 +651,6 @@ async function createComponentTreeInternal(
   }
 
   const Component = MaybeComponent
-  // If force-dynamic is used and the current render supports postponing, we
-  // replace it with a node that will postpone the render. This ensures that the
-  // postpone is invoked during the react render phase and not during the next
-  // render phase.
-  // @TODO this does not actually do what it seems like it would or should do. The idea is that
-  // if we are rendering in a force-dynamic mode and we can postpone we should only make the segments
-  // that ask for force-dynamic to be dynamic, allowing other segments to still prerender. However
-  // because this comes after the children traversal and the static generation store is mutated every segment
-  // along the parent path of a force-dynamic segment will hit this condition effectively making the entire
-  // render force-dynamic. We should refactor this function so that we can correctly track which segments
-  // need to be dynamic
-  if (workStore.isStaticGeneration && workStore.forceDynamic) {
-    return createSeedData(
-      ctx,
-      createElement(
-        Fragment,
-        {
-          key: cacheNodeKey,
-        },
-        createElement(Postpone, {
-          reason: 'dynamic = "force-dynamic" was used',
-          route: workStore.route,
-        }),
-        layerAssets
-      ),
-      parallelRouteCacheNodeSeedData,
-      loadingData,
-      true,
-
-      // force-dynamic postpones without rendering the component, so no params
-      // are accessed. The vary params are empty.
-      emptyVaryParamsAccumulator
-    )
-  }
-
   const isClientComponent = isClientReference(layoutOrPageMod)
 
   const varyParamsAccumulator = isClientComponent

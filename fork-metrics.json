@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
-  "label": "one-dynamic-parameter-model",
-  "capturedAt": "2026-07-27T21:34:07.104Z",
+  "label": "remove-app-router-dynamic-config",
+  "capturedAt": "2026-07-27T21:52:59.161Z",
   "git": {
-    "baseHead": "1071f5e68e"
+    "baseHead": "8bace37e6c"
   },
   "source": {
     "frameworkTracked": {
-      "files": 2458,
-      "lines": 1093802,
-      "bytes": 51394998
+      "files": 2457,
+      "lines": 1093135,
+      "bytes": 51368294
     },
     "frameworkAuthored": {
-      "files": 1753,
-      "lines": 299471,
-      "bytes": 9652549
+      "files": 1752,
+      "lines": 298804,
+      "bytes": 9625845
     },
     "vendoredCompiled": {
       "files": 705,
@@ -23,8 +23,8 @@
     },
     "appRender": {
       "files": 97,
-      "lines": 28275,
-      "bytes": 967944
+      "lines": 28176,
+      "bytes": 963781
     },
     "clientRouter": {
       "files": 39,
@@ -33,8 +33,8 @@
     },
     "compilerRust": {
       "files": 979,
-      "lines": 52076,
-      "bytes": 1816742
+      "lines": 52003,
+      "bytes": 1814665
     },
     "appApiRust": {
       "files": 1,
@@ -43,8 +43,8 @@
     },
     "webpackPathProxy": {
       "files": 267,
-      "lines": 138141,
-      "bytes": 7396140
+      "lines": 138138,
+      "bytes": 7396037
     },
     "pagesRouterPathProxy": {
       "files": 30,
@@ -57,7 +57,7 @@
     "experimentalConfig": 148
   },
   "legacyModeReferences": {
-    "cacheComponents": 70,
+    "cacheComponents": 68,
     "routePPR": 0,
     "appPPR": 0,
     "cacheComponentsEnv": 0,
@@ -73,7 +73,10 @@
     "appEdgeEntryWrappers": 0,
     "appRuntimeSelectionBranches": 0,
     "appEdgeContextRuntimeConstants": 1,
-    "appDynamicParamsModeReferences": 0
+    "appDynamicParamsModeReferences": 0,
+    "appDynamicModeReferences": 0,
+    "appDynamicFixtureExports": 0,
+    "appDynamicTestModeReferences": 143
   },
   "packageDependencies": {
     "dependencies": 6,
@@ -81,46 +84,46 @@
     "peerDependencies": 6
   },
   "tests": {
-    "totalFiles": 1855,
-    "e2eFiles": 1106,
-    "developmentFiles": 291,
+    "totalFiles": 1851,
+    "e2eFiles": 1103,
+    "developmentFiles": 290,
     "productionFiles": 348,
     "unitFiles": 108
   },
   "builtArtifacts": {
-    "conditions": "warm local after the core release inside a full bootstrap build; comparable to the prior warm core-release snapshot",
-    "nextDistBytes": 180628044,
-    "nextDistJavaScriptBytes": 76308269
+    "conditions": "Warm core release build; local macOS arm64; watcher stopped",
+    "nextDistBytes": 180240055,
+    "nextDistJavaScriptBytes": 76200478
   },
-  "validationTimingConditions": "warm local; direct tests combine next-api check, static-path unit tests, RSC diagnostics, next-types plugin tests, and TypeScript plugin tests; focused tests are the 56-test fork allowlist; one retained production Turbopack browser journey covers lazy fallback params and Partial Prefetching; build-all includes the native binding and core release",
+  "validationTimingConditions": "Warm local validation; successful commands only; rebuilt core release before E2E",
   "validationTimingsMs": {
-    "types": 14460,
-    "directTests": 43720,
-    "focusedTests": 4260,
-    "testSelectionOverhead": 36050,
+    "types": 15050,
+    "directTests": 17680,
+    "focusedTests": 5090,
+    "testSelectionOverhead": null,
     "httpTests": null,
-    "httpTestBody": 126,
-    "browserStartup": 74,
-    "browserTestBody": 14735,
-    "browserTests": 22020,
+    "httpTestBody": null,
+    "browserStartup": null,
+    "browserTestBody": 98325,
+    "browserTests": 105280,
     "edgeDceBuild": null,
-    "nativeBuild": 9130,
-    "nextBuild": 23110,
-    "buildAll": 37280,
-    "total": 121740
+    "nativeBuild": null,
+    "nextBuild": 22490,
+    "buildAll": null,
+    "total": 185590
   },
   "runtimePerformance": {
-    "conditions": "single warm-local production Turbopack journey; startup and per-test observations are guardrails, not performance claims",
-    "devStartupMs": null,
-    "productionStartupMs": 74,
-    "routeHandlerRequestMs": null,
+    "conditions": "Warm local Turbopack dev request plus production browser contract; single observations, not benchmark claims",
+    "devStartupMs": 197,
+    "productionStartupMs": 84,
+    "routeHandlerRequestMs": 808,
     "routeHandlerRevalidationMs": null,
     "edgeMiddlewareStartupMs": null,
     "edgeImageResponseMs": null,
     "edgeImageResponseBytes": null,
     "pprShellFirstByteMs": null,
     "pprCompleteMs": null,
-    "partialNavigationMs": null,
+    "partialNavigationMs": 501,
     "partialNavigationResponseBytes": null,
     "fastRefreshMaxMs": null,
     "fastRefreshSamples": null,

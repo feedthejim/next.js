@@ -107,13 +107,6 @@ const AppSegmentConfigSchema = z.object({
     .optional(),
 
   /**
-   * The dynamic behavior of the page.
-   */
-  dynamic: z
-    .enum(['auto', 'error', 'force-static', 'force-dynamic'])
-    .optional(),
-
-  /**
    * The caching behavior of the page.
    */
   fetchCache: z
@@ -228,11 +221,6 @@ export type AppSegmentConfig = {
    * The revalidation period for the page in seconds, or false to disable ISR.
    */
   revalidate?: number | false
-
-  /**
-   * The dynamic behavior of the page.
-   */
-  dynamic?: 'auto' | 'error' | 'force-static' | 'force-dynamic'
 
   /**
    * The caching behavior of the page.

@@ -3860,21 +3860,6 @@ describe('app-dir static/dynamic handling', () => {
         $('#data-value-cached').text()
       )
     })
-
-    if (!process.env.__NEXT_CACHE_COMPONENTS) {
-      it('should properly error when dynamic = "error" page uses dynamic', async () => {
-        const res = await next.fetch('/dynamic-error/static-bailout-1')
-        const outputIndex = next.cliOutput.length
-
-        expect(res.status).toBe(500)
-
-        if (isNextStart) {
-          expect(stripAnsi(next.cliOutput).substring(outputIndex)).not.toMatch(
-            /Page with dynamic = "error" encountered dynamic data method on \/dynamic-error\/static-bailout-1/
-          )
-        }
-      })
-    }
   }
 
   it('should skip cache in draft mode', async () => {
@@ -4026,12 +4011,6 @@ describe('app-dir static/dynamic handling', () => {
       expect(pageData).toBe(pageData2)
       return 'success'
     }, 'success')
-
-    if (isNextStart) {
-      expect(next.cliOutput).toContain(
-        `Page "/variable-revalidate-edge/revalidate-3" is using runtime = 'edge' which is currently incompatible with dynamic = 'force-static'. Please remove either "runtime" or "force-static" for correct behavior`
-      )
-    }
   })
 
   it('should honor fetch cache correctly (edge)', async () => {
@@ -4526,50 +4505,6 @@ describe('app-dir static/dynamic handling', () => {
       expect(res1.status).toBe(200)
       const res2 = await next.fetch('/gen-params-catch-all-unique/foo/bar')
       expect(res2.status).toBe(200)
-    })
-
-    it('should honor dynamic = "force-static" correctly', async () => {
-      const res = await next.fetch('/force-static/first')
-      expect(res.status).toBe(200)
-
-      const html = await res.text()
-      const $ = cheerio.load(html)
-
-      expect(JSON.parse($('#params').text())).toEqual({ slug: 'first' })
-      expect(JSON.parse($('#headers').text())).toEqual([])
-      expect(JSON.parse($('#cookies').text())).toEqual([])
-
-      const firstTime = $('#now').text()
-
-      if (!(global as any).isNextDev) {
-        const res2 = await next.fetch('/force-static/first')
-        expect(res2.status).toBe(200)
-
-        const $2 = cheerio.load(await res2.text())
-        expect(firstTime).toBe($2('#now').text())
-      }
-    })
-
-    it('should honor dynamic = "force-static" correctly (lazy)', async () => {
-      const res = await next.fetch('/force-static/random')
-      expect(res.status).toBe(200)
-
-      const html = await res.text()
-      const $ = cheerio.load(html)
-
-      expect(JSON.parse($('#params').text())).toEqual({ slug: 'random' })
-      expect(JSON.parse($('#headers').text())).toEqual([])
-      expect(JSON.parse($('#cookies').text())).toEqual([])
-
-      const firstTime = $('#now').text()
-
-      if (!(global as any).isNextDev) {
-        const res2 = await next.fetch('/force-static/random')
-        expect(res2.status).toBe(200)
-
-        const $2 = cheerio.load(await res2.text())
-        expect(firstTime).toBe($2('#now').text())
-      }
     })
   }
 

@@ -1,7 +1,4 @@
-import {
-  HeadersAdapter,
-  type ReadonlyHeaders,
-} from '../web/spec-extension/adapters/headers'
+import type { ReadonlyHeaders } from '../web/spec-extension/adapters/headers'
 import {
   workAsyncStorage,
   type WorkStore,
@@ -17,7 +14,6 @@ import {
   throwToInterruptStaticGeneration,
   trackDynamicDataInDynamicRender,
 } from '../app-render/dynamic-rendering'
-import { StaticGenBailoutError } from '../../client/components/static-generation-bailout'
 import {
   makeDevtoolsIOAwarePromise,
   makeRuntimeHangingPromise,
@@ -47,13 +43,6 @@ export function headers(): Promise<ReadonlyHeaders> {
       throw new Error(
         `Route ${workStore.route} used \`headers()\` inside \`after()\` while rendering. This is not supported. If you need this data inside an \`after()\` callback, use \`headers()\` outside of the callback. See more info here: https://nextjs.org/docs/app/api-reference/functions/after`
       )
-    }
-
-    if (workStore.forceStatic) {
-      // When using forceStatic we override all other logic and always just return an empty
-      // headers object without tracking
-      const underlyingHeaders = HeadersAdapter.seal(new Headers({}))
-      return makeUntrackedHeaders(underlyingHeaders)
     }
 
     if (workUnitStore) {
@@ -87,12 +76,6 @@ export function headers(): Promise<ReadonlyHeaders> {
         default:
           workUnitStore satisfies never
       }
-    }
-
-    if (workStore.dynamicShouldError) {
-      throw new StaticGenBailoutError(
-        `Route ${workStore.route} with \`dynamic = "error"\` couldn't be rendered statically because it used \`headers()\`. See more info here: https://nextjs.org/docs/app/building-your-application/rendering/static-and-dynamic#dynamic-rendering`
-      )
     }
 
     if (workUnitStore) {

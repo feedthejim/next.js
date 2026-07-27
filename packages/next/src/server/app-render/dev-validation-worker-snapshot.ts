@@ -81,7 +81,6 @@ export async function buildDevValidationSnapshot(
     requestFallbackRouteParams: ctx.fallbackRouteParams,
     fallbackRouteParams,
     optimisticRouting: ctx.renderOpts.experimental.optimisticRouting,
-    forceStatic: ctx.workStore.forceStatic,
     validationLevel: ctx.workStore.validationLevel,
     implicitTags: ctx.implicitTags.tags,
     additionalClientReferenceManifestPages: ctx.workStore

@@ -3,4 +3,3 @@ export default function Layout({ children }) {
 }
 
 // make children routes dynamic
-export const dynamic = 'force-dynamic'

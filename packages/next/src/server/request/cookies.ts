@@ -1,9 +1,7 @@
 import {
   type ReadonlyRequestCookies,
   areCookiesMutableInCurrentPhase,
-  RequestCookiesAdapter,
 } from '../web/spec-extension/adapters/request-cookies'
-import { RequestCookies } from '../web/spec-extension/cookies'
 import {
   workAsyncStorage,
   type WorkStore,
@@ -19,7 +17,6 @@ import {
   throwToInterruptStaticGeneration,
   trackDynamicDataInDynamicRender,
 } from '../app-render/dynamic-rendering'
-import { StaticGenBailoutError } from '../../client/components/static-generation-bailout'
 import {
   makeDevtoolsIOAwarePromise,
   makeRuntimeHangingPromise,
@@ -39,19 +36,6 @@ export function cookies(): Promise<ReadonlyRequestCookies> {
     if (workUnitStore && !isRequestApiAllowedInCurrentPhase(workUnitStore)) {
       throw new Error(
         `Route ${workStore.route} used \`cookies()\` inside \`after()\` while rendering. This is not supported. If you need this data inside an \`after()\` callback, use \`cookies()\` outside of the callback. See more info here: https://nextjs.org/docs/app/api-reference/functions/after`
-      )
-    }
-
-    if (workStore.forceStatic) {
-      // When using forceStatic we override all other logic and always just return an empty
-      // cookies object without tracking
-      const underlyingCookies = createEmptyCookies()
-      return makeUntrackedCookies(underlyingCookies)
-    }
-
-    if (workStore.dynamicShouldError) {
-      throw new StaticGenBailoutError(
-        `Route ${workStore.route} with \`dynamic = "error"\` couldn't be rendered statically because it used \`cookies()\`. See more info here: https://nextjs.org/docs/app/building-your-application/rendering/static-and-dynamic#dynamic-rendering`
       )
     }
 
@@ -153,10 +137,6 @@ export function cookies(): Promise<ReadonlyRequestCookies> {
 
   // If we end up here, there was no work store or work unit store present.
   throwForMissingRequestStore(callingExpression)
-}
-
-function createEmptyCookies(): ReadonlyRequestCookies {
-  return RequestCookiesAdapter.seal(new RequestCookies(new Headers({})))
 }
 
 interface CacheLifetime {}

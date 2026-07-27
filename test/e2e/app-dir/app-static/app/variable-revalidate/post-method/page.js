@@ -1,7 +1,5 @@
 import { fetchRetry } from '../../../lib/fetch-retry'
 
-export const dynamic = 'force-dynamic'
-
 async function EmptyBodiesOne() {
   // We expect the same cache key so we're doing these in pairs
   // 3 or more requests will start to get a miss due to too low revalidation time

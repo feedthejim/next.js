@@ -23,5 +23,3 @@ export default function () {
     </>
   )
 }
-
-export const dynamic = 'force-dynamic'
