@@ -50,7 +50,10 @@
   production or development workers, and always computes static-shell
   metadata. App Route build templates and export workers likewise carry no
   Cache Components mode, and Route Handler static generation has one staged
-  prerender algorithm.
+  prerender algorithm. Development HMR now classifies every request-ID socket
+  as an App Router client and reserves legacy broadcasts for the remaining
+  no-ID Pages Router clients. Cache status delivery and router-server
+  registration no longer depend on a Cache Components configuration value.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -65,8 +68,8 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Remove Cache Components configuration gates from Turbopack
-  development and HMR.
+- **Next action:** Remove the remaining Cache Components value plumbing from
+  render-server initialization and startup reporting.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -76,10 +79,38 @@
   `pnpm --filter=next types`, the 19-test fast App Router allowlist, 108 focused
   dev-overlay assertions, `pnpm --filter=next build`, the 34-assertion
   production Turbopack runtime pack, the retained navigation journey, all 12
-  PPR partial-hydration assertions, and the transition-instrumentation journey
-  passed.
+  PPR partial-hydration assertions, the transition-instrumentation journey, and
+  two focused Turbopack Fast Refresh assertions passed.
 
 ## History
+
+### 2026-07-27: One App Router HMR client classification
+
+Removed Cache Components mode checks from Turbopack socket registration and
+the shared development HMR broadcast boundary. Every client carrying an HTML
+request ID now follows the App Router protocol, receives cached status, and is
+never included in legacy broadcasts. Only no-ID Pages Router clients remain on
+the legacy protocol. Router-server initialization also registers cache status
+delivery unconditionally and passes the invariant into the remaining startup
+plumbing.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** Cache Components references fell from 120 to 114. App
+  Router sockets now have one classification and one cache-status path, while
+  legacy HMR has one explicit client set instead of a configuration-dependent
+  union.
+- **Leanness:** Authored framework source fell by 30 lines and 1,409 bytes. The
+  warm built distribution fell by 7,565 bytes overall and 3,412 JavaScript
+  bytes. Test and dependency counts were unchanged.
+- **Runtime performance:** Two focused Turbopack Fast Refresh browser
+  assertions completed refresh in 40 and 37 milliseconds, for a measured
+  maximum of 40 milliseconds. These are directional warm-local observations.
+- **Iteration efficiency:** Types passed in 13.72 seconds, the 19-test fast
+  allowlist in 1.90 seconds, the core build in 21.17 seconds, and the focused
+  Turbopack HMR file in 18.71 seconds with a 17.64-second Jest body. The HMR
+  name filter exercised both the normal render and `after()` behavior, for two
+  browser assertions. Total measured validation cost was 55.50 seconds.
 
 ### 2026-07-27: One App Route prerender algorithm
 

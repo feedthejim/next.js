@@ -271,18 +271,7 @@ export class WebpackHotMiddleware {
       return
     }
 
-    // Clients with a request ID are inferred App Router clients. If Cache
-    // Components is not enabled, we consider those legacy clients. Pages
-    // Router clients are also considered legacy clients. TODO: Maybe mark
-    // clients as App Router / Pages Router clients explicitly, instead of
-    // inferring it from the presence of a request ID.
-
-    if (!this.config.cacheComponents) {
-      for (const wsClient of this.clientsByHtmlRequestId.values()) {
-        this.publishToClient(wsClient, message)
-      }
-    }
-
+    // Only clients without an HTML request ID use legacy HMR messages.
     for (const wsClient of this.clientsWithoutHtmlRequestId) {
       this.publishToClient(wsClient, message)
     }

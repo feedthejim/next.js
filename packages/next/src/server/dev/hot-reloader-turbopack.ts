@@ -1308,26 +1308,18 @@ export async function createHotReloaderTurbopack(
           ? new URL(req.url, 'http://n').searchParams.get('id')
           : null
 
-        // Clients with a request ID are inferred App Router clients. If Cache
-        // Components is not enabled, we consider those legacy clients. Pages
-        // Router clients are also considered legacy clients. TODO: Maybe mark
-        // clients as App Router / Pages Router clients explicitly, instead of
-        // inferring it from the presence of a request ID.
+        // App Router clients have an HTML request ID. The remaining clients are
+        // legacy Pages Router clients until that router is removed.
         if (htmlRequestId) {
           clientsByHtmlRequestId.set(htmlRequestId, client)
-          const enableCacheComponents = nextConfig.cacheComponents
-          if (enableCacheComponents) {
-            onUpgrade(client, { isLegacyClient: false })
-            const cacheStatus = cacheStatusesByHtmlRequestId.get(htmlRequestId)
-            if (cacheStatus !== undefined) {
-              sendToClient(client, {
-                type: HMR_MESSAGE_SENT_TO_BROWSER.CACHE_INDICATOR,
-                state: cacheStatus,
-              })
-              cacheStatusesByHtmlRequestId.delete(htmlRequestId)
-            }
-          } else {
-            onUpgrade(client, { isLegacyClient: true })
+          onUpgrade(client, { isLegacyClient: false })
+          const cacheStatus = cacheStatusesByHtmlRequestId.get(htmlRequestId)
+          if (cacheStatus !== undefined) {
+            sendToClient(client, {
+              type: HMR_MESSAGE_SENT_TO_BROWSER.CACHE_INDICATOR,
+              state: cacheStatus,
+            })
+            cacheStatusesByHtmlRequestId.delete(htmlRequestId)
           }
 
           connectReactDebugChannelForHtmlRequest(
@@ -1559,18 +1551,7 @@ export async function createHotReloaderTurbopack(
     sendToLegacyClients(action) {
       const payload = JSON.stringify(action)
 
-      // Clients with a request ID are inferred App Router clients. If Cache
-      // Components is not enabled, we consider those legacy clients. Pages
-      // Router clients are also considered legacy clients. TODO: Maybe mark
-      // clients as App Router / Pages Router clients explicitly, instead of
-      // inferring it from the presence of a request ID.
-
-      if (!nextConfig.cacheComponents) {
-        for (const client of clientsByHtmlRequestId.values()) {
-          client.send(payload)
-        }
-      }
-
+      // Only clients without an HTML request ID use legacy HMR messages.
       for (const client of clientsWithoutHtmlRequestId) {
         client.send(payload)
       }

@@ -279,6 +279,8 @@ const metrics = {
     partialNavigationResponseBytes: optionalNumber(
       'partial-navigation-response-bytes'
     ),
+    fastRefreshMaxMs: optionalNumber('fast-refresh-max-ms'),
+    fastRefreshSamples: optionalNumber('fast-refresh-samples'),
     peakRssBytes: optionalNumber('peak-rss-bytes'),
   },
 }

@@ -193,8 +193,9 @@ Track at least:
   startup and test body, focused browser tests, the core package build, the
   bootstrap build, and the complete validation slice when run
 - runtime performance when the changed path can affect it: development and
-  production startup, PPR shell first byte and completion, Partial Prefetching
-  navigation latency, response bytes, and peak resident memory
+  production startup, Fast Refresh latency, PPR shell first byte and
+  completion, Partial Prefetching navigation latency, response bytes, and peak
+  resident memory
 
 Record performance timings with the corresponding `fork-metrics` CLI options.
 Use the same warm or cold conditions when comparing timings and label the

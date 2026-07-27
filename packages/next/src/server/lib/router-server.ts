@@ -836,7 +836,7 @@ export async function initialize(opts: {
     onDevServerCleanup: opts.onDevServerCleanup,
     distDir: config.distDir,
     experimentalFeatures,
-    cacheComponents: config.cacheComponents,
+    cacheComponents: true,
     partialPrefetching: config.partialPrefetching,
   }
   renderServerOpts.serverFields.routerServerHandler = requestHandlerImpl
@@ -860,9 +860,9 @@ export async function initialize(opts: {
     logErrorWithOriginalStack: opts.dev
       ? handlers.server.logErrorWithOriginalStack.bind(handlers.server)
       : (err: unknown) => !opts.quiet && Log.error(err),
-    setCacheStatus: config.cacheComponents
-      ? development?.service?.setCacheStatus.bind(development?.service)
-      : undefined,
+    setCacheStatus: development?.service?.setCacheStatus.bind(
+      development?.service
+    ),
     setIsrStatus: development?.service?.setIsrStatus.bind(development?.service),
     setReactDebugChannel: development?.config.experimental.reactDebugChannel
       ? development?.service?.setReactDebugChannel.bind(development?.service)
@@ -1016,7 +1016,7 @@ export async function initialize(opts: {
     },
     distDir: config.distDir,
     experimentalFeatures,
-    cacheComponents: config.cacheComponents,
+    cacheComponents: true,
     partialPrefetching: config.partialPrefetching,
     agentRules: config.agentRules,
   }
