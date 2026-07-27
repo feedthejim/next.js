@@ -59,7 +59,9 @@
   directly. App render options and work stores likewise carry no Cache
   Components mode field. App development requests always compute the
   most-specific fallback-param set, and export always uses the staged
-  static-shell partition.
+  static-shell partition. The development warmup suite now has one Partial
+  Prefetching model across four fixture and load-mode entry points instead of
+  an eight-file on/off matrix.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -74,9 +76,9 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Collapse the development fallback and warmup test matrix to
-  the always-on Partial Prefetching model, retaining a cheap fallback-route
-  selection contract instead of stale mode-specific browser expectations.
+- **Next action:** Move mixed static and fallback param selection into a cheap
+  request-layer contract, then delete its stale warmup browser routes and
+  assertions.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -92,6 +94,30 @@
   revalidation assertions.
 
 ## History
+
+### 2026-07-27: One development warmup matrix
+
+Deleted the four duplicate development warmup entry points for Partial
+Prefetching off. The four retained files now represent only the meaningful
+fixture and load-mode dimensions. Their shared utility no longer reads an
+environment switch, branches static-param expectations by prefetch mode, or
+keeps a no-runtime-prefetch sync-I/O expectation.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** One mode dimension, one environment switch, and two
+  expectation branches are gone from the development warmup suite.
+- **Leanness:** Total test files fell from 1,863 to 1,859, and development test
+  files fell from 296 to 292. Framework source, dependencies, and the warm
+  release distribution were unchanged.
+- **Runtime performance:** The retained Turbopack navigation and initial-load
+  fixtures reached ready state in 295 and 274 milliseconds. One fully covered
+  dynamic-param browser assertion passed in each entry point. This test-only
+  slice does not change framework runtime code.
+- **Iteration efficiency:** Types passed in 13.95 seconds, the 19-test fast
+  allowlist in 1.79 seconds, the two focused browser assertions in 20.86
+  seconds with a 19.71-second Jest body, and the core build in 22.04 seconds.
+  Total measured validation cost was 58.64 seconds.
 
 ### 2026-07-27: One render work-store mode
 

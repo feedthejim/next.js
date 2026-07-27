@@ -1,9 +1,9 @@
 {
   "schemaVersion": 2,
-  "label": "one-render-work-store-mode",
-  "capturedAt": "2026-07-27T20:12:30.725Z",
+  "label": "one-dev-warmup-matrix",
+  "capturedAt": "2026-07-27T20:17:07.922Z",
   "git": {
-    "baseHead": "05af06c0e7"
+    "baseHead": "b25e893c30"
   },
   "source": {
     "frameworkTracked": {
@@ -65,9 +65,9 @@
     "peerDependencies": 6
   },
   "tests": {
-    "totalFiles": 1863,
+    "totalFiles": 1859,
     "e2eFiles": 1109,
-    "developmentFiles": 296,
+    "developmentFiles": 292,
     "productionFiles": 348,
     "unitFiles": 108
   },
@@ -76,28 +76,28 @@
     "nextDistBytes": 180654448,
     "nextDistJavaScriptBytes": 76321684
   },
-  "validationTimingConditions": "warm local; directTests is tracer unit file; focusedTests is fork fast allowlist; httpTests is production Route Handler fixture; testSelectionOverhead is measured stale development fallback test investigation and excludes two unmeasured one-case diagnostics; total includes the initial and final core builds",
+  "validationTimingConditions": "warm local; focusedTests is fork fast allowlist; browserTests is two retained Turbopack warmup entry points with one fully covered param assertion each",
   "validationTimingsMs": {
-    "types": 13720,
-    "directTests": 1150,
-    "focusedTests": 1930,
-    "testSelectionOverhead": 75620,
-    "httpTests": 20620,
-    "httpTestBody": 19447,
+    "types": 13950,
+    "directTests": null,
+    "focusedTests": 1790,
+    "testSelectionOverhead": null,
+    "httpTests": null,
+    "httpTestBody": null,
     "browserStartup": null,
-    "browserTestBody": null,
-    "browserTests": null,
+    "browserTestBody": 19712,
+    "browserTests": 20860,
     "edgeDceBuild": null,
-    "nextBuild": 21970,
+    "nextBuild": 22040,
     "buildAll": null,
-    "total": 156050
+    "total": 58640
   },
   "runtimePerformance": {
-    "conditions": "production Turbopack Route Handler fixture, warm local",
-    "devStartupMs": null,
-    "productionStartupMs": 75,
-    "routeHandlerRequestMs": 87,
-    "routeHandlerRevalidationMs": 229,
+    "conditions": "isolated Turbopack development warmup fixtures for retained initial-load and navigation entry points",
+    "devStartupMs": 295,
+    "productionStartupMs": null,
+    "routeHandlerRequestMs": null,
+    "routeHandlerRevalidationMs": null,
     "edgeMiddlewareStartupMs": null,
     "edgeImageResponseMs": null,
     "edgeImageResponseBytes": null,

@@ -4,9 +4,8 @@ import * as nodePath from 'node:path'
 
 // This suite restarts the dev server before every test, which makes it one of
 // the slowest files in CI. To keep shard times balanced, it's split into one
-// `*.test.ts` entry file per (fixture, load mode, partial prefetching)
-// combination, each calling this function. Keep the entry files in sync when
-// adding a new dimension.
+// `*.test.ts` entry file per fixture and load-mode combination, each calling
+// this function. Keep the entry files in sync when adding a new dimension.
 export function runDevWarmupTests({
   hasRuntimePrefetch,
   isInitialLoad,
@@ -14,8 +13,6 @@ export function runDevWarmupTests({
   hasRuntimePrefetch: boolean
   isInitialLoad: boolean
 }) {
-  const partialPrefetching = !!process.env.__NEXT_PARTIAL_PREFETCHING
-
   const description = hasRuntimePrefetch
     ? 'with runtime prefetch configs'
     : 'without runtime prefetch configs'
@@ -225,12 +222,8 @@ export function runDevWarmupTests({
 
     describe(isInitialLoad ? 'initial load' : 'navigation', () => {
       // Static
-      const STATIC_LINK_DATA = isInitialLoad
-        ? 'Prerender'
-        : // If we're rendering an App Shell, static params are deferred until the runtime stage.
-          partialPrefetching || hasRuntimePrefetch
-          ? 'Prefetch'
-          : 'Prerender'
+      // App Shell navigations defer static params until the runtime stage.
+      const STATIC_LINK_DATA = isInitialLoad ? 'Prerender' : 'Prefetch'
       const RUNTIME_LINK_DATA = 'Prefetch'
 
       describe('cached data resolves in the correct phase', () => {
@@ -476,16 +469,9 @@ export function runDevWarmupTests({
 
             assertLog(logs, 'after first cache', 'Prerender')
             assertLog(logs, 'after cookies', 'Prefetch')
-            if (hasRuntimePrefetch || partialPrefetching) {
-              // in partialPrefetching (either via allow-runtime or global flag),
-              // sync IO in the runtime stage errors and advances to Server.
-              assertLog(logs, 'after sync io', 'Server')
-              assertLog(logs, 'after cache read - page', 'Server')
-            } else {
-              // if runtime prefetching is not on, sync IO in the runtime stage does nothing.
-              assertLog(logs, 'after sync io', 'Prefetch')
-              assertLog(logs, 'after cache read - page', 'Prefetch')
-            }
+            // Sync IO in the runtime stage advances to Server.
+            assertLog(logs, 'after sync io', 'Server')
+            assertLog(logs, 'after cache read - page', 'Server')
           }
 
           if (isInitialLoad) {
