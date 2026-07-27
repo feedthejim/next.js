@@ -37,9 +37,16 @@ function git(...gitArgs) {
   return execFileSync('git', gitArgs, { encoding: 'utf8' }).trim()
 }
 
-function trackedFiles(pathspec) {
-  const output = git('ls-files', pathspec)
-  return output ? output.split('\n') : []
+function worktreeFiles(pathspec) {
+  const output = git(
+    'ls-files',
+    '--cached',
+    '--others',
+    '--exclude-standard',
+    '--',
+    pathspec
+  )
+  return output ? output.split('\n').filter(existsSync) : []
 }
 
 function isSourceFile(path) {
@@ -126,7 +133,7 @@ function optionalNumber(name) {
 }
 
 const frameworkSourceFiles =
-  trackedFiles('packages/next/src').filter(isSourceFile)
+  worktreeFiles('packages/next/src').filter(isSourceFile)
 const authoredFrameworkSourceFiles = frameworkSourceFiles.filter(
   (file) => !file.startsWith('packages/next/src/compiled/')
 )
@@ -151,7 +158,7 @@ const pagesRouterFiles = frameworkSourceFiles.filter(
     file.includes('/pages-router/') ||
     /(^|[/.-])pages-runtime([/.-]|$)/i.test(file)
 )
-const testFiles = trackedFiles('test').filter((file) =>
+const testFiles = worktreeFiles('test').filter((file) =>
   /\.(test|spec)\.[cm]?[jt]sx?$/.test(file)
 )
 

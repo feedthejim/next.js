@@ -9,9 +9,9 @@
   paths, public options, dependencies, and expensive test combinations.
 - **Current shape:** Branch `feedthejim/simplify-next-rendering` from
   `1f65c7646e`. `AGENTS.md` contains the product contract, architecture
-  principles, supported-behavior map, and phased checklist. The first verified
-  slice makes the rendering and navigation feature set unconditional.
-  `fork-metrics.json` is the committed scorecard baseline.
+  principles, supported-behavior map, and phased checklist. Configuration and
+  Flight router-state construction now use one rendering and Partial
+  Prefetching model. `fork-metrics.json` is the current scorecard.
 - **Constraints:** Backward compatibility is out of scope. Do not add migration
   layers or special removed-feature errors. Preserve only behavior in the fork
   contract. Keep each independently verified slice committed before starting
@@ -20,18 +20,29 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Map and delete the non-Cache-Components and legacy PPR
-  renderer branches.
+- **Next action:** Delete the non-Cache-Components and legacy PPR prerender
+  branches, starting with the renderer's static-generation pipeline.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
   performance metrics; each slice is committed; the worktree is clean; and no
   required follow-up is implicit.
 - **Last verified:** 2026-07-27 on `feedthejim/simplify-next-rendering`.
-  `pnpm --filter=next types`, 31 focused config tests, and
+  `pnpm --filter=next types`, three focused Flight router-state unit tests, and
   `pnpm --filter=next build` passed.
 
 ## History
+
+### 2026-07-27: Always-partial Flight router state
+
+Removed Cache Components and Partial Prefetching mode parameters from Flight
+router-state construction. The default segment strategy is now directly
+`partial`, and missing runtime inlining hints always disable prefetching.
+Authored framework and App Router renderer source each fell by 40 lines,
+Cache Components references fell by 18, built JavaScript fell by 7,072 bytes,
+and one fast unit test file replaced the need for browser coverage of this
+decision. The first warm core-build observation was a 26.34-second outlier; an
+immediate repeat took 20.23 seconds versus the 20.75-second baseline.
 
 ### 2026-07-27: Simplification scorecard
 

@@ -13,8 +13,6 @@ async function createFlightRouterStateFromLoaderTreeImpl(
   loaderTree: LoaderTree,
   hintTree: PrefetchHints | null,
   prefetchInliningEnabled: boolean,
-  cacheComponents: boolean,
-  partialPrefetching: boolean | 'unstable_eager' | undefined,
   isStaticGeneration: boolean,
   isBuildTimePrerendering: boolean,
   getDynamicParamFromSegment: GetDynamicParamFromSegment,
@@ -32,17 +30,11 @@ async function createFlightRouterStateFromLoaderTreeImpl(
 
   // Load the layout or page module to check its instant and prefetch
   // configs. When a segment doesn't export prefetch, it defaults to
-  // 'partial' if the app has opted into partial prefetching globally via the
-  // `partialPrefetching` config in next.config.js.
+  // 'partial' unless the segment explicitly selects another strategy.
   const mod = layout ? await layout[0]() : page ? await page[0]() : undefined
   const instantConfig = mod ? (mod as AppSegmentConfig).instant : undefined
   const prefetchConfig =
-    (mod ? (mod as AppSegmentConfig).prefetch : undefined) ??
-    (partialPrefetching === 'unstable_eager'
-      ? 'unstable_eager'
-      : partialPrefetching
-        ? 'partial'
-        : undefined)
+    (mod ? (mod as AppSegmentConfig).prefetch : undefined) ?? 'partial'
   let prefetchHints = 0
 
   // Union in the precomputed build-time hints (e.g. segment inlining
@@ -76,16 +68,12 @@ async function createFlightRouterStateFromLoaderTreeImpl(
       // Once that bug is fixed, this branch should become an error again —
       // hints should always be available from the manifest during ISR.
       prefetchHints |= PrefetchHint.PrefetchDisabled
-    } else if (cacheComponents) {
+    } else {
       // At runtime with no hint tree, this is a fully dynamic route with no
       // manifest entry. Treat every segment as unprefetchable. Do NOT set
       // InliningHintsStale — that would cause the client to enter an
       // infinite re-fetch loop trying to get hints that will never exist.
       prefetchHints |= PrefetchHint.PrefetchDisabled
-    } else {
-      // Without cacheComponents, dynamic pages have no static shell so
-      // hints are never computed. Don't disable prefetching — just skip
-      // the inlining hint system and let prefetching proceed normally.
     }
   }
 
@@ -159,8 +147,6 @@ async function createFlightRouterStateFromLoaderTreeImpl(
       parallelRoutes[parallelRouteKey],
       childHintNode,
       prefetchInliningEnabled,
-      cacheComponents,
-      partialPrefetching,
       isStaticGeneration,
       isBuildTimePrerendering,
       getDynamicParamFromSegment,
@@ -186,8 +172,6 @@ export async function createFlightRouterStateFromLoaderTree(
   loaderTree: LoaderTree,
   hintTree: PrefetchHints | null,
   prefetchInliningEnabled: boolean,
-  cacheComponents: boolean,
-  partialPrefetching: boolean | 'unstable_eager' | undefined,
   isStaticGeneration: boolean,
   isBuildTimePrerendering: boolean,
   getDynamicParamFromSegment: GetDynamicParamFromSegment,
@@ -201,8 +185,6 @@ export async function createFlightRouterStateFromLoaderTree(
     loaderTree,
     hintTree,
     prefetchInliningEnabled,
-    cacheComponents,
-    partialPrefetching,
     isStaticGeneration,
     isBuildTimePrerendering,
     getDynamicParamFromSegment,
@@ -215,8 +197,6 @@ export async function createRouteTreePrefetch(
   loaderTree: LoaderTree,
   hintTree: PrefetchHints | null,
   prefetchInliningEnabled: boolean,
-  cacheComponents: boolean,
-  partialPrefetching: boolean | 'unstable_eager' | undefined,
   isStaticGeneration: boolean,
   isBuildTimePrerendering: boolean,
   getDynamicParamFromSegment: GetDynamicParamFromSegment,
@@ -231,8 +211,6 @@ export async function createRouteTreePrefetch(
     loaderTree,
     hintTree,
     prefetchInliningEnabled,
-    cacheComponents,
-    partialPrefetching,
     isStaticGeneration,
     isBuildTimePrerendering,
     getDynamicParamFromSegment,
