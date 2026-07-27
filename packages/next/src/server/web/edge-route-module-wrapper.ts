@@ -123,7 +123,7 @@ export class EdgeRouteModuleWrapper {
         waitUntil,
         onClose: closeController.onClose.bind(closeController),
         onAfterTaskError: undefined,
-        cacheComponents: !!process.env.__NEXT_CACHE_COMPONENTS,
+        cacheComponents: true,
         // Edge runtime doesn't run instant validation; the level value is
         // irrelevant here.
         // TODO: Remove validationLevel and other global config from renderOpts

@@ -89,10 +89,7 @@ export function getRootParam(paramName: string): Promise<ParamValue> {
       )
     }
     case 'request': {
-      if (
-        process.env.__NEXT_CACHE_COMPONENTS &&
-        workUnitStore.validationSamples
-      ) {
+      if (workUnitStore.validationSamples) {
         const { assertRootParamInSamples } =
           require('../app-render/instant-validation/instant-samples') as typeof import('../app-render/instant-validation/instant-samples')
         // If we error, make sure we return a rejected promise instead of erroring synchronously.

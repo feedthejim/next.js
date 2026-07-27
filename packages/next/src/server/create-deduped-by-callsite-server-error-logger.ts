@@ -8,12 +8,8 @@ const cache =
     ? React.cache
     : (fn: (key: unknown) => void) => fn
 
-// When Cache Components is enabled, we record these as errors so that they
-// are captured by the dev overlay as it's more critical to fix these
-// when enabled.
-const logErrorOrWarn = process.env.__NEXT_CACHE_COMPONENTS
-  ? console.error
-  : console.warn
+// Record these as errors so that they are captured by the dev overlay.
+const logErrorOrWarn = console.error
 
 // We don't want to dedupe across requests.
 // The developer might've just attempted to fix the warning so we should warn again if it still happens.

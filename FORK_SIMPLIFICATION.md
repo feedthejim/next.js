@@ -40,6 +40,9 @@
   client hydration, navigation response, segment cache, route-state Activity,
   instant-validation, and development diagnostics paths no longer branch on
   Cache Components, cached-navigation, or legacy PPR environment flags. The
+  server runtime and build-time define map no longer expose those rendering
+  mode switches either. Node-only image caching and instant-validation modules
+  are selected through explicit runtime capabilities.
   retained navigation journey covers both imperative prefetch and the default
   declarative Link path.
   Runtime-prefetch resume-cache installation is a directly testable renderer
@@ -56,9 +59,9 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Remove the remaining server-side Cache Components
-  environment branches, then stop defining obsolete client and server mode
-  constants.
+- **Next action:** Remove the final application-PPR helper and obsolete
+  configuration-derived Cache Components plumbing that can no longer affect
+  App Page rendering.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -72,6 +75,40 @@
   passed.
 
 ## History
+
+### 2026-07-27: No rendering-mode environment switches
+
+Removed the final Cache Components, cached-navigation, and legacy PPR
+environment checks and stopped emitting those obsolete constants into
+application bundles. Server request validation, patched fetch behavior,
+logging, edge route context, module instrumentation, instant validation, and
+image rendering now follow the fork's one rendering model. The Node-only image
+cache is loaded only during a prerender and remains inside a DCE-safe runtime
+capability branch.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** Cache Components environment references fell from nine
+  to zero, and the final PPR and cached-navigation environment references also
+  fell to zero. The framework no longer defines or consumes rendering-mode
+  environment switches.
+- **Leanness:** Authored framework source fell by 24 lines and 1,151 bytes.
+  The App Router renderer accounts for six lines and 99 bytes. The warm built
+  distribution fell by 8,746 bytes overall and 2,576 JavaScript bytes. Test
+  and dependency counts were unchanged.
+- **Runtime performance:** The retained navigation and PPR journeys passed all
+  13 assertions. The navigation server was ready in 144 milliseconds and its
+  first browser load took 89 milliseconds. Startup was 68 milliseconds slower
+  than the preceding single run, while first load was three milliseconds
+  slower. These are directional local observations.
+- **Iteration efficiency:** Types passed in 14.31 seconds, the 19-test fast
+  allowlist in 1.80 seconds, the final core build in 22.16 seconds, five focused
+  fetch and image-response units in 1.33 seconds, and the two browser journeys
+  in 33.57 seconds. The prescribed legacy webpack edge fixture exited after
+  8.12 seconds because its application-selected Edge Runtime is intentionally
+  incompatible with the fork's always-on Cache Components contract, before it
+  could exercise DCE. Total measured iteration cost, including that
+  out-of-contract attempt, was 81.29 seconds.
 
 ### 2026-07-27: One always-on client runtime
 

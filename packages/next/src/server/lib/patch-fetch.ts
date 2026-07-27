@@ -1145,7 +1145,6 @@ export function createPatchedFetcher(
         if (
           (workStore.isStaticGeneration ||
             (process.env.NODE_ENV === 'development' &&
-              process.env.__NEXT_CACHE_COMPONENTS &&
               workUnitStore &&
               // eslint-disable-next-line no-restricted-syntax
               workUnitStore.type === 'request' &&

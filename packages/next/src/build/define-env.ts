@@ -121,8 +121,6 @@ export function getDefineEnv({
   const nextPublicEnv = getNextPublicEnvironmentVariables()
   const nextConfigEnv = getNextConfigEnv(config)
 
-  const isPPREnabled = true
-  const isCacheComponentsEnabled = true
   const isUseCacheEnabled = !!config.experimental.useCache
 
   const defineEnv: DefineEnv = {
@@ -176,10 +174,7 @@ export function getDefineEnv({
     'process.env.__NEXT_TURBOPACK_SHARED_RUNTIME': Boolean(
       config.experimental.turbopackSharedRuntime
     ),
-    'process.env.__NEXT_PPR': isPPREnabled,
-    'process.env.__NEXT_CACHE_COMPONENTS': isCacheComponentsEnabled,
-    'process.env.__NEXT_EXPERIMENTAL_CACHED_NAVIGATIONS': true,
-    'process.env.__NEXT_INSTANT_NAV_TOGGLE': isCacheComponentsEnabled,
+    'process.env.__NEXT_INSTANT_NAV_TOGGLE': true,
     'process.env.__NEXT_EXPERIMENTAL_COLD_CACHE_BADGE': Boolean(
       config.experimental.coldCacheBadge
     ),

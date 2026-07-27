@@ -7,10 +7,7 @@
 export function instrumentModuleGetter<TModule>(
   getter: () => TModule
 ): () => TModule {
-  if (
-    process.env.NEXT_RUNTIME === 'edge' ||
-    !process.env.__NEXT_CACHE_COMPONENTS
-  ) {
+  if (process.env.NEXT_RUNTIME !== 'nodejs') {
     // The tracking is only consumed when prerendering with Cache Components,
     // which is not supported in the edge runtime (and the tracking relies on
     // Node.js APIs).

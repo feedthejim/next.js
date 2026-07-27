@@ -10,28 +10,22 @@ function importModule(): Promise<
   )
 }
 
-// The Cache Components-specific caching path (and its React Flight and Node
-// stream dependencies) lives in a separate module that is only required for
-// Node.js Cache Components builds. The `NEXT_RUNTIME` guard matters because
-// `__NEXT_CACHE_COMPONENTS` is derived from config, not the per-route runtime,
-// so it stays `true` in edge bundles too. A Pages Router edge route that
-// renders an `ImageResponse` is valid under Cache Components, and without the
-// guard this node-only module would be pulled into that edge bundle and fail to
-// compile. (App Router edge routes, including metadata routes, are
-// independently rejected at compile time under Cache Components.) Both checks
-// fold to constants at build time, so the `require` is eliminated as dead code
-// for edge builds and for apps without Cache Components, which keep
-// ImageResponse's original streaming behavior.
-let getCachedImageResponseBody:
+function getImageResponseBodyCache():
   | typeof import('./cache-image-response').getCachedImageResponseBody
-  | undefined
-if (
-  process.env.NEXT_RUNTIME !== 'edge' &&
-  process.env.__NEXT_CACHE_COMPONENTS
-) {
-  getCachedImageResponseBody = (
-    require('./cache-image-response') as typeof import('./cache-image-response')
-  ).getCachedImageResponseBody
+  | undefined {
+  if (process.env.__NEXT_USE_NODE_STREAMS) {
+    const { workUnitAsyncStorage } =
+      require('../app-render/work-unit-async-storage.external') as typeof import('../app-render/work-unit-async-storage.external')
+    if (workUnitAsyncStorage.getStore()?.type === 'prerender') {
+      return (
+        require('./cache-image-response') as typeof import('./cache-image-response')
+      ).getCachedImageResponseBody
+    }
+  } else {
+    // The Node-only relative requires stay inside the branch that is removed
+    // from edge bundles.
+  }
+  return undefined
 }
 
 /**
@@ -46,6 +40,7 @@ export class ImageResponse extends Response {
     // Under Cache Components, route the render through the cache so metadata
     // image routes can be statically prerendered. Otherwise stream the rendered
     // image directly from the underlying `@vercel/og` response.
+    const getCachedImageResponseBody = getImageResponseBodyCache()
     const readable = getCachedImageResponseBody
       ? getCachedImageResponseBody(args)
       : new ReadableStream({

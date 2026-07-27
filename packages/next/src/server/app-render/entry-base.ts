@@ -71,10 +71,7 @@ export {
 } from './collect-segment-data'
 
 export const InstantValidation = () => {
-  if (
-    process.env.NEXT_RUNTIME !== 'edge' &&
-    process.env.__NEXT_CACHE_COMPONENTS
-  ) {
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
     return require('./instant-validation/instant-validation') as typeof import('./instant-validation/instant-validation')
   } else {
     return undefined

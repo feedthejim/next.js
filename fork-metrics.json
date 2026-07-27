@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
-  "label": "no-client-cache-mode-gates",
-  "capturedAt": "2026-07-27T19:25:23.851Z",
+  "label": "no-rendering-mode-env-switches",
+  "capturedAt": "2026-07-27T19:30:55.785Z",
   "git": {
-    "baseHead": "2980303cdf"
+    "baseHead": "00210a8e53"
   },
   "source": {
     "frameworkTracked": {
       "files": 2458,
-      "lines": 1094178,
-      "bytes": 51409437
+      "lines": 1094154,
+      "bytes": 51408286
     },
     "frameworkAuthored": {
       "files": 1753,
-      "lines": 299847,
-      "bytes": 9666988
+      "lines": 299823,
+      "bytes": 9665837
     },
     "vendoredCompiled": {
       "files": 705,
@@ -23,8 +23,8 @@
     },
     "appRender": {
       "files": 97,
-      "lines": 28286,
-      "bytes": 968230
+      "lines": 28280,
+      "bytes": 968131
     },
     "clientRouter": {
       "files": 39,
@@ -50,9 +50,9 @@
     "cacheComponents": 151,
     "routePPR": 0,
     "appPPR": 7,
-    "cacheComponentsEnv": 9,
-    "pprEnv": 1,
-    "cachedNavigationsEnv": 1,
+    "cacheComponentsEnv": 0,
+    "pprEnv": 0,
+    "cachedNavigationsEnv": 0,
     "prefetchKind": 0,
     "fullPrefetchStrategy": 0,
     "loadingBoundaryStrategy": 0,
@@ -72,25 +72,25 @@
     "unitFiles": 108
   },
   "builtArtifacts": {
-    "conditions": "warm local after core build and complete retained browser fixture pack; comparable to prior warm core-build snapshot",
-    "nextDistBytes": 180719999,
-    "nextDistJavaScriptBytes": 76343625
+    "conditions": "warm local after core build and focused browser fixture pack; comparable to prior warm core-build snapshot",
+    "nextDistBytes": 180711253,
+    "nextDistJavaScriptBytes": 76341049
   },
-  "validationTimingConditions": "warm local; focusedTests is fork fast allowlist; browserTests is complete retained browser allowlist including isolated packaging; total includes focused dev-overlay units",
+  "validationTimingConditions": "warm local; focusedTests is fork fast allowlist; browserTests combines navigation and PPR journeys; total includes focused units and an out-of-contract webpack edge fixture attempt",
   "validationTimingsMs": {
-    "types": 14160,
+    "types": 14310,
     "focusedTests": 1800,
-    "browserStartup": 86,
+    "browserStartup": 89,
     "browserTestBody": null,
-    "browserTests": 86940,
-    "nextBuild": 22680,
+    "browserTests": 33570,
+    "nextBuild": 22160,
     "buildAll": null,
-    "total": 127710
+    "total": 81290
   },
   "runtimePerformance": {
     "conditions": "production Turbopack navigation fixture, warm local",
     "devStartupMs": null,
-    "productionStartupMs": 76,
+    "productionStartupMs": 144,
     "pprShellFirstByteMs": null,
     "pprCompleteMs": null,
     "partialNavigationMs": null,
