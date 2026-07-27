@@ -49,8 +49,8 @@
   required follow-up is implicit.
 - **Last verified:** 2026-07-27 on `feedthejim/simplify-next-rendering`.
   `pnpm --filter=next types`, the 19-test fast App Router allowlist,
-  `pnpm --filter=next build`, 12 production Turbopack PPR partial-hydration
-  assertions, and the Partial Prefetching navigation journey passed.
+  `pnpm --filter=next build`, and the 34-assertion production Turbopack
+  runtime pack passed.
 
 ## History
 
@@ -68,9 +68,12 @@ Types passed in 16.99 seconds, the 19-test fast contract passed in 1.97
 seconds, the combined PPR and navigation browser run passed all 13 assertions
 in 34.99 seconds, and the core build passed in 22.82 seconds. The navigation
 fixture's production server was ready in 88 milliseconds and its first browser
-load took 136 milliseconds. Type and build time were 2.34 and 0.89 seconds
-slower than the prior observation; total validation is not comparable because
-this slice restored two browser journeys after an algorithm-only slice.
+load took 136 milliseconds. A broader post-commit pack also passed all 34 PPR,
+resume-cache, HTTP fallback-recovery, and navigation assertions in 74.90
+seconds; the scorecard keeps the comparable two-journey timing. Type and build
+time were 2.34 and 0.89 seconds slower than the prior observation; total
+validation is not comparable because this slice restored two browser journeys
+after an algorithm-only slice.
 
 ### 2026-07-27: Route-kind-derived static paths and build output
 
