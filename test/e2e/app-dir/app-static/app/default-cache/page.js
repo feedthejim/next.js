@@ -1,5 +1,3 @@
-export const fetchCache = 'default-cache'
-
 export default async function Page() {
   const dataNoCache = await fetch(
     'https://next-data-api-endpoint.vercel.app/api/random?no-cache',

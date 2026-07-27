@@ -3,7 +3,6 @@ use std::borrow::Cow;
 use anyhow::{Result, bail};
 use async_trait::async_trait;
 use bincode::{Decode, Encode};
-use serde::Deserialize;
 use serde_json::Value;
 use swc_core::{
     common::{DUMMY_SP, GLOBALS, Span, Spanned, source_map::SmallPos},
@@ -44,31 +43,6 @@ use crate::{
 };
 
 #[derive(
-    Default,
-    PartialEq,
-    Eq,
-    Clone,
-    Copy,
-    Debug,
-    TraceRawVcs,
-    Deserialize,
-    NonLocalValue,
-    Encode,
-    Decode,
-)]
-#[serde(rename_all = "kebab-case")]
-pub enum NextSegmentFetchCache {
-    #[default]
-    Auto,
-    DefaultCache,
-    OnlyCache,
-    ForceCache,
-    DefaultNoStore,
-    OnlyNoStore,
-    ForceNoStore,
-}
-
-#[derive(
     Default, PartialEq, Eq, Clone, Copy, Debug, TraceRawVcs, NonLocalValue, Encode, Decode,
 )]
 pub enum NextRevalidate {
@@ -84,7 +58,6 @@ pub enum NextRevalidate {
 #[derive(Debug, Default, Clone)]
 pub struct NextSegmentConfig {
     pub revalidate: Option<NextRevalidate>,
-    pub fetch_cache: Option<NextSegmentFetchCache>,
     pub runtime: Option<NextRuntime>,
     pub preferred_region: Option<Vec<RcStr>>,
     pub middleware_matcher: Option<Vec<MiddlewareMatcherKind>>,
@@ -117,13 +90,11 @@ impl NextSegmentConfig {
     pub fn apply_parent_config(&mut self, parent: &Self) {
         let NextSegmentConfig {
             revalidate,
-            fetch_cache,
             runtime,
             preferred_region,
             ..
         } = self;
         *revalidate = revalidate.or(parent.revalidate);
-        *fetch_cache = fetch_cache.or(parent.fetch_cache);
         *runtime = runtime.or(parent.runtime);
         *preferred_region = preferred_region.take().or(parent.preferred_region.clone());
     }
@@ -152,13 +123,11 @@ impl NextSegmentConfig {
         }
         let Self {
             revalidate,
-            fetch_cache,
             runtime,
             preferred_region,
             ..
         } = self;
         merge_parallel(revalidate, &parallel_config.revalidate, "revalidate")?;
-        merge_parallel(fetch_cache, &parallel_config.fetch_cache, "fetchCache")?;
         merge_parallel(runtime, &parallel_config.runtime, "runtime")?;
         merge_parallel(
             preferred_region,
@@ -740,48 +709,6 @@ async fn parse_config_value(
                     //https://github.com/vercel/next.js/blob/cd46c221d2b7f796f963d2b81eea1e405023db23/packages/next/src/server/lib/patch-fetch.ts#L20
                 }
             }
-        }
-        "fetchCache" => {
-            let Some(value) = get_value() else {
-                return invalid_config(
-                    source,
-                    "fetchCache",
-                    span,
-                    rcstr!("It mustn't be reexported."),
-                    None,
-                    IssueSeverity::Error,
-                )
-                .await;
-            };
-            if matches!(value, JsValue::Constant(ConstantValue::Undefined)) {
-                return Ok(());
-            }
-            let Some(val) = value.as_str() else {
-                return invalid_config(
-                    source,
-                    "fetchCache",
-                    span,
-                    rcstr!("It needs to be a static string."),
-                    Some(&value),
-                    IssueSeverity::Error,
-                )
-                .await;
-            };
-
-            config.fetch_cache = match serde_json::from_value(Value::String(val.to_string())) {
-                Ok(fetch_cache) => Some(fetch_cache),
-                Err(err) => {
-                    return invalid_config(
-                        source,
-                        "fetchCache",
-                        span,
-                        format!("It has an invalid value: {err}.").into(),
-                        Some(&value),
-                        IssueSeverity::Error,
-                    )
-                    .await;
-                }
-            };
         }
         "runtime" => {
             if mode == ParseSegmentMode::App {

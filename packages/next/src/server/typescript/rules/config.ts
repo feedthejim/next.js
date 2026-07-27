@@ -9,7 +9,6 @@ import {
 } from '../utils'
 import { NEXT_TS_ERRORS, ALLOWED_EXPORTS } from '../constant'
 import type tsModule from 'typescript/lib/tsserverlibrary'
-import type { AppSegmentConfig } from '../../../build/segment-config/app/app-segment-config'
 
 const API_DOCS: Record<
   string,
@@ -23,27 +22,6 @@ const API_DOCS: Record<
     insertText?: string
   }
 > = {
-  fetchCache: {
-    description:
-      "The `fetchCache` option controls how Next.js statically caches fetches. By default it statically caches fetches reachable before any dynamic Hooks are used, and it doesn't cache fetches that are discovered after that.",
-    options: {
-      '"force-no-store"':
-        "This lets you intentionally opt-out of all caching of data. This option forces all fetches to be refetched every request even if the `cache: 'force-cache'` option is passed to `fetch()`.",
-      '"only-no-store"':
-        "This lets you enforce that all data opts out of caching. This option makes `fetch()` reject with an error if `cache: 'force-cache'` is provided. It also changes the default to `no-store`.",
-      '"default-no-store"':
-        "Allows any explicit `cache` option to be passed to `fetch()` but if `'default'`, or no option, is provided then it defaults to `'no-store'`. This means that even fetches before a dynamic Hook are considered dynamic.",
-      '"auto"':
-        "This is the default option. It caches any fetches with the default `cache` option provided, that happened before a dynamic Hook is used and don't cache any such fetches if they're issued after a dynamic Hook.",
-      '"default-cache"':
-        "Allows any explicit `cache` option to be passed to `fetch()` but if `'default'`, or no option, is provided then it defaults to `'force-cache'`. This means that even fetches before a dynamic Hook are considered dynamic.",
-      '"only-cache"':
-        "This lets you enforce that all data opts into caching. This option makes `fetch()` reject with an error if `cache: 'force-cache'` is provided. It also changes the default to `force-cache`. This error can be discovered early during static builds - or dynamically during Edge rendering.",
-      '"force-cache"':
-        "This lets you intentionally opt-in to all caching of data. This option forces all fetches to be cache even if the `cache: 'no-store'` option is passed to `fetch()`.",
-    } satisfies DocsOptionsObject<FullAppSegmentConfig['fetchCache']>,
-    link: 'https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#fetchcache',
-  },
   preferredRegion: {
     description:
       '@deprecated\\n\\nThe `preferredRegion` route segment config is deprecated. Remove this export.',
@@ -146,27 +124,6 @@ const API_DOCS: Record<
     },
   },
 }
-
-type FullAppSegmentConfig = Required<AppSegmentConfig>
-
-/**
- * Maps a type for a config value to a docs object that lists all its values.
- * This ensures that all the valid options are listed.
- * Note that values that aren't primitives are skipped.
- *
- * ```
- * DocsOptionsObject<0 | false | "yes"> = { 0: string, false: string, '"yes"': string }
- * ```
- */
-type DocsOptionsObject<T> = {
-  [Value in T as AsObjectKey<Value>]: string
-}
-
-type AsObjectKey<Value> = Value extends string
-  ? `"${Value}"`
-  : Value extends number | boolean | null | undefined
-    ? `${Value}`
-    : never
 
 function visitEntryConfig(
   fileName: string,

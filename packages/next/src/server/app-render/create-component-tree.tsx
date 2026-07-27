@@ -242,10 +242,6 @@ async function createComponentTreeInternal(
         })
       : []
 
-  if (typeof layoutOrPageMod?.fetchCache === 'string') {
-    workStore.fetchCache = layoutOrPageMod?.fetchCache
-  }
-
   if (typeof layoutOrPageMod?.revalidate !== 'undefined') {
     validateRevalidate(layoutOrPageMod?.revalidate, workStore.route)
   }

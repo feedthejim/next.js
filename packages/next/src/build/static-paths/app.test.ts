@@ -8,7 +8,6 @@ import {
   generateRouteStaticParams,
 } from './app'
 import type { PrerenderedRoute } from './types'
-import type { WorkStore } from '../../server/app-render/work-async-storage.external'
 import type { AppSegment } from '../segment-config/app/app-segments'
 
 function pathnameSegments(
@@ -940,8 +939,7 @@ const createEmptyParamsError = () =>
   )
 
 // Mock WorkStore for testing
-const createMockWorkStore = (fetchCache?: WorkStore['fetchCache']) => ({
-  fetchCache,
+const createMockWorkStore = () => ({
   page: '/test-page',
 })
 
@@ -1129,64 +1127,6 @@ describe('generateRouteStaticParams', () => {
         { lang: 'en', category: 'en-tech' },
         { category: 'default-tech' },
       ])
-    })
-  })
-
-  describe('FetchCache configuration', () => {
-    it('should set fetchCache on store when segment has fetchCache config', async () => {
-      const segments: TestAppSegment[] = [
-        createMockSegment(async () => [{ id: '1' }], {
-          fetchCache: 'force-cache',
-        }),
-      ]
-      const store = createMockWorkStore()
-      await generateRouteStaticParams(
-        segments,
-        store,
-
-        false,
-        [],
-        false
-      )
-      expect(store.fetchCache).toBe('force-cache')
-    })
-
-    it('should not modify fetchCache when segment has no fetchCache config', async () => {
-      const segments: TestAppSegment[] = [
-        createMockSegment(async () => [{ id: '1' }]),
-      ]
-      const store = createMockWorkStore('force-cache')
-      await generateRouteStaticParams(
-        segments,
-        store,
-
-        false,
-        [],
-        false
-      )
-      expect(store.fetchCache).toBe('force-cache')
-    })
-
-    it('should update fetchCache for multiple segments', async () => {
-      const segments: TestAppSegment[] = [
-        createMockSegment(async () => [{ category: 'tech' }], {
-          fetchCache: 'force-cache',
-        }),
-        createMockSegment(async () => [{ slug: 'post' }], {
-          fetchCache: 'default-cache',
-        }),
-      ]
-      const store = createMockWorkStore()
-      await generateRouteStaticParams(
-        segments,
-        store,
-
-        false,
-        [],
-        false
-      )
-      // Should have the last fetchCache value
-      expect(store.fetchCache).toBe('default-cache')
     })
   })
 

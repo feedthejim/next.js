@@ -98,7 +98,12 @@
   force-static, dynamic-error work-store state, request-data shims, or
   configuration-driven postponement. Mode-only suites and the fully skipped
   legacy `ppr-full` application are absent, while remaining semantic test debt
-  is measured explicitly.
+  is measured explicitly. Fetch caching also has no route-level mode:
+  `fetch()` cache options, `next.revalidate`, and Cache Components APIs are the
+  supported controls. The App segment schema, compiler contract, work store,
+  static-path generator, Route Handler runtime, language service, and
+  generated types no longer transport `fetchCache`. The internal incremental
+  cache entry discriminator remains a separate implementation concept.
   `fork-metrics.json` is the current scorecard, including static complexity,
   validation cost, and relevant runtime performance guardrails.
 - **Constraints:** Backward compatibility is out of scope. Do not add migration
@@ -110,59 +115,62 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Remove the `fetchCache` App Router configuration and its
-  rendering branches, then continue with `revalidate` and `experimental_ppr`.
+- **Next action:** Remove route-level `revalidate`, then remove
+  `experimental_ppr`.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
   performance metrics; each slice is committed; the worktree is clean; and no
   required follow-up is implicit.
 - **Last verified:** 2026-07-27 on `feedthejim/simplify-next-rendering`.
-  `pnpm --filter=next types`, the 56-test fast App Router allowlist, 108 focused
-  dev-overlay assertions, `pnpm --filter=next build`, the 34-assertion
-  production Turbopack runtime pack, the retained navigation journey, all 12
-  PPR partial-hydration assertions, the transition-instrumentation journey, and
-  two focused Turbopack Fast Refresh assertions passed. The focused Turbopack
-  development startup fixture also passed all three cache, deduplication, and
-  revalidation assertions. The retained generic Blocking Route redbox
-  assertion passed without the removed Cache Components config key. All 20
-  isolated config assertions also passed with no selectable Cache Components
-  or use-cache field in normalized config. The five-assertion production
-  resume-cache journey passed against the rebuilt local Turbopack binding. The
-  cleaned Rust transform contracts passed 30 RSC diagnostics and six transform
-  fixtures, and `next-core` passed a focused Cargo check with no compiler mode
-  fields. After removing application-selected runtimes, `next-api` passed a
-  focused Cargo check, the direct compiler contract passed 31 diagnostics,
-  all 12 PPR partial-hydration assertions passed, and the retained production
-  Partial Prefetching navigation passed against the rebuilt native binding.
-  The full bootstrap build passed, as did the five-assertion production
-  resume-cache journey against that local binding. After collapsing App
-  endpoint packaging, `next-api` checked successfully, the full bootstrap and
-  core release builds passed, the 56-test fast contract passed, all 12 PPR
-  browser assertions passed, and all five resume-cache and Server Action
-  assertions passed against the rebuilt local binding. App Router dynamic
-  parameters now have one lazy-generation model: `dynamicParams` is absent
-  from JavaScript and Rust route configuration, static-path planning, generated
-  types, language-service metadata, and supported fixtures. Parameters outside
-  `generateStaticParams` are generated on demand. The 80-case static-path unit
-  suite, 31 RSC diagnostics, eight TypeScript plugin and generated-type
-  assertions, `next-api` check, 56-test fast contract, rebuilt native binding,
-  and core release build passed. A production Turbopack E2E also proved that
-  an ungenerated parameter returns successfully under the fork's Partial
-  Prefetching configuration. App Router `dynamic` configuration is now absent
-  from JavaScript and Rust schemas, rendering, Route Handlers, request APIs,
-  fetch behavior, output export, generated types, and language-service
-  metadata. Core types, `next-core`, the 31-case RSC diagnostic contract, eight
-  TypeScript-plugin and generated-type assertions, the 56-test fast contract,
-  and the core release build passed. The converted App Route request-data
-  journey passed in Turbopack development. The 35-assertion production browser
-  pack passed PPR hydration, resume-cache and Server Action behavior, HTTP
-  fallback recovery, and Partial Prefetching navigation. The production form
-  of the converted upstream App Route fixture is still blocked by existing
-  public declaration export errors, so that journey remains a development
-  check until the dense conformance application replaces the shared fixture.
+  App Router `fetchCache` configuration is absent from JavaScript and Rust
+  schemas, rendering, Route Handlers, static-path generation, generated types,
+  language-service metadata, and supported fixtures. Core types, `next-core`,
+  the 30-case RSC diagnostic contract, 84 direct JavaScript assertions, the
+  56-test fast contract, the full bootstrap, and the core release build passed.
+  The rebuilt native binding passed five production resume-cache and Server
+  Action assertions plus two Partial Prefetching navigation assertions.
 
 ## History
+
+### 2026-07-27: Explicit fetch caching without route modes
+
+Removed the App Router `fetchCache` route configuration from the JavaScript and
+Rust segment schemas, generated types, TypeScript language service, static-path
+planner, work store, component tree, Route Handler runtime, Server Action
+setup, and fetch patch. Fetch caching now follows one rule: an individual
+`fetch()` or Cache Components boundary declares its cache behavior. Removed
+the route-level force, only, and default branches and their bespoke conflicts,
+without changing the internal incremental-cache entry discriminator.
+
+Pruned all fixture exports, deleted the compiler fixture that existed only to
+produce a special `fetchCache` removal error, deleted the route-config-only
+browser fixtures, and rewrote retained assertions around explicit fetch
+options. The scorecard now tracks both exact implementation references and
+residual test names inherited from the removed mode.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** Exact implementation references fell from 70 to zero,
+  fixture exports from 17 to zero, and residual route-mode test references
+  from 68 to 37. The remaining 37 are a visible fixture-naming cleanup queue,
+  not supported configuration.
+- **Leanness:** Authored framework source fell by 252 lines and 9,842 bytes.
+  Tracked Rust compiler source fell by two files, 84 lines, and 2,401 bytes.
+  The comparable core distribution fell by 115,787 bytes overall and 25,489
+  JavaScript bytes. Test-suite and dependency counts were unchanged.
+- **Runtime performance:** The retained production fixtures were ready in 78
+  to 87 milliseconds. The explicit fetch-cache resume assertion completed in
+  598 milliseconds, its Server Action invalidation assertion in 630
+  milliseconds, and the Partial Prefetching runtime-cache assertion in 561
+  milliseconds. These are warm-local guardrails, not improvement claims.
+- **Iteration efficiency:** Types took 14.78 seconds, 84 JavaScript and 30 Rust
+  diagnostic assertions took 5.91 seconds, and the 56-test fast contract took
+  4.30 seconds. `next-core` checked in 13.54 seconds. The full bootstrap took
+  49.33 seconds including a 38.91-second native build, the core release took
+  22.38 seconds, and the seven-assertion production browser selection took
+  37.43 seconds with a 29.94-second Jest body. The successful validation path
+  totaled 147.67 seconds.
 
 ### 2026-07-27: One request-derived rendering model
 
@@ -289,8 +297,9 @@ selection remain temporarily isolated in their own contracts.
 
 Moved unsupported route-config verification below the browser boundary.
 Deleted three E2E suites, their two fixture applications, and their Rspack
-matrix entries. The direct RSC transform contract now covers both a page with
-all removed segment modes and a Route Handler with `fetchCache`.
+matrix entries. The direct RSC transform contract covers the remaining
+unsupported exports without preserving diagnostics for APIs that are simply
+absent.
 
 Across the four scorecard dimensions:
 

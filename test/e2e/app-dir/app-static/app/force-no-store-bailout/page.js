@@ -1,5 +1,3 @@
-export const fetchCache = 'force-no-store'
-
 export default async function Page() {
   // this should not be invoked during build as
   // no-store should have it bail out

@@ -690,7 +690,7 @@ export interface ExperimentalConfig {
 
   /**
    * Type-checks props and return values of pages.
-   * Requires literal values for segment config (e.g. `export const fetchCache = 'force-cache' as const`).
+   * Requires literal values for segment configuration.
    */
   strictRouteTypes?: boolean
 

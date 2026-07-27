@@ -419,6 +419,7 @@ export function createPatchedFetcher(
         )
 
         let revalidateStore: RevalidateStore | undefined
+        let isNestedInUnstableCache = false
 
         if (workUnitStore) {
           switch (workUnitStore.type) {
@@ -434,8 +435,10 @@ export function createPatchedFetcher(
               revalidateStore = workUnitStore
               break
             case 'request':
-            case 'unstable-cache':
             case 'generate-static-params':
+              break
+            case 'unstable-cache':
+              isNestedInUnstableCache = true
               break
             default:
               workUnitStore satisfies never
@@ -456,31 +459,6 @@ export function createPatchedFetcher(
         }
 
         const implicitTags = workUnitStore?.implicitTags
-
-        let pageFetchCacheMode = workStore.fetchCache
-
-        if (workUnitStore) {
-          switch (workUnitStore.type) {
-            case 'unstable-cache':
-              // Inside unstable-cache we treat it the same as force-no-store on
-              // the page.
-              pageFetchCacheMode = 'force-no-store'
-              break
-            case 'prerender':
-            case 'prerender-client':
-            case 'validation-client':
-            case 'prerender-runtime':
-            case 'prerender-ppr':
-            case 'prerender-legacy':
-            case 'request':
-            case 'cache':
-            case 'private-cache':
-            case 'generate-static-params':
-              break
-            default:
-              workUnitStore satisfies never
-          }
-        }
 
         const isUsingNoStore = !!workStore.isUnstableNoStore
 
@@ -512,10 +490,8 @@ export function createPatchedFetcher(
           // fetch config itself signals not to cache
           currentFetchCacheConfig === 'no-cache' ||
           currentFetchCacheConfig === 'no-store' ||
-          // the fetch isn't explicitly caching and the segment level cache config signals not to cache
-          // note: `pageFetchCacheMode` is also set by being in an unstable_cache context.
-          pageFetchCacheMode === 'force-no-store' ||
-          pageFetchCacheMode === 'only-no-store'
+          // Avoid putting a second fetch-cache entry inside unstable_cache.
+          isNestedInUnstableCache
 
         if (
           // force-cache was specified without a revalidate value. We set the revalidate value to false
@@ -556,7 +532,6 @@ export function createPatchedFetcher(
         /**
          * We automatically disable fetch caching under the following conditions:
          * - Fetch cache configs are not set. Specifically:
-         *    - A page fetch cache mode is not set (export const fetchCache=...)
          *    - A fetch cache mode is not set in the fetch call (fetch(url, { cache: ... }))
          *      or the fetch cache mode is set to 'default'
          *    - A fetch revalidate value is not set in the fetch call (fetch(url, { revalidate: ... }))
@@ -564,8 +539,6 @@ export function createPatchedFetcher(
          *   and the fetch was considered uncacheable (e.g., POST method or has authorization headers)
          */
         const hasNoExplicitCacheConfig =
-          // eslint-disable-next-line eqeqeq
-          pageFetchCacheMode == undefined &&
           // eslint-disable-next-line eqeqeq
           (currentFetchCacheConfig == undefined ||
             // when considering whether to opt into the default "no-cache" fetch semantics,
@@ -640,62 +613,8 @@ export function createPatchedFetcher(
           }
         }
 
-        switch (pageFetchCacheMode) {
-          case 'force-no-store': {
-            cacheReason = 'fetchCache = force-no-store'
-            break
-          }
-          case 'only-no-store': {
-            if (
-              currentFetchCacheConfig === 'force-cache' ||
-              (typeof finalRevalidate !== 'undefined' && finalRevalidate > 0)
-            ) {
-              throw new Error(
-                `cache: 'force-cache' used on fetch for ${fetchUrl} with 'export const fetchCache = 'only-no-store'`
-              )
-            }
-            cacheReason = 'fetchCache = only-no-store'
-            break
-          }
-          case 'only-cache': {
-            if (currentFetchCacheConfig === 'no-store') {
-              throw new Error(
-                `cache: 'no-store' used on fetch for ${fetchUrl} with 'export const fetchCache = 'only-cache'`
-              )
-            }
-            break
-          }
-          case 'force-cache': {
-            if (
-              typeof currentFetchRevalidate === 'undefined' ||
-              currentFetchRevalidate === 0
-            ) {
-              cacheReason = 'fetchCache = force-cache'
-              finalRevalidate = INFINITE_CACHE
-            }
-            break
-          }
-          case 'default-cache':
-          case 'default-no-store':
-          case 'auto':
-          case undefined:
-            // sometimes we won't match the above cases. the reason we don't move
-            // everything to this switch is the use of autoNoCache which is not a fetchCacheMode
-            // I suspect this could be unified with fetchCacheMode however in which case we could
-            // simplify the switch case and ensure we have an exhaustive switch handling all modes
-            break
-          default:
-            pageFetchCacheMode satisfies never
-        }
-
         if (typeof finalRevalidate === 'undefined') {
-          if (pageFetchCacheMode === 'default-cache' && !isUsingNoStore) {
-            finalRevalidate = INFINITE_CACHE
-            cacheReason = 'fetchCache = default-cache'
-          } else if (pageFetchCacheMode === 'default-no-store') {
-            finalRevalidate = 0
-            cacheReason = 'fetchCache = default-no-store'
-          } else if (isUsingNoStore) {
+          if (isUsingNoStore) {
             finalRevalidate = 0
             cacheReason = 'noStore call'
           } else if (autoNoCache) {

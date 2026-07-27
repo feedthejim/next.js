@@ -212,7 +212,6 @@ export function unstable_cache<T extends Callback>(
           // when we are nested inside of other unstable_cache's
           // we should bypass cache similar to fetches
           !isNestedUnstableCache &&
-          workStore.fetchCache !== 'force-no-store' &&
           !workStore.isOnDemandRevalidate &&
           !incrementalCache.isOnDemandRevalidate &&
           !workStore.isDraftMode

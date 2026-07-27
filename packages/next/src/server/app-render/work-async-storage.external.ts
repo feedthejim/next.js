@@ -2,7 +2,6 @@ import type { AsyncLocalStorage } from 'async_hooks'
 import type { IncrementalCache } from '../lib/incremental-cache'
 import type { FetchMetrics } from '../base-http'
 import type { DeepReadonly } from '../../shared/lib/deep-readonly'
-import type { AppSegmentConfig } from '../../build/segment-config/app/app-segment-config'
 import type { AfterContext } from '../after/after-context'
 import type { ResolvedCacheLifeProfiles } from '../config-shared'
 import type { SharedCacheResult } from '../use-cache/use-cache-wrapper'
@@ -35,8 +34,6 @@ export interface WorkStore {
 
   readonly isOnDemandRevalidate?: boolean
   readonly isBuildTimePrerendering?: boolean
-
-  fetchCache?: AppSegmentConfig['fetchCache']
 
   pendingRevalidates?: Record<string, Promise<any>>
   pendingRevalidateWrites?: Array<Promise<void>> // This is like pendingRevalidates but isn't used for deduping.

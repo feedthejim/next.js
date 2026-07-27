@@ -663,7 +663,7 @@ async function callGenerateStaticParams(
  * Uses iterative processing instead of recursion for better performance.
  *
  * @param segments - Array of app directory segments to process
- * @param store - Work store for tracking fetch cache configuration
+ * @param store - Work store providing the route identity
  * @param supportsPartialParams - Whether missing params produce PPR shells.
  * @param rootParamKeys - The keys identifying which params are root params
  * @param isStaticExport - Whether the route is built with output: export
@@ -678,7 +678,7 @@ export async function generateRouteStaticParams(
       >
     >
   >,
-  store: Pick<WorkStore, 'fetchCache' | 'page'>,
+  store: Pick<WorkStore, 'page'>,
   supportsPartialParams: boolean,
   rootParamKeys: readonly string[],
   isStaticExport: boolean
@@ -712,11 +712,6 @@ export async function generateRouteStaticParams(
     if (typeof current.generateStaticParams !== 'function') {
       queue.push({ segmentIndex: segmentIndex + 1, params })
       continue
-    }
-
-    // Configure fetchCache if specified
-    if (current.config?.fetchCache !== undefined) {
-      store.fetchCache = current.config.fetchCache
     }
 
     const nextParams: Params[] = []

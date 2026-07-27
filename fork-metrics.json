@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
-  "label": "remove-app-router-dynamic-config",
-  "capturedAt": "2026-07-27T21:52:59.161Z",
+  "label": "fetchCache route configuration removed",
+  "capturedAt": "2026-07-27T22:12:03.838Z",
   "git": {
-    "baseHead": "8bace37e6c"
+    "baseHead": "3d8be59ec4"
   },
   "source": {
     "frameworkTracked": {
       "files": 2457,
-      "lines": 1093135,
-      "bytes": 51368294
+      "lines": 1092883,
+      "bytes": 51358452
     },
     "frameworkAuthored": {
       "files": 1752,
-      "lines": 298804,
-      "bytes": 9625845
+      "lines": 298552,
+      "bytes": 9616003
     },
     "vendoredCompiled": {
       "files": 705,
@@ -23,8 +23,8 @@
     },
     "appRender": {
       "files": 97,
-      "lines": 28176,
-      "bytes": 963781
+      "lines": 28165,
+      "bytes": 963351
     },
     "clientRouter": {
       "files": 39,
@@ -32,9 +32,9 @@
       "bytes": 526771
     },
     "compilerRust": {
-      "files": 979,
-      "lines": 52003,
-      "bytes": 1814665
+      "files": 977,
+      "lines": 51919,
+      "bytes": 1812264
     },
     "appApiRust": {
       "files": 1,
@@ -43,8 +43,8 @@
     },
     "webpackPathProxy": {
       "files": 267,
-      "lines": 138138,
-      "bytes": 7396037
+      "lines": 138137,
+      "bytes": 7395908
     },
     "pagesRouterPathProxy": {
       "files": 30,
@@ -76,7 +76,10 @@
     "appDynamicParamsModeReferences": 0,
     "appDynamicModeReferences": 0,
     "appDynamicFixtureExports": 0,
-    "appDynamicTestModeReferences": 143
+    "appDynamicTestModeReferences": 131,
+    "appFetchCacheModeReferences": 0,
+    "appFetchCacheFixtureExports": 0,
+    "appFetchCacheTestModeReferences": 37
   },
   "packageDependencies": {
     "dependencies": 6,
@@ -92,38 +95,38 @@
   },
   "builtArtifacts": {
     "conditions": "Warm core release build; local macOS arm64; watcher stopped",
-    "nextDistBytes": 180240055,
-    "nextDistJavaScriptBytes": 76200478
+    "nextDistBytes": 180124268,
+    "nextDistJavaScriptBytes": 76174989
   },
-  "validationTimingConditions": "Warm local validation; successful commands only; rebuilt core release before E2E",
+  "validationTimingConditions": "Warm local macOS arm64; successful validation path; browser fixtures installed from isolated package tarballs; bootstrap includes native build",
   "validationTimingsMs": {
-    "types": 15050,
-    "directTests": 17680,
-    "focusedTests": 5090,
+    "types": 14780,
+    "directTests": 5910,
+    "focusedTests": 4300,
     "testSelectionOverhead": null,
     "httpTests": null,
     "httpTestBody": null,
     "browserStartup": null,
-    "browserTestBody": 98325,
-    "browserTests": 105280,
+    "browserTestBody": 29939,
+    "browserTests": 37430,
     "edgeDceBuild": null,
-    "nativeBuild": null,
-    "nextBuild": 22490,
-    "buildAll": null,
-    "total": 185590
+    "nativeBuild": 38910,
+    "nextBuild": 22380,
+    "buildAll": 49330,
+    "total": 147670
   },
   "runtimePerformance": {
-    "conditions": "Warm local Turbopack dev request plus production browser contract; single observations, not benchmark claims",
-    "devStartupMs": 197,
-    "productionStartupMs": 84,
-    "routeHandlerRequestMs": 808,
+    "conditions": "Warm local production Turbopack retained resume-cache and Partial Prefetching fixtures; single observations, not benchmark claims",
+    "devStartupMs": null,
+    "productionStartupMs": 78,
+    "routeHandlerRequestMs": null,
     "routeHandlerRevalidationMs": null,
     "edgeMiddlewareStartupMs": null,
     "edgeImageResponseMs": null,
     "edgeImageResponseBytes": null,
     "pprShellFirstByteMs": null,
     "pprCompleteMs": null,
-    "partialNavigationMs": 501,
+    "partialNavigationMs": 561,
     "partialNavigationResponseBytes": null,
     "fastRefreshMaxMs": null,
     "fastRefreshSamples": null,

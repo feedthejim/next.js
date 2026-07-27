@@ -202,6 +202,20 @@ const appDynamicModeFiles = [
     ].filter(existsSync)
   ),
 ]
+const appFetchCacheConfigFiles = [
+  ...new Set(
+    [
+      ...appRouteConfigFiles,
+      'packages/next/src/build/utils.ts',
+      'packages/next/src/server/app-render/action-handler.ts',
+      'packages/next/src/server/app-render/app-render.tsx',
+      'packages/next/src/server/app-render/create-component-tree.tsx',
+      'packages/next/src/server/app-render/work-async-storage.external.ts',
+      'packages/next/src/server/async-storage/work-store.ts',
+      'packages/next/src/server/config-shared.ts',
+    ].filter(existsSync)
+  ),
+]
 const appEntryFiles = [
   'crates/next-api/src/app.rs',
   'crates/next-core/src/next_app/app_page_entry.rs',
@@ -320,6 +334,23 @@ const metrics = {
     appDynamicTestModeReferences: countMatches(
       testSourceFiles,
       /\bdynamic\s*=\s*["'](?:error|force-dynamic|force-static)["']|\bforce-(?:dynamic|static)\b/g
+    ),
+    appFetchCacheModeReferences:
+      countMatches(
+        appFetchCacheConfigFiles,
+        /\bNextSegmentFetchCache\b|\bfetch_cache\b|\bfetchCache\b/g
+      ) +
+      countMatches(
+        ['packages/next/src/server/lib/patch-fetch.ts'],
+        /\bpageFetchCacheMode\b|\bworkStore\.fetchCache\b|fetchCache = (?:force|only|default)/g
+      ),
+    appFetchCacheFixtureExports: countMatches(
+      testSourceFiles,
+      /\bexport\s+const\s+fetchCache\s*=/g
+    ),
+    appFetchCacheTestModeReferences: countMatches(
+      testSourceFiles,
+      /\b(?:force-no-store|only-no-store|only-cache|default-no-store|default-cache)\b/g
     ),
   },
   packageDependencies: {

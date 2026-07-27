@@ -189,7 +189,7 @@ describe('app-dir static/dynamic handling', () => {
       expect(meta.headers['x-next-cache-tags']).toContain('unstable_cache_tag1')
     })
 
-    it('should infer a fetchCache of force-no-store when force-dynamic is used', async () => {
+    it('should leave fetches without cache options uncached', async () => {
       const $ = await next.render$('/force-dynamic-fetch-cache/no-fetch-cache')
       const initData = $('#data').text()
       await retry(async () => {
@@ -214,7 +214,7 @@ describe('app-dir static/dynamic handling', () => {
       })
     })
 
-    it('should infer a fetch cache of "force-cache" when force-dynamic is used on a fetch with revalidate', async () => {
+    it('should cache fetches with an explicit revalidate interval', async () => {
       let currentData: string | undefined
       await retry(async () => {
         const $ = await next.render$('/force-dynamic-fetch-cache/revalidate')
@@ -237,7 +237,7 @@ describe('app-dir static/dynamic handling', () => {
       })
     })
 
-    it('force-dynamic should supercede a "default" cache value', async () => {
+    it('should treat cache: default as uncached', async () => {
       const $ = await next.render$('/force-dynamic-fetch-cache/default-cache')
       const initData = $('#data').text()
       await retry(async () => {
@@ -262,34 +262,7 @@ describe('app-dir static/dynamic handling', () => {
       })
     })
 
-    it('fetchCache config should supercede dynamic config when force-dynamic is used', async () => {
-      const $ = await next.render$(
-        '/force-dynamic-fetch-cache/with-fetch-cache'
-      )
-      const initData = $('#data').text()
-      await retry(async () => {
-        const $2 = await next.render$(
-          '/force-dynamic-fetch-cache/with-fetch-cache'
-        )
-        expect($2('#data').text()).toBeTruthy()
-        expect($2('#data').text()).toBe(initData)
-      })
-
-      // Check route handlers as well
-      const initFetchData = await (
-        await next.fetch('/force-dynamic-fetch-cache/with-fetch-cache/route')
-      ).json()
-
-      await retry(async () => {
-        const newFetchData = await (
-          await next.fetch('/force-dynamic-fetch-cache/with-fetch-cache/route')
-        ).json()
-        expect(newFetchData).toBeTruthy()
-        expect(newFetchData).toEqual(initFetchData)
-      })
-    })
-
-    it('fetch `cache` should supercede dynamic config when force-dynamic is used', async () => {
+    it('should cache fetches with cache: force-cache', async () => {
       const $ = await next.render$('/force-dynamic-fetch-cache/force-cache')
       const initData = $('#data').text()
       await retry(async () => {
@@ -311,14 +284,6 @@ describe('app-dir static/dynamic handling', () => {
         expect(newFetchData).toEqual(initFetchData)
       })
     })
-
-    if (!process.env.CUSTOM_CACHE_HANDLER) {
-      it('should honor force-static with fetch cache: no-store correctly', async () => {
-        const res = await next.fetch('/force-static-fetch-no-store')
-        expect(res.status).toBe(200)
-        expect(res.headers.get('x-nextjs-cache')?.toLowerCase()).toBe('hit')
-      })
-    }
   }
 
   it('should correctly include headers instance in cache key', async () => {
@@ -694,7 +659,7 @@ describe('app-dir static/dynamic handling', () => {
     })
   }
 
-  it('should correctly handle fetchCache = "force-no-store"', async () => {
+  it('should keep default fetches uncached outside explicit caching', async () => {
     const initRes = await next.fetch('/force-no-store')
     const html = await initRes.text()
     const $ = cheerio.load(html)
@@ -3615,7 +3580,7 @@ describe('app-dir static/dynamic handling', () => {
     }
   })
 
-  it('should cache correctly for fetchCache = default-cache', async () => {
+  it('should honor explicit fetch cache options', async () => {
     const res = await next.fetch('/default-cache')
     expect(res.status).toBe(200)
 
@@ -3683,7 +3648,7 @@ describe('app-dir static/dynamic handling', () => {
     })
   })
 
-  it('should cache correctly for fetchCache = force-cache', async () => {
+  it('should honor explicit fetch options without a route default', async () => {
     const res = await next.fetch('/force-cache')
     expect(res.status).toBe(200)
 
@@ -3697,7 +3662,9 @@ describe('app-dir static/dynamic handling', () => {
       const curHtml = await curRes.text()
       const cur$ = cheerio.load(curHtml)
 
-      expect(cur$('#data-no-cache').text()).toBe(prev$('#data-no-cache').text())
+      expect(cur$('#data-no-cache').text()).not.toBe(
+        prev$('#data-no-cache').text()
+      )
       expect(cur$('#data-force-cache').text()).toBe(
         prev$('#data-force-cache').text()
       )
@@ -3707,7 +3674,7 @@ describe('app-dir static/dynamic handling', () => {
       expect(cur$('#data-revalidate-and-fetch-cache').text()).toBe(
         prev$('#data-revalidate-and-fetch-cache').text()
       )
-      expect(cur$('#data-auto-cache').text()).toBe(
+      expect(cur$('#data-auto-cache').text()).not.toBe(
         prev$('#data-auto-cache').text()
       )
     })

@@ -1,5 +1,3 @@
-export const fetchCache = 'default-cache'
-
 export default async function Page() {
   await fetch(
     new Request(

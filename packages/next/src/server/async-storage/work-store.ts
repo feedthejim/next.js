@@ -3,7 +3,6 @@ import type { IncrementalCache } from '../lib/incremental-cache'
 import type { RenderOpts } from '../app-render/types'
 import type { FetchMetric } from '../base-http'
 import type { RequestLifecycleOpts } from '../base-server'
-import type { AppSegmentConfig } from '../../build/segment-config/app/app-segment-config'
 import type {
   ValidationLevel,
   ResolvedCacheLifeProfiles,
@@ -36,7 +35,6 @@ export type WorkStoreContext = {
     hmrRefreshHash?: string
     isOnDemandRevalidate?: boolean
     validationLevel: ValidationLevel
-    fetchCache?: AppSegmentConfig['fetchCache']
     isPossibleServerAction?: boolean
     pendingWaitUntil?: Promise<any>
     experimental: Pick<
@@ -140,7 +138,6 @@ export function createWorkStore({
     useCacheTimeout: renderOpts.experimental.useCacheTimeout,
     staticPageGenerationTimeout: renderOpts.staticPageGenerationTimeout,
     isBuildTimePrerendering: renderOpts.isBuildTimePrerendering,
-    fetchCache: renderOpts.fetchCache,
     isOnDemandRevalidate: renderOpts.isOnDemandRevalidate,
     requestId: undefined,
     htmlRequestId: undefined,

@@ -1,7 +1,5 @@
 import { cache, use } from 'react'
 
-export const fetchCache = 'force-no-store'
-
 export default function Page() {
   const getData = cache(() =>
     fetch('https://next-data-api-endpoint.vercel.app/api/random?page', {}).then(

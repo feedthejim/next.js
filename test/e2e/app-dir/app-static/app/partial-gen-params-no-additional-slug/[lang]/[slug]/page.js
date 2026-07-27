@@ -1,5 +1,3 @@
-export const fetchCache = 'default-cache'
-
 export async function generateStaticParams() {
   const res = await fetch(
     'https://next-data-api-endpoint.vercel.app/api/random?staticGen'

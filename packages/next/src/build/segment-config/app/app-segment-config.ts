@@ -107,21 +107,6 @@ const AppSegmentConfigSchema = z.object({
     .optional(),
 
   /**
-   * The caching behavior of the page.
-   */
-  fetchCache: z
-    .enum([
-      'auto',
-      'default-cache',
-      'only-cache',
-      'force-cache',
-      'force-no-store',
-      'default-no-store',
-      'only-no-store',
-    ])
-    .optional(),
-
-  /**
    * How this segment should be prefetched.
    */
   instant: InstantConfigSchema.optional(),
@@ -221,18 +206,6 @@ export type AppSegmentConfig = {
    * The revalidation period for the page in seconds, or false to disable ISR.
    */
   revalidate?: number | false
-
-  /**
-   * The caching behavior of the page.
-   */
-  fetchCache?:
-    | 'auto'
-    | 'default-cache'
-    | 'default-no-store'
-    | 'force-cache'
-    | 'force-no-store'
-    | 'only-cache'
-    | 'only-no-store'
 
   /**
    * How this segment should be prefetched.

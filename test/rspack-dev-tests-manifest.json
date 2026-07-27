@@ -4018,7 +4018,6 @@
   "test/e2e/app-dir/app-static/app-static-custom-handler.test.ts": {
     "passed": [
       "app-dir static/dynamic handling should correctly handle \"default\" cache statuses",
-      "app-dir static/dynamic handling should correctly handle fetchCache = \"force-no-store\"",
       "app-dir static/dynamic handling should correctly handle multi-level generateStaticParams when some levels are missing",
       "app-dir static/dynamic handling should correctly include headers instance in cache key",
       "app-dir static/dynamic handling should correctly skip caching POST fetch for POST handler",
@@ -4046,8 +4045,6 @@
       "app-dir static/dynamic handling should bypass fetch cache with cache-control: no-cache",
       "app-dir static/dynamic handling should cache correctly for cache: \"force-cache\" and \"revalidate\"",
       "app-dir static/dynamic handling should cache correctly for cache: no-store",
-      "app-dir static/dynamic handling should cache correctly for fetchCache = default-cache",
-      "app-dir static/dynamic handling should cache correctly for fetchCache = force-cache",
       "app-dir static/dynamic handling should cache correctly handle JSON body",
       "app-dir static/dynamic handling should cache correctly when accessing search params opts into dynamic rendering",
       "app-dir static/dynamic handling should cache correctly with POST method and revalidate",
@@ -4109,7 +4106,6 @@
       "app-dir static/dynamic handling it should revalidate tag correctly with edge route handler",
       "app-dir static/dynamic handling it should revalidate tag correctly with node route handler",
       "app-dir static/dynamic handling should correctly handle \"default\" cache statuses",
-      "app-dir static/dynamic handling should correctly handle fetchCache = \"force-no-store\"",
       "app-dir static/dynamic handling should correctly handle multi-level generateStaticParams when some levels are missing",
       "app-dir static/dynamic handling should correctly include headers instance in cache key",
       "app-dir static/dynamic handling should correctly skip caching POST fetch for POST handler",
@@ -4137,8 +4133,6 @@
       "app-dir static/dynamic handling should bypass fetch cache with cache-control: no-cache",
       "app-dir static/dynamic handling should cache correctly for cache: \"force-cache\" and \"revalidate\"",
       "app-dir static/dynamic handling should cache correctly for cache: no-store",
-      "app-dir static/dynamic handling should cache correctly for fetchCache = default-cache",
-      "app-dir static/dynamic handling should cache correctly for fetchCache = force-cache",
       "app-dir static/dynamic handling should cache correctly handle JSON body",
       "app-dir static/dynamic handling should cache correctly when accessing search params opts into dynamic rendering",
       "app-dir static/dynamic handling should cache correctly with POST method and revalidate",

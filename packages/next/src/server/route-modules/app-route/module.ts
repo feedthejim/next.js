@@ -156,7 +156,7 @@ export type AppRouteHandlers = {
  * routes. This contains all the user generated code.
  */
 export type AppRouteUserlandModule = AppRouteHandlers &
-  Pick<AppSegmentConfig, 'revalidate' | 'fetchCache'> &
+  Pick<AppSegmentConfig, 'revalidate'> &
   Pick<AppSegment, 'generateStaticParams'>
 
 /**
@@ -744,13 +744,6 @@ export class AppRouteRouteModule extends RouteModule<
       deploymentId: context.sharedContext.deploymentId,
       previouslyRevalidatedTags: [],
     }
-
-    // Use the live userland (if available) for per-request values so HMR
-    // changes to fetchCache, dynamic, etc. are also picked up.
-    const userland = liveUserland ?? this.userland
-
-    // Add the fetchCache option to the renderOpts.
-    staticGenerationContext.renderOpts.fetchCache = userland.fetchCache
 
     const actionStore: ActionStore = {
       isAppRoute: true,

@@ -7543,7 +7543,6 @@ async function validateInstantConfigInBuildWithSample(
     useCacheTimeout: outerWorkStore.useCacheTimeout,
     staticPageGenerationTimeout: outerWorkStore.staticPageGenerationTimeout,
     isBuildTimePrerendering: false,
-    fetchCache: outerWorkStore.fetchCache,
     isOnDemandRevalidate: false,
     requestId: outerWorkStore.requestId,
     htmlRequestId: outerWorkStore.htmlRequestId,

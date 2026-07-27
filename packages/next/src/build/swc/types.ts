@@ -409,14 +409,6 @@ export interface Endpoint {
 
 interface EndpointConfig {
   revalidate?: 'never' | 'force-cache' | number
-  fetchCache?:
-    | 'auto'
-    | 'default-cache'
-    | 'only-cache'
-    | 'force-cache'
-    | 'default-no-store'
-    | 'only-no-store'
-    | 'force-no-store'
   runtime?: 'nodejs' | 'edge'
   preferredRegion?: string
 }

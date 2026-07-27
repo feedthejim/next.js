@@ -652,9 +652,6 @@ export async function handleAction({
 
   let temporaryReferences: TemporaryReferenceSet | undefined
 
-  // When running actions the default is no-store, you can still `cache: 'force-cache'`
-  workStore.fetchCache = 'default-no-store'
-
   const originHeader = req.headers['origin']
   const originHost =
     typeof originHeader === 'string'

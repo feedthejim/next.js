@@ -1,7 +1,5 @@
 import { updateTag } from 'next/cache'
 
-export const fetchCache = 'default-cache'
-
 async function AnotherRsc() {
   const data = await fetch(
     'https://next-data-api-endpoint.vercel.app/api/random?another-no-cache',

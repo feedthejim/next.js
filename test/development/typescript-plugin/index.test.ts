@@ -57,7 +57,7 @@ describe('typescript-plugin', () => {
   })
 
   it('forwards all quick info arguments and preserves native fields for valid config values', () => {
-    const position = positionOf("'force-cache'") + 1
+    const position = positionOf('30') + 1
     const result = quickInfo.getQuickInfoAtPosition(
       quickInfoFile,
       position,
@@ -76,17 +76,17 @@ describe('typescript-plugin', () => {
     const documentation = documentationText(result)
     expect(documentation[0]).toBe(nativeDocumentation)
     expect(documentation.slice(1).join(' ')).toContain(
-      'forces all fetches to be cache'
+      'Set the revalidation time to `30` seconds'
     )
     expect(documentation.slice(1).join(' ')).toContain(
-      'Read more about the "fetchCache" option'
+      'Read more about the "revalidate" option'
     )
   })
 
   it('preserves native fields and appends Next.js docs for config names', () => {
     const result = quickInfo.getQuickInfoAtPosition(
       quickInfoFile,
-      positionOf('fetchCache')
+      positionOf('revalidate')
     )
 
     expect(result?.canIncreaseVerbosityLevel).toBe(true)
@@ -94,10 +94,10 @@ describe('typescript-plugin', () => {
     const documentation = documentationText(result)
     expect(documentation[0]).toBe(nativeDocumentation)
     expect(documentation.slice(1).join(' ')).toContain(
-      'The `fetchCache` option controls'
+      'The `revalidate` option sets'
     )
     expect(documentation.slice(1).join(' ')).toContain(
-      'Read more about the "fetchCache" option'
+      'Read more about the "revalidate" option'
     )
   })
 
