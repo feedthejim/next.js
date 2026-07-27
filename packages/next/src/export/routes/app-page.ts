@@ -105,11 +105,6 @@ export async function exportAppPage(
       hasPendingUi,
     } = metadata
 
-    // Ensure we don't postpone without having PPR enabled.
-    if (postponed && !renderOpts.experimental.isRoutePPREnabled) {
-      throw new Error('Invariant: page postponed without PPR being enabled')
-    }
-
     if (cacheControl.revalidate === 0) {
       if (isDynamicError) {
         throw new Error(
@@ -135,19 +130,11 @@ export async function exportAppPage(
     let hasStaticRsc = false
 
     if (!flightData) {
-      if (
-        !fallbackRouteParams ||
-        fallbackRouteParams.size === 0 ||
-        renderOpts.cacheComponents
-      ) {
-        throw new Error(`Invariant: failed to get page data for ${path}`)
-      }
+      throw new Error(`Invariant: failed to get page data for ${path}`)
     } else {
       const hasFallbackParams =
         fallbackRouteParams != null && fallbackRouteParams.size > 0
-      const shouldWriteRsc =
-        !renderOpts.experimental.isRoutePPREnabled ||
-        (!postponed && !hasFallbackParams)
+      const shouldWriteRsc = !postponed && !hasFallbackParams
       hasStaticRsc = shouldWriteRsc
 
       // With PPR enabled, we normally skip writing .rsc because it may contain
@@ -199,9 +186,7 @@ export async function exportAppPage(
     // When PPR is enabled, we don't always send 200 for routes that have been
     // pregenerated, so we should grab the status code from the mocked
     // response.
-    let status: number | undefined = renderOpts.experimental.isRoutePPREnabled
-      ? res.statusCode
-      : undefined
+    let status: number | undefined = res.statusCode
 
     if (isDefaultNotFound) {
       // Override the default /_not-found page status code to 404

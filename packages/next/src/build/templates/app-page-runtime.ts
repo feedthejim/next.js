@@ -888,7 +888,6 @@ export function createAppPageEntrypoint({
             validationLevel:
               nextConfig.experimental.instantInsights.validationLevel,
             experimental: {
-              isRoutePPREnabled: true,
               expireTime: nextConfig.expireTime,
               staleTimes: nextConfig.experimental.staleTimes,
               dynamicOnHover: Boolean(nextConfig.experimental.dynamicOnHover),
@@ -1220,7 +1219,6 @@ export function createAppPageEntrypoint({
                       await responseCache.revalidate(
                         ssgCacheKey,
                         incrementalCache,
-                        RouteKind.APP_PAGE,
                         false,
                         (c) => {
                           return doRender({
@@ -1288,7 +1286,6 @@ export function createAppPageEntrypoint({
               resolvedPathname,
               {
                 kind: IncrementalCacheKind.APP_PAGE,
-                isRoutePPREnabled: true,
                 isFallback: false,
               }
             )
@@ -1323,7 +1320,6 @@ export function createAppPageEntrypoint({
                     await responseCache.revalidate(
                       resolvedPathname,
                       incrementalCache,
-                      RouteKind.APP_PAGE,
                       false,
                       (c) =>
                         responseGenerator({

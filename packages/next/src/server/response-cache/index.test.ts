@@ -31,7 +31,7 @@ function makeCacheEntry(html: string): ResponseCacheEntry {
 }
 
 describe('ResponseCache', () => {
-  it('derives PPR cache semantics from the route kind', async () => {
+  it('uses route kind as the incremental cache discriminator', async () => {
     const cache = new ResponseCache(false)
     const incrementalCache = mockIncrementalCache()
 
@@ -42,13 +42,12 @@ describe('ResponseCache', () => {
 
     expect(incrementalCache.get).toHaveBeenCalledWith('/app-page', {
       kind: IncrementalCacheKind.APP_PAGE,
-      isRoutePPREnabled: true,
       isFallback: false,
     })
     expect(incrementalCache.set).toHaveBeenCalledWith(
       '/app-page',
       expect.anything(),
-      expect.objectContaining({ isRoutePPREnabled: true })
+      expect.objectContaining({ isFallback: false })
     )
 
     await cache.get('/app-route', async () => null, {
@@ -58,7 +57,6 @@ describe('ResponseCache', () => {
 
     expect(incrementalCache.get).toHaveBeenCalledWith('/app-route', {
       kind: IncrementalCacheKind.APP_ROUTE,
-      isRoutePPREnabled: false,
       isFallback: false,
     })
   })

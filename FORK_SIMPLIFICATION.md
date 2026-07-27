@@ -20,7 +20,8 @@
   component-tree generation and Flight tree walking have one Cache Components
   and PPR path. The App Page runtime also treats PPR, Cache Components, and
   resume-data capture as unconditional. The response-cache boundary derives
-  PPR behavior from the canonical route kind instead of a second boolean.
+  PPR behavior from the canonical route kind instead of a second boolean, and
+  the renderer and incremental cache no longer accept a route-PPR toggle.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -36,8 +37,8 @@
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
 - **Next action:** Remove remaining App Page `isRoutePPREnabled` booleans from
-  build protocols and renderer options, then collapse the client to one
-  segment-cache prefetch protocol.
+  build and static-path protocols, then collapse the client to one segment-cache
+  prefetch protocol.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -49,6 +50,24 @@
   assertions passed.
 
 ## History
+
+### 2026-07-27: Canonical App Page render and cache semantics
+
+Removed route-PPR toggles from renderer options, export rendering, and
+incremental-cache read and write contexts. App Page export now always follows
+PPR output rules, while the file cache derives page-data behavior from typed
+cache kinds and values. Authored framework source fell by 54 lines and 1,801
+bytes, App Router renderer source fell by five lines and 139 bytes,
+route-PPR references fell by 22, and Cache Components references fell by one.
+The warm built distribution fell by 38,149 bytes, including 8,729 JavaScript
+bytes. Types passed in 14.97 seconds, the 19-test fast contract passed in 1.81
+seconds, the core build passed in 22.57 seconds, and the targeted PPR journey
+passed all 12 assertions in 24.98 seconds. The production server was ready in
+73 milliseconds and the first browser load took 61 milliseconds. Total
+validation fell by 17.51 seconds because this export-focused slice ran one
+browser journey instead of two, not because of a demonstrated framework speed
+improvement. Comparable type, fast-test, and build timings changed by no more
+than 0.26 seconds.
 
 ### 2026-07-27: Route-kind-derived response caching
 

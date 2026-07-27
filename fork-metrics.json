@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
-  "label": "route-kind-response-cache",
-  "capturedAt": "2026-07-27T18:24:17.579Z",
+  "label": "canonical-app-page-render-cache",
+  "capturedAt": "2026-07-27T18:28:53.036Z",
   "git": {
-    "baseHead": "5a09c69565"
+    "baseHead": "7c8ed1e60b"
   },
   "source": {
     "frameworkTracked": {
       "files": 2458,
-      "lines": 1095897,
-      "bytes": 51477256
+      "lines": 1095843,
+      "bytes": 51475455
     },
     "frameworkAuthored": {
       "files": 1753,
-      "lines": 301566,
-      "bytes": 9734807
+      "lines": 301512,
+      "bytes": 9733006
     },
     "vendoredCompiled": {
       "files": 705,
@@ -23,8 +23,8 @@
     },
     "appRender": {
       "files": 97,
-      "lines": 28301,
-      "bytes": 968881
+      "lines": 28296,
+      "bytes": 968742
     },
     "clientRouter": {
       "files": 25,
@@ -47,8 +47,8 @@
     "experimentalConfig": 149
   },
   "legacyModeReferences": {
-    "cacheComponents": 154,
-    "routePPR": 79,
+    "cacheComponents": 153,
+    "routePPR": 57,
     "appPPR": 15,
     "cacheComponentsEnv": 29,
     "pprEnv": 2,
@@ -68,24 +68,24 @@
   },
   "builtArtifacts": {
     "conditions": "warm-local-after-core-build",
-    "nextDistBytes": 181651898,
-    "nextDistJavaScriptBytes": 76549606
+    "nextDistBytes": 181613749,
+    "nextDistJavaScriptBytes": 76540877
   },
-  "validationTimingConditions": "warm-local-watcher-stopped-two-browser-journeys",
+  "validationTimingConditions": "warm-local-watcher-stopped-ppr-browser-journey",
   "validationTimingsMs": {
-    "types": 14710,
-    "focusedTests": 1750,
-    "browserStartup": 127,
+    "types": 14970,
+    "focusedTests": 1810,
+    "browserStartup": 61,
     "browserTestBody": null,
-    "browserTests": 42830,
-    "nextBuild": 22550,
+    "browserTests": 24980,
+    "nextBuild": 22570,
     "buildAll": null,
-    "total": 81840
+    "total": 64330
   },
   "runtimePerformance": {
-    "conditions": "production-turbopack-navigation-fixture-warm-local",
+    "conditions": "production-turbopack-ppr-fixture-warm-local",
     "devStartupMs": null,
-    "productionStartupMs": 81,
+    "productionStartupMs": 73,
     "pprShellFirstByteMs": null,
     "pprCompleteMs": null,
     "partialNavigationMs": null,

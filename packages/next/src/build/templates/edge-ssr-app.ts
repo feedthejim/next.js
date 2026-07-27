@@ -167,7 +167,6 @@ async function requestHandler(
       partialPrefetching: true,
       validationLevel: nextConfig.experimental.instantInsights.validationLevel,
       experimental: {
-        isRoutePPREnabled: false,
         expireTime: nextConfig.expireTime,
         staleTimes: nextConfig.experimental.staleTimes,
         dynamicOnHover: Boolean(nextConfig.experimental.dynamicOnHover),
