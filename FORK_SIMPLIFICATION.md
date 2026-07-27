@@ -11,10 +11,12 @@
   `1f65c7646e`. `AGENTS.md` contains the product contract, architecture
   principles, supported-behavior map, and phased checklist. The first verified
   slice makes the rendering and navigation feature set unconditional.
+  `fork-metrics.json` is the committed scorecard baseline.
 - **Constraints:** Backward compatibility is out of scope. Do not add migration
   layers or special removed-feature errors. Preserve only behavior in the fork
   contract. Keep each independently verified slice committed before starting
-  the next one.
+  the next one. Regenerate `fork-metrics.json` and review its delta for every
+  slice.
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
@@ -22,13 +24,20 @@
   renderer branches.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
-  tests; the core package builds; each slice is committed; the worktree is
-  clean; and no required follow-up is implicit.
+  tests; the core package builds; every slice records its simplification and
+  performance metrics; each slice is committed; the worktree is clean; and no
+  required follow-up is implicit.
 - **Last verified:** 2026-07-27 on `feedthejim/simplify-next-rendering`.
   `pnpm --filter=next types`, 31 focused config tests, and
   `pnpm --filter=next build` passed.
 
 ## History
+
+### 2026-07-27: Simplification scorecard
+
+Added a reproducible metric snapshot covering source size, public configuration,
+legacy mode references, dependencies, tests, built artifact size, and validation
+timings. Every future slice updates the snapshot and reviews its delta.
 
 ### 2026-07-27: Rendering model configuration
 

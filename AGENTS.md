@@ -130,6 +130,41 @@ many fast algorithm and state-machine tests
 Before changing the test strategy, measure build, server startup, browser
 startup, and test-body time separately. Optimize the measured dominant cost.
 
+### Simplification Metrics Gate
+
+Every simplification slice must make its effect visible. Run
+`pnpm fork-metrics` before deciding what to remove and regenerate
+`fork-metrics.json` after verification. The committed snapshot is the current
+scorecard; Git history is the ledger.
+
+Track at least:
+
+- framework, App Router renderer, and client router source files, lines, and
+  bytes
+- public `NextConfig` and `ExperimentalConfig` member counts
+- legacy rendering-mode and feature-gate references
+- webpack-path and Pages Router-path source proxies until those systems are
+  removed
+- direct, optional, and peer dependency counts for `next`
+- end-to-end, development, production, and unit test file counts
+- built `packages/next/dist` total and JavaScript bytes
+- wall time for type checking, focused tests, the core package build, and the
+  bootstrap build when run
+
+Record performance timings with the corresponding `fork-metrics` CLI options.
+Use the same warm or cold conditions when comparing timings and label the
+snapshot accordingly. A timing change from one local run is directional, not a
+regression claim; investigate material changes with repeated measurements.
+
+Do not treat raw line deletion as success by itself. Each slice must report:
+
+1. the static metric delta from the previous committed snapshot
+2. validation and performance timing deltas when comparable
+3. which supported behavior was retained or intentionally removed
+4. any metric that worsened and why the tradeoff is acceptable
+
+Do not commit a simplification slice without updating `fork-metrics.json`.
+
 ### Supported Behavior Verification Map
 
 This is the fork's behavior manifest. The existing tests are temporary upstream

@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "label": "post-rendering-model-config",
+  "capturedAt": "2026-07-27T17:14:29.985Z",
+  "git": {
+    "baseHead": "283b98515e"
+  },
+  "source": {
+    "frameworkTracked": {
+      "files": 2458,
+      "lines": 1097212,
+      "bytes": 51531707
+    },
+    "frameworkAuthored": {
+      "files": 1753,
+      "lines": 302881,
+      "bytes": 9789258
+    },
+    "vendoredCompiled": {
+      "files": 705,
+      "lines": 794331,
+      "bytes": 41742449
+    },
+    "appRender": {
+      "files": 97,
+      "lines": 29431,
+      "bytes": 1013890
+    },
+    "clientRouter": {
+      "files": 25,
+      "lines": 5765,
+      "bytes": 208572
+    },
+    "webpackPathProxy": {
+      "files": 267,
+      "lines": 138154,
+      "bytes": 7396716
+    },
+    "pagesRouterPathProxy": {
+      "files": 30,
+      "lines": 3544,
+      "bytes": 109254
+    }
+  },
+  "publicConfigMembers": {
+    "nextConfig": 67,
+    "experimentalConfig": 149
+  },
+  "legacyModeReferences": {
+    "cacheComponents": 224,
+    "routePPR": 126,
+    "appPPR": 16,
+    "cacheComponentsEnv": 31,
+    "pprEnv": 2,
+    "cachedNavigationsEnv": 4
+  },
+  "packageDependencies": {
+    "dependencies": 6,
+    "optionalDependencies": 1,
+    "peerDependencies": 6
+  },
+  "tests": {
+    "totalFiles": 1863,
+    "e2eFiles": 1110,
+    "developmentFiles": 297,
+    "productionFiles": 348,
+    "unitFiles": 106
+  },
+  "builtArtifacts": {
+    "nextDistBytes": 182540015,
+    "nextDistJavaScriptBytes": 76786200
+  },
+  "validationTimingConditions": "warm-local",
+  "validationTimingsMs": {
+    "types": 12940,
+    "focusedTests": 1476,
+    "nextBuild": 20746,
+    "buildAll": 28464
+  }
+}
