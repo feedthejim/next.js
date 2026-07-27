@@ -92,9 +92,6 @@ export function ManualPrefetchLinkAccordion({
   )
 }
 
-type Router = ReturnType<typeof useRouter>
-type PrefetchOptions = Parameters<Router['prefetch']>[1]
-
 function ManualPrefetchLink({
   href,
   children,
@@ -113,7 +110,6 @@ function ManualPrefetchLink({
       const pollPrefetch = () => {
         if (!didUnmount) {
           router.prefetch(href, {
-            kind: 'auto' as PrefetchOptions['kind'],
             onInvalidate: pollPrefetch,
           })
         }

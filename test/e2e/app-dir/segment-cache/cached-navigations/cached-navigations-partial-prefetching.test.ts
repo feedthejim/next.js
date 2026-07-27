@@ -23,11 +23,21 @@ describe('cached navigations - fork Partial Prefetching default', () => {
         await page.clock.install()
       },
     })
-    const act = createRouterAct(page)
+    const act = createRouterAct(page, { includeAppShellRequests: true })
+
+    // Imperative prefetching uses the same partial protocol as automatic
+    // prefetching: cached shell content is included, but dynamic content is
+    // deferred until navigation.
+    await act(async () => {
+      await browser.eval('window.next.router.prefetch("/runtime-prefetchable")')
+    }, [
+      { includes: 'Cached content' },
+      { includes: 'Dynamic content', block: 'reject' },
+    ])
 
     // First navigation to /runtime-prefetchable — a route that reads request
-    // data but does NOT export any `prefetch` config. The link uses
-    // prefetch={false}, so this is a plain navigation with no prefetch.
+    // data but does NOT export any `prefetch` config. The link itself uses
+    // prefetch={false}; the shell above came from the imperative prefetch.
     await act(
       async () => {
         await browser.elementByCss('a[href="/runtime-prefetchable"]').click()

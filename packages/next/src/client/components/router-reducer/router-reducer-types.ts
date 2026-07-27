@@ -137,17 +137,6 @@ export interface ServerPatchAction {
 }
 
 /**
- * PrefetchKind defines the type of prefetching that should be done.
- * - `auto` - if the page is dynamic, prefetch the page data partially, if static prefetch the page data fully.
- * - `full` - prefetch the page data fully.
- */
-
-export enum PrefetchKind {
-  AUTO = 'auto',
-  FULL = 'full',
-}
-
-/**
  * Prefetch adds the provided FlightData to the prefetch cache
  * - Creates the router state tree based on the patch in FlightData
  * - Adds the FlightData to the prefetch cache

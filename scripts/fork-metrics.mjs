@@ -146,7 +146,7 @@ const appRenderFiles = frameworkSourceFiles.filter((file) =>
 const clientRouterFiles = frameworkSourceFiles.filter(
   (file) =>
     file.startsWith('packages/next/src/client/components/router-reducer/') ||
-    file.startsWith('packages/next/src/client/segment-cache/')
+    file.startsWith('packages/next/src/client/components/segment-cache/')
 )
 const webpackFiles = frameworkSourceFiles.filter(
   (file) =>
@@ -199,6 +199,11 @@ const metrics = {
     cachedNavigationsEnv: countMatches(
       frameworkSourceFiles,
       /__NEXT_EXPERIMENTAL_CACHED_NAVIGATIONS/g
+    ),
+    prefetchKind: countMatches(frameworkSourceFiles, /\bPrefetchKind\b/g),
+    fullPrefetchStrategy: countMatches(
+      frameworkSourceFiles,
+      /\bFetchStrategy\.Full\b/g
     ),
   },
   packageDependencies: {

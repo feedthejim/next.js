@@ -8,17 +8,13 @@ import {
   ACTION_RESTORE,
   type NavigateAction,
   ACTION_HMR_REFRESH,
-  PrefetchKind,
   ScrollBehavior,
   type AppHistoryState,
 } from './router-reducer/router-reducer-types'
 import { reducer } from './router-reducer/router-reducer'
 import { addTransitionType, startTransition } from 'react'
 import { isThenable } from '../../shared/lib/is-thenable'
-import {
-  FetchStrategy,
-  type PrefetchTaskFetchStrategy,
-} from './segment-cache/types'
+import { FetchStrategy } from './segment-cache/types'
 import { prefetch as prefetchWithSegmentCache } from './segment-cache/prefetch'
 import { navigate } from './segment-cache/navigation'
 import {
@@ -403,36 +399,12 @@ export const publicAppRouterInstance: AppRouterInstance = {
         )
       }
       const actionQueue = getAppRouterActionQueue()
-      const prefetchKind = options?.kind ?? PrefetchKind.AUTO
-
-      // We don't currently offer a way to issue a runtime prefetch via `router.prefetch()`.
-      // This will be possible when we update its API to not take a PrefetchKind.
-      let fetchStrategy: PrefetchTaskFetchStrategy
-      switch (prefetchKind) {
-        case PrefetchKind.AUTO: {
-          // We default to PPR. We'll discover whether or not the route supports it with the initial prefetch.
-          fetchStrategy = FetchStrategy.PPR
-          break
-        }
-        case PrefetchKind.FULL: {
-          fetchStrategy = FetchStrategy.Full
-          break
-        }
-        default: {
-          prefetchKind satisfies never
-          // Despite typescript thinking that this can't happen,
-          // we might get an unexpected value from user code.
-          // We don't know what they want, but we know they want a prefetch,
-          // so use the default.
-          fetchStrategy = FetchStrategy.PPR
-        }
-      }
 
       prefetchWithSegmentCache(
         href,
         actionQueue.state.nextUrl,
         actionQueue.state.tree,
-        fetchStrategy,
+        FetchStrategy.PPR,
         options?.onInvalidate ?? null
       )
     },

@@ -84,6 +84,20 @@ if (mode === 'fast') {
     }
   }
 
+  const nextPackagePath = resolve('packages/next/packed.tgz')
+  const requiredNextRuntime =
+    'package/dist/compiled/next-server/app-page-turbo.runtime.prod.js'
+  const packedNextFiles = execFileSync('tar', ['-tzf', nextPackagePath], {
+    encoding: 'utf8',
+  })
+  if (!packedNextFiles.split('\n').includes(requiredNextRuntime)) {
+    execFileSync(
+      'pnpm',
+      ['--dir', 'packages/next', 'pack', '--out', './packed.tgz'],
+      { stdio: 'inherit' }
+    )
+  }
+
   const nativePackage = readdirSync('node_modules/@next').find((entry) =>
     entry.startsWith('swc-')
   )

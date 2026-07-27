@@ -25,7 +25,8 @@
   Static-path generation and build manifests likewise derive App Page behavior
   from route identity rather than worker-provided PPR state. `BaseServer`
   recognizes App Page resume requests directly and no longer interprets
-  manifest rendering modes as a runtime feature switch.
+  manifest rendering modes as a runtime feature switch. Imperative
+  `router.prefetch()` now exposes only the fork's Partial Prefetching protocol.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -40,8 +41,9 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Collapse the client to one segment-cache prefetch protocol,
-  then continue deleting remaining false-mode Cache Components branches.
+- **Next action:** Remove `<Link prefetch={true}>` and the remaining internal
+  `FetchStrategy.Full` path, then delete the PPR-disabled loading-boundary
+  scheduler path.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -49,10 +51,26 @@
   required follow-up is implicit.
 - **Last verified:** 2026-07-27 on `feedthejim/simplify-next-rendering`.
   `pnpm --filter=next types`, the 19-test fast App Router allowlist,
-  `pnpm --filter=next build`, and the 34-assertion production Turbopack
-  runtime pack passed.
+  `pnpm --filter=next build`, the 34-assertion production Turbopack runtime
+  pack, and the imperative-prefetch navigation journey passed.
 
 ## History
+
+### 2026-07-27: One imperative prefetch protocol
+
+Removed the public `PrefetchKind` mode and made `router.prefetch()` always use
+the Partial Prefetching strategy. The retained navigation journey now proves
+that imperative prefetching includes cached shell content, defers dynamic
+content, and completes the navigation. Authored framework source fell by 43
+lines and 1,383 bytes; exact `PrefetchKind` references fell from nine to zero,
+and `FetchStrategy.Full` references fell from 30 to 29. The client-router
+scorecard now includes the actual `components/segment-cache` directory, so its
+size increase is a baseline correction rather than source growth. Built output
+is not comparable because transient compiled artifacts changed. Types passed
+in 14.41 seconds, the 19-test fast contract passed in 1.64 seconds, the core
+build passed in 22.66 seconds, and the navigation journey passed in 14.76
+seconds. Its production server was ready in 79 milliseconds and first browser
+load took 93 milliseconds.
 
 ### 2026-07-27: App Page resume routing without PPR mode checks
 

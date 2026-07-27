@@ -1,9 +1,6 @@
 'use client'
 
-import type {
-  FocusAndScrollRef,
-  PrefetchKind,
-} from '../../client/components/router-reducer/router-reducer-types'
+import type { FocusAndScrollRef } from '../../client/components/router-reducer/router-reducer-types'
 import type { Params } from '../../server/request/params'
 import type {
   FlightRouterState,
@@ -26,7 +23,6 @@ export interface NavigateOptions {
 }
 
 export interface PrefetchOptions {
-  kind: PrefetchKind
   onInvalidate?: () => void
 }
 
