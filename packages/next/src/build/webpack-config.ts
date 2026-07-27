@@ -1428,10 +1428,7 @@ export default async function getBaseWebpackConfig(
             not: [WEBPACK_LAYERS.middleware, WEBPACK_LAYERS.instrument],
           },
           resolve: {
-            conditionNames: [
-              config.cacheComponents ? 'next-js' : '',
-              '...',
-            ].filter(Boolean) as string[],
+            conditionNames: ['next-js', '...'],
           },
         },
         // Alias server-only and client-only to proper exports based on bundling layers

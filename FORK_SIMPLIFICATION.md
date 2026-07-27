@@ -66,7 +66,9 @@
   browser. The separate 19-file fallback-validation browser application is
   gone; fallback specificity lives in the fast request contract, while the
   retained generic development error suite owns the user-visible Blocking
-  Route diagnostic.
+  Route diagnostic. Normalized and serialized runtime config no longer carries
+  an always-true Cache Components field. Compiler export conditions and the
+  remaining webpack HMR client classification consume the invariant directly.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -81,10 +83,10 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Remove the obsolete Cache Components configuration field
-  from compiler and route-analysis plumbing, and rewrite route-segment
-  incompatibility diagnostics around the product invariant rather than the
-  deleted option.
+- **Next action:** Remove the compatibility-only `experimental.dynamicIO` and
+  `experimental.useCache` configuration aliases, then rewrite route-segment
+  incompatibility diagnostics around the product invariant rather than deleted
+  option names.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -98,9 +100,38 @@
   two focused Turbopack Fast Refresh assertions passed. The focused Turbopack
   development startup fixture also passed all three cache, deduplication, and
   revalidation assertions. The retained generic Blocking Route redbox
-  assertion passed without the removed Cache Components config key.
+  assertion passed without the removed Cache Components config key. All 20
+  isolated config assertions also passed with no selectable Cache Components
+  field in normalized config.
 
 ## History
+
+### 2026-07-27: No internal Cache Components config field
+
+Removed the always-true Cache Components property from complete config,
+defaults, runtime config serialization, and final normalization. The compiler
+now always enables the `next-js` export condition. The remaining webpack HMR
+path classifies request-ID clients as App Router clients and delivers their
+cache status without consulting a mode that could no longer be false. The
+isolated config contract now asserts that normalized config has no selectable
+Cache Components property.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** Cache Components references fell from 88 to 75. Four
+  config, compiler, and development modules no longer produce, transport, or
+  branch on a redundant field. The public config member count is unchanged
+  because the user-facing property was already absent.
+- **Leanness:** Authored framework source fell by 25 lines and 841 bytes. The
+  comparable warm distribution fell by 4,259 bytes overall and 1,401
+  JavaScript bytes. Test counts and dependencies were unchanged.
+- **Runtime performance:** No supported runtime benchmark was relevant. The
+  supported Turbopack path was already unconditional; the only runtime branch
+  removed was in webpack HMR, which is outside the fork contract.
+- **Iteration efficiency:** All 20 isolated config assertions passed in 1.54
+  seconds, types in 14.21 seconds, the 56-test fast contract in 1.83 seconds,
+  and the core build in 21.52 seconds. Total measured validation cost was 39.10
+  seconds.
 
 ### 2026-07-27: No fallback-validation browser matrix
 

@@ -39,12 +39,8 @@ export type PrefetchInliningConfig =
   | { maxSize: number; maxBundleSize: number }
 
 export type NextConfigComplete = Required<
-  Omit<
-    NextConfig,
-    'configFile' | 'cacheLife' | 'cacheComponents' | 'partialPrefetching'
-  >
+  Omit<NextConfig, 'configFile' | 'cacheLife' | 'partialPrefetching'>
 > & {
-  cacheComponents: true
   partialPrefetching: true
   images: Required<ImageConfigComplete>
   typescript: TypeScriptConfig
@@ -2037,7 +2033,6 @@ export const defaultConfig = Object.freeze({
   outputFileTracingRoot: '',
   allowedDevOrigins: undefined,
   enablePrerenderSourceMaps: true,
-  cacheComponents: true,
   partialPrefetching: true,
   cacheLife: {
     default: {
@@ -2180,7 +2175,6 @@ export const defaultConfig = Object.freeze({
   htmlLimitedBots: undefined,
   bundlePagesRouterDependencies: false,
 } satisfies NextConfig & {
-  cacheComponents: true
   partialPrefetching: true
 })
 
@@ -2224,7 +2218,6 @@ export interface NextConfigRuntime {
   env?: NextConfigComplete['env']
 
   distDir: NextConfigComplete['distDir']
-  cacheComponents: NextConfigComplete['cacheComponents']
   partialPrefetching: NextConfigComplete['partialPrefetching']
   agentRules: NextConfigComplete['agentRules']
   htmlLimitedBots: NextConfigComplete['htmlLimitedBots']
@@ -2380,7 +2373,6 @@ export function getNextConfigRuntime(
     env: undefined,
 
     distDir: config.distDir,
-    cacheComponents: config.cacheComponents,
     partialPrefetching: config.partialPrefetching,
     agentRules: config.agentRules,
     htmlLimitedBots: config.htmlLimitedBots,

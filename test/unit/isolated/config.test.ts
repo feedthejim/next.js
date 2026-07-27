@@ -225,12 +225,12 @@ describe('config', () => {
   })
 
   describe('fork rendering model', () => {
-    it('enables Cache Components and Partial Prefetching by default', async () => {
+    it('normalizes the rendering model without a selectable mode', async () => {
       const config = await loadConfig(PHASE_DEVELOPMENT_SERVER, '<rootDir>', {
         customConfig: {},
       })
 
-      expect(config.cacheComponents).toBe(true)
+      expect(config).not.toHaveProperty('cacheComponents')
       expect(config.partialPrefetching).toBe(true)
       expect(config.experimental.ppr).toBe(true)
       expect(config.experimental.useCache).toBe(true)

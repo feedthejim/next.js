@@ -465,13 +465,9 @@ export default class HotReloaderWebpack implements NextJsHotReloaderInterface {
       this.webpackHotMiddleware.onHMR(client, htmlRequestId)
       this.onDemandEntries?.onHMR(client, () => this.hmrServerError)
 
-      const enableCacheComponents = this.config.cacheComponents
-      // Clients with a request ID are inferred App Router clients. If Cache
-      // Components is not enabled, we consider those legacy clients. Pages
-      // Router clients are also considered legacy clients. TODO: Maybe mark
-      // clients as App Router / Pages Router clients explicitly, instead of
-      // inferring it from the presence of a request ID.
-      const isLegacyClient = !htmlRequestId || !enableCacheComponents
+      // Clients with a request ID are inferred App Router clients. Pages Router
+      // clients have no request ID and remain on the legacy protocol.
+      const isLegacyClient = !htmlRequestId
 
       callback(client, { isLegacyClient })
 
@@ -656,15 +652,13 @@ export default class HotReloaderWebpack implements NextJsHotReloaderInterface {
           this.sendToClient.bind(this, client)
         )
 
-        if (enableCacheComponents) {
-          const status = this.cacheStatusesByRequestId.get(htmlRequestId)
-          if (status) {
-            this.sendToClient(client, {
-              type: HMR_MESSAGE_SENT_TO_BROWSER.CACHE_INDICATOR,
-              state: status,
-            })
-            this.cacheStatusesByRequestId.delete(htmlRequestId)
-          }
+        const status = this.cacheStatusesByRequestId.get(htmlRequestId)
+        if (status) {
+          this.sendToClient(client, {
+            type: HMR_MESSAGE_SENT_TO_BROWSER.CACHE_INDICATOR,
+            state: status,
+          })
+          this.cacheStatusesByRequestId.delete(htmlRequestId)
         }
       }
 

@@ -891,13 +891,6 @@ function assignDefaultsAndValidate(
   )
   warnOptionHasBeenMovedOutOfExperimental(
     result,
-    'cacheComponents',
-    'cacheComponents',
-    configFileName,
-    silent
-  )
-  warnOptionHasBeenMovedOutOfExperimental(
-    result,
     'cacheLife',
     'cacheLife',
     configFileName,
@@ -1578,7 +1571,6 @@ function assignDefaultsAndValidate(
     result.experimental.mcpServer = true
   }
 
-  result.cacheComponents = true
   result.partialPrefetching = true
   ;(result.experimental as ExperimentalConfig & { ppr: true }).ppr = true
   result.experimental.useCache = true
