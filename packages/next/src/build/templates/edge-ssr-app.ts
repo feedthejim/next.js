@@ -163,7 +163,8 @@ async function requestHandler(
       logServerFunctions:
         typeof nextConfig.logging === 'object' &&
         Boolean(nextConfig.logging.serverFunctions),
-      cacheComponents: Boolean(nextConfig.cacheComponents),
+      cacheComponents: true,
+      partialPrefetching: true,
       validationLevel: nextConfig.experimental.instantInsights.validationLevel,
       experimental: {
         isRoutePPREnabled: false,
@@ -178,7 +179,7 @@ async function requestHandler(
         // no-op.
         serverComponentsHmrCancellation: false,
         useCacheTimeout: nextConfig.experimental.useCacheTimeout,
-        cachedNavigations: nextConfig.experimental.cachedNavigations ?? false,
+        cachedNavigations: true,
         clientTraceMetadata:
           nextConfig.experimental.clientTraceMetadata || ([] as any),
         clientParamParsingOrigins:

@@ -926,8 +926,8 @@ export function createAppPageEntrypoint({
                   isDebugDynamicAccesses: isDebugDynamicAccesses,
                 }
               : {}),
-            cacheComponents: Boolean(nextConfig.cacheComponents),
-            partialPrefetching: nextConfig.partialPrefetching,
+            cacheComponents: true,
+            partialPrefetching: true,
             // A fallback shell can only be upgraded to a concrete version if at
             // least one of its fallback params is a `generateStaticParams`
             // candidate (`remainingPrerenderableParams`). This gates whether the
@@ -951,8 +951,7 @@ export function createAppPageEntrypoint({
                 nextConfig.experimental.serverComponentsHmrCancellation
               ),
               useCacheTimeout: nextConfig.experimental.useCacheTimeout,
-              cachedNavigations:
-                nextConfig.experimental.cachedNavigations ?? false,
+              cachedNavigations: true,
               clientTraceMetadata:
                 nextConfig.experimental.clientTraceMetadata || ([] as any),
               clientParamParsingOrigins:

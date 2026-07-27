@@ -10,9 +10,10 @@
 - **Current shape:** Branch `feedthejim/simplify-next-rendering` from
   `1f65c7646e`. `AGENTS.md` contains the product contract, architecture
   principles, supported-behavior map, and phased checklist. Configuration,
-  Flight router-state construction, and resume-cache serialization now use one
-  Cache Components and Partial Prefetching model. `fork-metrics.json` is the
-  current scorecard.
+  Flight router-state construction, resume-cache serialization, runtime
+  prefetch setup, render-option types, and the normal static-generation
+  pipeline now use one Cache Components and Partial Prefetching model.
+  `fork-metrics.json` is the current scorecard.
 - **Constraints:** Backward compatibility is out of scope. Do not add migration
   layers or special removed-feature errors. Preserve only behavior in the fork
   contract. Keep each independently verified slice committed before starting
@@ -21,8 +22,9 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Delete the non-Cache-Components and legacy PPR prerender
-  branches, starting with the renderer's static-generation pipeline.
+- **Next action:** Establish the first small App Router validation allowlist,
+  convert a representative prerender assertion below the browser boundary, and
+  then delete the renderer's legacy error-recovery prerender branch.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -30,9 +32,26 @@
   required follow-up is implicit.
 - **Last verified:** 2026-07-27 on `feedthejim/simplify-next-rendering`.
   `pnpm --filter=next types`, 12 focused postponed-state and resume-cache unit
-  tests, and two consecutive `pnpm --filter=next build` runs passed.
+  tests, and `pnpm --filter=next build` passed. The existing resume-data-cache
+  E2E reached application type checking in 16.13 seconds but was blocked by
+  missing `ResolvingMetadata` and `ResolvingViewport` exports in its isolated
+  package, before the test body ran.
 
 ## History
+
+### 2026-07-27: One normal prerender path
+
+Deleted the unreachable non-Cache-Components PPR and legacy static-generation
+implementations from the normal App Router prerender pipeline. Render options
+now state the always-on model directly, and runtime prefetch cache setup no
+longer branches on removed configuration. Authored framework and App Router
+source each fell by 367 lines and 16.5 KB. The clean built package fell by
+311,771 bytes overall and 85,634 JavaScript bytes. Cache Components references
+fell by three and route-PPR references fell by one. Type checking, the core
+package build, and all 12 focused serialization tests pass. The legacy E2E
+attempt exposed an isolated-package type-export failure, which is now evidence
+for the cheaper allowlist and test-conversion slice rather than a false product
+pass.
 
 ### 2026-07-27: Single resume-cache wire format
 

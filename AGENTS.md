@@ -98,6 +98,13 @@ operating systems, and deployment modes.
 - Preserve end-to-end tests for a small number of complete browser behaviors.
 - Move behavioral combinations below the expensive process and browser
   boundary.
+- Migrate coverage incrementally with the code. Each behavioral simplification
+  slice should convert at least one representative upstream end-to-end
+  assertion to the cheapest trustworthy layer when practical, or record why
+  the browser remains material.
+- Maintain a small runnable App Router allowlist during the transition. A slice
+  is not validated by passing unrelated unit tests while its supported
+  producer-consumer behavior remains unexercised.
 - Build one dense conformance application once and reuse its compiled output,
   server process, and browser across scenarios.
 - Prefer real compiled route entrypoints invoked directly with `Request`,
