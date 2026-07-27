@@ -85,7 +85,7 @@ React Activity preservation.
 Across the four scorecard dimensions:
 
 - **Maintainability:** Client references to the Cache Components,
-  cached-navigation, and legacy PPR environment switches fell from 17 to zero.
+  cached-navigation, and legacy PPR environment switches fell from 21 to zero.
   Response cache data is no longer nullable and the client has one hydration
   and navigation protocol.
 - **Leanness:** Authored framework source fell by 130 lines and 6,125 bytes.
