@@ -82,7 +82,11 @@
   App Page, Route Handler, or metadata Edge entry wrappers. Three browser E2E
   suites and their applications that only exercised removed route-config and
   Edge-error modes are gone; direct compiler fixtures now cover unsupported
-  exports in both page and Route Handler entry files.
+  exports in both page and Route Handler entry files. App endpoint output now
+  has one Node.js chunking, manifest, tracing, and output-path implementation:
+  the Edge output variant and its middleware-manifest packaging are gone. The
+  separate Edge SSR transition remains only as a shared compiler capability
+  for Edge middleware and instrumentation while those products remain.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -97,10 +101,10 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Collapse the 13 residual App endpoint runtime-selection
-  branches that now always receive Node, then delete `dynamicParams`, `dynamic`,
-  `fetchCache`, `revalidate`, and `experimental_ppr` App Router plumbing in
-  bounded vertical slices.
+- **Next action:** Remove `dynamicParams` App Router configuration and its
+  inherited Rust/JavaScript plumbing while preserving the canonical fallback
+  parameter behavior, then continue with `dynamic`, `fetchCache`, `revalidate`,
+  and `experimental_ppr`.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -125,9 +129,54 @@
   all 12 PPR partial-hydration assertions passed, and the retained production
   Partial Prefetching navigation passed against the rebuilt native binding.
   The full bootstrap build passed, as did the five-assertion production
-  resume-cache journey against that local binding.
+  resume-cache journey against that local binding. After collapsing App
+  endpoint packaging, `next-api` checked successfully, the full bootstrap and
+  core release builds passed, the 56-test fast contract passed, all 12 PPR
+  browser assertions passed, and all five resume-cache and Server Action
+  assertions passed against the rebuilt local binding.
 
 ## History
+
+### 2026-07-27: One App endpoint packaging path
+
+Collapsed App endpoint production and development output to the Node.js path.
+Removed the App Edge RSC and Route module contexts, Edge chunk graph, Edge
+client-reference handling, middleware-manifest synthesis, Edge output variant,
+and the Node/Edge branches in endpoint path reporting and Server Action graph
+construction. `AppEndpointOutput` is now a single struct around the canonical
+entry chunk and its server and client assets.
+
+Kept the independent Edge SSR client-reference transition used by Edge
+middleware and instrumentation. The scorecard now distinguishes that one real
+shared compiler capability from App endpoint runtime selection.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** App endpoint runtime-selection branches fell from the
+  previous broad count of 13 to zero after the metric was narrowed to the
+  endpoint implementation. One Edge runtime constant remains in the shared
+  Edge SSR transition and is tracked separately. A two-variant output enum and
+  six App-specific Edge context constructors are gone.
+- **Leanness:** `crates/next-api/src/app.rs` fell from 2,320 to 1,936 lines and
+  from 92,045 to 74,098 bytes: 384 net lines and 17,947 bytes removed. Tests,
+  dependencies, TypeScript framework source, and compiler source counts were
+  unchanged. The comparable built distribution increased by six bytes overall
+  and six JavaScript bytes, which is effectively unchanged and not evidence of
+  a runtime cost.
+- **Runtime performance:** The retained PPR production fixture was ready in 96
+  milliseconds and passed all 12 shell, hydration, metadata, and
+  no-JavaScript assertions. The resume-cache fixture was ready in 129
+  milliseconds and passed all five cache, Route Handler, Server Action, and
+  revalidation assertions. These single warm-local observations are
+  guardrails, not speed claims.
+- **Iteration efficiency:** `next-api` checked in 4.14 seconds, types passed in
+  14.28 seconds, and the 56-test fast contract passed in 1.80 seconds. The full
+  bootstrap build took 11.68 seconds, the two browser journeys 54.82 seconds
+  with a combined 37.01-second Jest body, and the final core release build
+  23.25 seconds. Productive validation cost 109.97 seconds. An initial
+  four-second Cargo failure exposed that Edge middleware still consumes the
+  shared Edge SSR transition; correcting that metric and boundary was
+  investigation overhead.
 
 ### 2026-07-27: One App Router runtime
 

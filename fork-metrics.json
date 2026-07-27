@@ -1,9 +1,9 @@
 {
   "schemaVersion": 2,
-  "label": "app-runtime-schema-removal",
-  "capturedAt": "2026-07-27T21:12:32.852Z",
+  "label": "node-only-app-endpoint-packaging",
+  "capturedAt": "2026-07-27T21:22:07.796Z",
   "git": {
-    "baseHead": "4d40e1d293"
+    "baseHead": "7b9cd74767"
   },
   "source": {
     "frameworkTracked": {
@@ -36,6 +36,11 @@
       "lines": 52117,
       "bytes": 1818100
     },
+    "appApiRust": {
+      "files": 1,
+      "lines": 1936,
+      "bytes": 74098
+    },
     "webpackPathProxy": {
       "files": 267,
       "lines": 138145,
@@ -66,7 +71,8 @@
     "compilerCacheModeFields": 0,
     "appRouteConfigRuntimeSchemaFields": 0,
     "appEdgeEntryWrappers": 0,
-    "appRuntimeSelectionBranches": 13
+    "appRuntimeSelectionBranches": 0,
+    "appEdgeContextRuntimeConstants": 1
   },
   "packageDependencies": {
     "dependencies": 6,
@@ -81,31 +87,31 @@
     "unitFiles": 108
   },
   "builtArtifacts": {
-    "conditions": "warm local after full bootstrap build; not directly comparable to prior core-build-only snapshot",
-    "nextDistBytes": 180642095,
-    "nextDistJavaScriptBytes": 76313999
+    "conditions": "warm local after final core release build; comparable to prior warm core-build snapshot",
+    "nextDistBytes": 180642101,
+    "nextDistJavaScriptBytes": 76314005
   },
-  "validationTimingConditions": "warm local except first cargo check after Rust source edits; directTests combines next-api cargo check, RSC diagnostics, and next-types plugin unit test; focusedTests is 56-assertion fork fast allowlist; browserTests is the production resume-cache journey against the rebuilt local native binding",
+  "validationTimingConditions": "warm local after full bootstrap; directTests is next-api cargo check; focusedTests is 56-assertion fork fast allowlist; browserTests combines retained production PPR and resume-cache journeys against the rebuilt local native binding",
   "validationTimingsMs": {
-    "types": 18060,
-    "directTests": 36130,
-    "focusedTests": 2030,
+    "types": 14280,
+    "directTests": 4140,
+    "focusedTests": 1800,
     "testSelectionOverhead": null,
     "httpTests": null,
     "httpTestBody": null,
-    "browserStartup": 147,
-    "browserTestBody": 19783,
-    "browserTests": 27550,
+    "browserStartup": 129,
+    "browserTestBody": 37011,
+    "browserTests": 54820,
     "edgeDceBuild": null,
     "nativeBuild": null,
-    "nextBuild": null,
-    "buildAll": 49210,
-    "total": 132980
+    "nextBuild": 23250,
+    "buildAll": 11680,
+    "total": 109970
   },
   "runtimePerformance": {
-    "conditions": "single warm-local Turbopack production resume-cache journey against rebuilt native binding; startup is a guardrail, not a performance claim",
+    "conditions": "two single warm-local Turbopack production journeys against rebuilt native binding; 96ms PPR and 129ms resume-cache startup observations are guardrails, not performance claims",
     "devStartupMs": null,
-    "productionStartupMs": 147,
+    "productionStartupMs": 129,
     "routeHandlerRequestMs": null,
     "routeHandlerRevalidationMs": null,
     "edgeMiddlewareStartupMs": null,

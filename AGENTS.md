@@ -184,6 +184,7 @@ Track at least:
   bytes
 - Rust compiler pipeline source files, lines, and bytes, plus obsolete
   Cache Components and `use cache` mode fields at the JavaScript/Rust seam
+- App endpoint Rust source files, lines, and bytes
 - App Router route-config runtime schema fields, edge-entry wrappers, and
   residual runtime-selection branches until App rendering has one platform
   entry path

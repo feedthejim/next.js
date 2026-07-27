@@ -162,6 +162,10 @@ const appEntryFiles = [
   'crates/next-core/src/next_app/app_page_entry.rs',
   'crates/next-core/src/next_app/app_route_entry.rs',
 ].filter(existsSync)
+const appApiRustFiles = ['crates/next-api/src/app.rs'].filter(existsSync)
+const appApiSource = readFileSync('crates/next-api/src/app.rs', 'utf8')
+const appEndpointSource =
+  appApiSource.split('#[turbo_tasks::value]\nenum AppEndpointType')[1] ?? ''
 const compilerRustFiles = [
   ...worktreeFiles('crates/next-core'),
   ...worktreeFiles('crates/next-custom-transforms'),
@@ -199,6 +203,7 @@ const metrics = {
     appRender: summarize(appRenderFiles),
     clientRouter: summarize(clientRouterFiles),
     compilerRust: summarize(compilerRustFiles),
+    appApiRust: summarize(appApiRustFiles),
     webpackPathProxy: summarize(webpackFiles),
     pagesRouterPathProxy: summarize(pagesRouterFiles),
   },
@@ -248,7 +253,9 @@ const metrics = {
       appEntryFiles,
       /\bwrap_edge_page\b|\bwrap_edge_route\b/g
     ),
-    appRuntimeSelectionBranches: countMatches(
+    appRuntimeSelectionBranches:
+      appEndpointSource.match(/\bNextRuntime::Edge\b/g)?.length ?? 0,
+    appEdgeContextRuntimeConstants: countMatches(
       appEntryFiles,
       /\bNextRuntime::Edge\b/g
     ),
