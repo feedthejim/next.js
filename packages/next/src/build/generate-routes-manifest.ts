@@ -34,7 +34,6 @@ export interface GenerateRoutesManifestOptions {
   onMatchHeaders: CustomRoutes['headers']
   rewrites: CustomRoutes['rewrites']
   restrictedRedirectPaths: string[]
-  isAppPPREnabled: boolean
   appType: 'pages' | 'app' | 'hybrid'
   deploymentId?: string
 }
@@ -61,7 +60,6 @@ export function generateRoutesManifest(
     onMatchHeaders,
     rewrites,
     restrictedRedirectPaths,
-    isAppPPREnabled,
     appType,
     deploymentId,
   } = options
@@ -130,9 +128,9 @@ export function generateRoutesManifest(
       prefetchSegmentHeader: NEXT_ROUTER_SEGMENT_PREFETCH_HEADER,
       prefetchSegmentSuffix: RSC_SEGMENT_SUFFIX,
       prefetchSegmentDirSuffix: RSC_SEGMENTS_DIR_SUFFIX,
-      clientParamParsing: config.cacheComponents ?? false,
+      clientParamParsing: true,
       clientParamParsingOrigins: config.experimental.clientParamParsingOrigins,
-      dynamicRSCPrerender: isAppPPREnabled && config.cacheComponents === true,
+      dynamicRSCPrerender: true,
     },
     rewriteHeaders: {
       pathHeader: NEXT_REWRITTEN_PATH_HEADER,
@@ -140,15 +138,13 @@ export function generateRoutesManifest(
     },
     skipProxyUrlNormalize: config.skipProxyUrlNormalize,
     deploymentId: deploymentId || undefined,
-    ppr: isAppPPREnabled
-      ? {
-          chain: {
-            headers: {
-              [NEXT_RESUME_HEADER]: '1',
-            },
-          },
-        }
-      : undefined,
+    ppr: {
+      chain: {
+        headers: {
+          [NEXT_RESUME_HEADER]: '1',
+        },
+      },
+    },
   }
 
   return {

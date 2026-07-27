@@ -1653,7 +1653,6 @@ export default async function build(
             onMatchHeaders,
             rewrites,
             restrictedRedirectPaths,
-            isAppPPREnabled: true,
             deploymentId: config.deploymentId,
           })
         )

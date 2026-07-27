@@ -44,7 +44,8 @@
   mode switches either. Node-only image caching and instant-validation modules
   are selected through explicit runtime capabilities. The retained navigation
   journey covers both imperative prefetch and the default
-  declarative Link path.
+  declarative Link path. Routes-manifest generation now emits one PPR and RSC
+  contract across the build, analyze, and adapter-completion entry points.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -59,9 +60,8 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Remove the final application-PPR helper and obsolete
-  configuration-derived Cache Components plumbing that can no longer affect
-  App Page rendering.
+- **Next action:** Remove obsolete configuration-derived Cache Components
+  plumbing that can no longer affect App Page rendering.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -75,6 +75,30 @@
   passed.
 
 ## History
+
+### 2026-07-27: One routes-manifest rendering contract
+
+Removed the final `isAppPPREnabled` helper and its build, analysis, and adapter
+call-site arguments. Routes-manifest generation now unconditionally emits the
+fork's client parameter parsing, dynamic RSC prerender, and resume-chain
+contract.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** Application-PPR helper references fell from seven to
+  zero. Cache Components references fell from 151 to 148 because the manifest
+  no longer derives fixed protocol fields from configuration.
+- **Leanness:** Authored framework source fell by seven lines and 302 bytes.
+  The warm built distribution fell by 1,653 bytes overall and 524 JavaScript
+  bytes. Test and dependency counts were unchanged.
+- **Runtime performance:** The retained navigation and PPR journeys passed all
+  13 assertions. The navigation server was ready in 151 milliseconds and its
+  first browser load took 88 milliseconds. These are directional local
+  observations.
+- **Iteration efficiency:** Types passed in 14.11 seconds, the 19-test fast
+  allowlist in 2.46 seconds, the core build in 26.78 seconds, and the two
+  browser journeys in 32.08 seconds. Total measured validation took 75.43
+  seconds.
 
 ### 2026-07-27: No rendering-mode environment switches
 

@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
-  "label": "no-rendering-mode-env-switches",
-  "capturedAt": "2026-07-27T19:31:15.143Z",
+  "label": "one-routes-manifest-rendering-contract",
+  "capturedAt": "2026-07-27T19:35:28.415Z",
   "git": {
-    "baseHead": "f34f270e23"
+    "baseHead": "a458681fb3"
   },
   "source": {
     "frameworkTracked": {
       "files": 2458,
-      "lines": 1094154,
-      "bytes": 51408286
+      "lines": 1094147,
+      "bytes": 51407984
     },
     "frameworkAuthored": {
       "files": 1753,
-      "lines": 299823,
-      "bytes": 9665837
+      "lines": 299816,
+      "bytes": 9665535
     },
     "vendoredCompiled": {
       "files": 705,
@@ -47,9 +47,9 @@
     "experimentalConfig": 149
   },
   "legacyModeReferences": {
-    "cacheComponents": 151,
+    "cacheComponents": 148,
     "routePPR": 0,
-    "appPPR": 7,
+    "appPPR": 0,
     "cacheComponentsEnv": 0,
     "pprEnv": 0,
     "cachedNavigationsEnv": 0,
@@ -73,28 +73,28 @@
   },
   "builtArtifacts": {
     "conditions": "warm local after core build and focused browser fixture pack; comparable to prior warm core-build snapshot",
-    "nextDistBytes": 180711253,
-    "nextDistJavaScriptBytes": 76341049
+    "nextDistBytes": 180709600,
+    "nextDistJavaScriptBytes": 76340525
   },
-  "validationTimingConditions": "warm local; focusedTests is fork fast allowlist; browserTests combines navigation and PPR journeys; edgeDceBuild is an isolated supported Edge middleware webpack build; total includes focused units, runtime verification, and an out-of-contract webpack edge fixture attempt",
+  "validationTimingConditions": "warm local; focusedTests is fork fast allowlist; browserTests combines navigation and PPR journeys",
   "validationTimingsMs": {
-    "types": 14310,
-    "focusedTests": 1800,
-    "browserStartup": 89,
+    "types": 14109,
+    "focusedTests": 2456,
+    "browserStartup": 88,
     "browserTestBody": null,
-    "browserTests": 33570,
-    "edgeDceBuild": 3450,
-    "nextBuild": 22160,
+    "browserTests": 32078,
+    "edgeDceBuild": null,
+    "nextBuild": 26780,
     "buildAll": null,
-    "total": 84932
+    "total": 75423
   },
   "runtimePerformance": {
-    "conditions": "production Turbopack navigation fixture plus isolated production webpack Edge middleware, warm local",
+    "conditions": "production Turbopack navigation fixture, warm local",
     "devStartupMs": null,
-    "productionStartupMs": 144,
-    "edgeMiddlewareStartupMs": 76,
-    "edgeImageResponseMs": 116,
-    "edgeImageResponseBytes": 4712,
+    "productionStartupMs": 151,
+    "edgeMiddlewareStartupMs": null,
+    "edgeImageResponseMs": null,
+    "edgeImageResponseBytes": null,
     "pprShellFirstByteMs": null,
     "pprCompleteMs": null,
     "partialNavigationMs": null,

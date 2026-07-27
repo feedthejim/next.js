@@ -179,7 +179,6 @@ async function collectRoutesForAnalyze(
     onMatchHeaders,
     rewrites,
     restrictedRedirectPaths,
-    isAppPPREnabled: true,
   })
 
   return routesManifest.dynamicRoutes
