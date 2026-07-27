@@ -836,7 +836,6 @@ export async function initialize(opts: {
     onDevServerCleanup: opts.onDevServerCleanup,
     distDir: config.distDir,
     experimentalFeatures,
-    cacheComponents: true,
     partialPrefetching: config.partialPrefetching,
   }
   renderServerOpts.serverFields.routerServerHandler = requestHandlerImpl
@@ -1016,7 +1015,6 @@ export async function initialize(opts: {
     },
     distDir: config.distDir,
     experimentalFeatures,
-    cacheComponents: true,
     partialPrefetching: config.partialPrefetching,
     agentRules: config.agentRules,
   }

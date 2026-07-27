@@ -54,6 +54,9 @@
   as an App Router client and reserves legacy broadcasts for the remaining
   no-ID Pages Router clients. Cache status delivery and router-server
   registration no longer depend on a Cache Components configuration value.
+  Render-server initialization and startup reporting no longer transport that
+  value either: development and build startup report the product invariant
+  directly.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -68,8 +71,8 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Remove the remaining Cache Components value plumbing from
-  render-server initialization and startup reporting.
+- **Next action:** Remove the remaining runtime Cache Components gate from
+  `BaseServer` request rendering.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -80,9 +83,37 @@
   dev-overlay assertions, `pnpm --filter=next build`, the 34-assertion
   production Turbopack runtime pack, the retained navigation journey, all 12
   PPR partial-hydration assertions, the transition-instrumentation journey, and
-  two focused Turbopack Fast Refresh assertions passed.
+  two focused Turbopack Fast Refresh assertions passed. The focused Turbopack
+  development startup fixture also passed all three cache, deduplication, and
+  revalidation assertions.
 
 ## History
+
+### 2026-07-27: Cache Components is a startup invariant
+
+Removed the Cache Components boolean from router-server options,
+render-server initialization and results, start-server consumption, and the
+shared build and development feature logger. The logger now reports Cache
+Components directly as part of the framework identity instead of interpreting
+a transported configuration value.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** Cache Components references fell from 114 to 102. Five
+  startup modules no longer share a boolean whose only consumer was a
+  conditional log line.
+- **Leanness:** Authored framework source fell by 12 lines and 358 bytes. The
+  warm built distribution fell by 1,842 bytes overall and 536 JavaScript
+  bytes. Test and dependency counts were unchanged.
+- **Runtime performance:** The focused Turbopack development fixture reached
+  ready state in 338 milliseconds on its first isolated startup and 190
+  milliseconds after its deliberate restart. These are directional warm-local
+  observations.
+- **Iteration efficiency:** Types passed in 14.28 seconds, the 19-test fast
+  allowlist in 1.76 seconds, the core build in 21.25 seconds, and the compiled
+  logger assertion in 60 milliseconds. The three-assertion development fixture
+  passed in 15.62 seconds with a 14.53-second Jest body. Total measured
+  validation cost was 52.97 seconds.
 
 ### 2026-07-27: One App Router HMR client classification
 

@@ -20,8 +20,6 @@ export type ServerInitResult = {
   distDir: string
   // Experimental features from config, used for logging after server is ready
   experimentalFeatures: ConfiguredExperimentalFeature[]
-  // Whether cache components is enabled
-  cacheComponents: boolean
   // Whether partial prefetching is enabled (and its mode)
   partialPrefetching?: boolean | 'unstable_eager'
   // Whether AGENTS.md / CLAUDE.md auto-generation is enabled (default true)
@@ -104,7 +102,6 @@ async function initializeImpl(opts: {
   onDevServerCleanup: ((listener: () => Promise<void>) => void) | undefined
   distDir: string
   experimentalFeatures: ConfiguredExperimentalFeature[]
-  cacheComponents: boolean
   partialPrefetching?: boolean | 'unstable_eager'
 }): Promise<ServerInitResult> {
   const type = process.env.__NEXT_PRIVATE_RENDER_WORKER
@@ -183,7 +180,6 @@ async function initializeImpl(opts: {
     },
     distDir: opts.distDir,
     experimentalFeatures: opts.experimentalFeatures,
-    cacheComponents: opts.cacheComponents,
     partialPrefetching: opts.partialPrefetching,
   }
 }

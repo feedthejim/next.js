@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
-  "label": "one-app-router-hmr-client-classification",
-  "capturedAt": "2026-07-27T19:54:42.288Z",
+  "label": "one-cache-components-startup-contract",
+  "capturedAt": "2026-07-27T19:59:07.600Z",
   "git": {
-    "baseHead": "aa45e441a2"
+    "baseHead": "7e1fc69a53"
   },
   "source": {
     "frameworkTracked": {
       "files": 2458,
-      "lines": 1094029,
-      "bytes": 51402615
+      "lines": 1094017,
+      "bytes": 51402257
     },
     "frameworkAuthored": {
       "files": 1753,
-      "lines": 299698,
-      "bytes": 9660166
+      "lines": 299686,
+      "bytes": 9659808
     },
     "vendoredCompiled": {
       "files": 705,
@@ -47,7 +47,7 @@
     "experimentalConfig": 149
   },
   "legacyModeReferences": {
-    "cacheComponents": 114,
+    "cacheComponents": 102,
     "routePPR": 0,
     "appPPR": 0,
     "cacheComponentsEnv": 0,
@@ -72,29 +72,29 @@
     "unitFiles": 108
   },
   "builtArtifacts": {
-    "conditions": "warm local after core build and focused Turbopack development HMR test; comparable to prior warm core-build snapshot",
-    "nextDistBytes": 180668351,
-    "nextDistJavaScriptBytes": 76325630
+    "conditions": "warm local after core build and focused Turbopack development startup test; comparable to prior warm core-build snapshot",
+    "nextDistBytes": 180666509,
+    "nextDistJavaScriptBytes": 76325094
   },
-  "validationTimingConditions": "warm local; focusedTests is fork fast allowlist; browserTests is one focused Turbopack development HMR file with two matching browser assertions",
+  "validationTimingConditions": "warm local; directTests is compiled logger assertion; focusedTests is fork fast allowlist; httpTests is focused Turbopack development startup and Route Handler fixture",
   "validationTimingsMs": {
-    "types": 13720,
-    "directTests": null,
-    "focusedTests": 1900,
+    "types": 14280,
+    "directTests": 60,
+    "focusedTests": 1760,
     "testSelectionOverhead": null,
-    "httpTests": null,
-    "httpTestBody": null,
+    "httpTests": 15620,
+    "httpTestBody": 14527,
     "browserStartup": null,
-    "browserTestBody": 17641,
-    "browserTests": 18710,
+    "browserTestBody": null,
+    "browserTests": null,
     "edgeDceBuild": null,
-    "nextBuild": 21170,
+    "nextBuild": 21250,
     "buildAll": null,
-    "total": 55500
+    "total": 52970
   },
   "runtimePerformance": {
-    "conditions": "local Turbopack development Fast Refresh; warm core build; browser logs from two matching assertions",
-    "devStartupMs": null,
+    "conditions": "first startup of isolated Turbopack development Route Handler fixture after warm package build",
+    "devStartupMs": 338,
     "productionStartupMs": null,
     "routeHandlerRequestMs": null,
     "routeHandlerRevalidationMs": null,
@@ -105,8 +105,8 @@
     "pprCompleteMs": null,
     "partialNavigationMs": null,
     "partialNavigationResponseBytes": null,
-    "fastRefreshMaxMs": 40,
-    "fastRefreshSamples": 2,
+    "fastRefreshMaxMs": null,
+    "fastRefreshSamples": null,
     "peakRssBytes": null
   }
 }

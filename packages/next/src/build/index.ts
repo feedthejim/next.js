@@ -1310,7 +1310,6 @@ export default async function build(
 
       logExperimentalInfo({
         experimentalFeatures,
-        cacheComponents: true,
         partialPrefetching: config.partialPrefetching,
       })
 

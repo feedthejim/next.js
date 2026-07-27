@@ -504,7 +504,6 @@ export async function startServer(
         if (isDev) {
           logExperimentalInfo({
             experimentalFeatures: initResult.experimentalFeatures,
-            cacheComponents: initResult.cacheComponents,
             partialPrefetching: initResult.partialPrefetching,
           })
 
