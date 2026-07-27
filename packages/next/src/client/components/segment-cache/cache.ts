@@ -215,7 +215,6 @@ export type PendingRouteCacheEntry = RouteCacheEntryShared & {
   renderedSearch: null
   tree: null
   metadata: null
-  supportsPerSegmentPrefetching: false
 }
 
 type RejectedRouteCacheEntry = RouteCacheEntryShared & {
@@ -225,7 +224,6 @@ type RejectedRouteCacheEntry = RouteCacheEntryShared & {
   renderedSearch: null
   tree: null
   metadata: null
-  supportsPerSegmentPrefetching: boolean
 }
 
 export type FulfilledRouteCacheEntry = RouteCacheEntryShared & {
@@ -235,7 +233,6 @@ export type FulfilledRouteCacheEntry = RouteCacheEntryShared & {
   renderedSearch: NormalizedSearch
   tree: RouteTree
   metadata: RouteTree
-  supportsPerSegmentPrefetching: boolean
 }
 
 export type RouteCacheEntry =
@@ -644,8 +641,6 @@ function createDetachedRouteCacheEntry(): PendingRouteCacheEntry {
     // could be intercepted. It's only set to false once we receive a response
     // from the server.
     couldBeIntercepted: true,
-    // Similarly, we don't yet know if the route supports PPR.
-    supportsPerSegmentPrefetching: false,
     hasDynamicRewrite: false,
     renderedSearch: null,
 
@@ -796,8 +791,6 @@ export function deprecated_requestOptimisticRouteCacheEntry(
     tree: optimisticRouteTree,
     metadata: optimisticMetadataTree,
     couldBeIntercepted: routeWithNoSearchParams.couldBeIntercepted,
-    supportsPerSegmentPrefetching:
-      routeWithNoSearchParams.supportsPerSegmentPrefetching,
     hasDynamicRewrite: routeWithNoSearchParams.hasDynamicRewrite,
 
     // Override the rendered search with the optimistic value.
@@ -1174,8 +1167,7 @@ export function fulfillRouteCacheEntry(
   tree: RouteTree,
   metadataVaryPath: PageVaryPath,
   couldBeIntercepted: boolean,
-  canonicalUrl: string,
-  supportsPerSegmentPrefetching: boolean
+  canonicalUrl: string
 ): FulfilledRouteCacheEntry {
   // Get the rendered search from the vary path
   const renderedSearch =
@@ -1202,7 +1194,6 @@ export function fulfillRouteCacheEntry(
   fulfilledEntry.couldBeIntercepted = couldBeIntercepted
   fulfilledEntry.canonicalUrl = canonicalUrl
   fulfilledEntry.renderedSearch = renderedSearch
-  fulfilledEntry.supportsPerSegmentPrefetching = supportsPerSegmentPrefetching
   fulfilledEntry.hasDynamicRewrite = false
   pingBlockedTasks(entry)
   return fulfilledEntry
@@ -1216,8 +1207,7 @@ export function writeRouteIntoCache(
   tree: RouteTree,
   metadataVaryPath: PageVaryPath,
   couldBeIntercepted: boolean,
-  canonicalUrl: string,
-  supportsPerSegmentPrefetching: boolean
+  canonicalUrl: string
 ): FulfilledRouteCacheEntry {
   const pendingEntry = createDetachedRouteCacheEntry()
   const fulfilledEntry = fulfillRouteCacheEntry(
@@ -1226,8 +1216,7 @@ export function writeRouteIntoCache(
     tree,
     metadataVaryPath,
     couldBeIntercepted,
-    canonicalUrl,
-    supportsPerSegmentPrefetching
+    canonicalUrl
   )
   const varyPath = getFulfilledRouteVaryPath(
     pathname,
@@ -1869,7 +1858,6 @@ export async function fetchRouteOnCacheMiss(
       metadataVaryPath,
       couldBeIntercepted,
       canonicalUrl,
-      true,
       false // hasDynamicRewrite
     )
 

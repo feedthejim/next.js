@@ -209,6 +209,10 @@ const metrics = {
       frameworkSourceFiles,
       /\bFetchStrategy\.LoadingBoundary\b/g
     ),
+    perSegmentPrefetchCapability: countMatches(
+      frameworkSourceFiles,
+      /\bsupportsPerSegmentPrefetching\b/g
+    ),
   },
   packageDependencies: {
     dependencies: Object.keys(nextPackage.dependencies ?? {}).length,

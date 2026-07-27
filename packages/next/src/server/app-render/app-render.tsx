@@ -781,7 +781,6 @@ async function generateDynamicRSCPayload(
       f: flightData,
       q: getRenderedSearch(query),
       i: !!couldBeIntercepted,
-      S: workStore.isStaticGeneration,
       h: getMetadataVaryParamsAccumulator(),
       r: getRootParamsVaryParamsAccumulator() ?? undefined,
     }
@@ -2169,8 +2168,6 @@ async function getRSCPayload(
     ],
     m: missingSlots,
     G: [GlobalError, globalErrorStyles],
-    // Every route supports per-segment prefetching.
-    S: true,
     h: getMetadataVaryParamsAccumulator(),
     r: getRootParamsVaryParamsAccumulator() ?? undefined,
     s: staleTimeIterable,
@@ -2319,8 +2316,6 @@ async function getErrorRSCPayload(
       ] as FlightDataPath,
     ],
     G: [GlobalError, globalErrorStyles],
-    // Every route supports per-segment prefetching.
-    S: true,
     h: getMetadataVaryParamsAccumulator(),
     r: getRootParamsVaryParamsAccumulator() ?? undefined,
   } satisfies InitialRSCPayload)

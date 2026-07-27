@@ -7,7 +7,6 @@ import { findSourceMapURL } from '../../../app-find-source-map-url'
 import {
   ACTION_HEADER,
   NEXT_ACTION_NOT_FOUND_HEADER,
-  NEXT_IS_PRERENDER_HEADER,
   NEXT_HTML_REQUEST_ID_HEADER,
   NEXT_ROUTER_STATE_TREE_HEADER,
   NEXT_URL,
@@ -97,7 +96,6 @@ type FetchServerActionResult = {
   actionResult: ActionResult | undefined
   actionFlightData: NormalizedFlightData[] | string | undefined
   actionFlightDataRenderedSearch: NormalizedSearch | undefined
-  isPrerender: boolean
   couldBeIntercepted: boolean
 }
 
@@ -191,8 +189,6 @@ async function fetchServerAction(
     default:
       redirectType = undefined
   }
-
-  const isPrerender = !!res.headers.get(NEXT_IS_PRERENDER_HEADER)
 
   let revalidationKind: ActionRevalidationKind = ActionDidNotRevalidate
   try {
@@ -299,7 +295,6 @@ async function fetchServerAction(
     redirectLocation,
     redirectType,
     revalidationKind,
-    isPrerender,
     couldBeIntercepted,
   }
 }
@@ -337,7 +332,6 @@ export function serverActionReducer(
       actionFlightDataRenderedSearch: flightDataRenderedSearch,
       redirectLocation,
       redirectType,
-      isPrerender,
       couldBeIntercepted,
     }) => {
       if (revalidationKind !== ActionDidNotRevalidate) {
@@ -492,7 +486,6 @@ export function serverActionReducer(
             metadataVaryPath,
             couldBeIntercepted,
             redirectCanonicalUrl,
-            isPrerender,
             false // hasDynamicRewrite
           )
         }

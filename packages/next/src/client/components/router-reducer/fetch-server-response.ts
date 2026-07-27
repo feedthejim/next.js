@@ -83,7 +83,6 @@ type SpaFetchServerResponseResult = {
   canonicalUrl: URL
   renderedSearch: NormalizedSearch
   couldBeIntercepted: boolean
-  supportsPerSegmentPrefetching: boolean
   postponed: boolean
   dynamicStaleTime: number
   staticStageData: StaticStageData | null
@@ -301,7 +300,6 @@ export async function fetchServerResponse(
       // wrong for interception routes.
       renderedSearch: flightResponse.q as NormalizedSearch,
       couldBeIntercepted: interception,
-      supportsPerSegmentPrefetching: flightResponse.S,
       postponed,
       // The dynamicStaleTime is only present in the response body when
       // a page exports unstable_dynamicStaleTime and this is a dynamic render.

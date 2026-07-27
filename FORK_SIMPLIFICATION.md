@@ -35,8 +35,10 @@
   The client route prefetch protocol now assumes every supported route emits
   the Cache Components tree format. The non-PPR response decoder,
   loading-boundary scheduler traversal, and LoadingBoundary fetch strategy are
-  absent. The retained navigation journey covers both imperative prefetch and
-  the default declarative Link path.
+  absent. The route cache, optimistic matcher, navigation response, and RSC
+  wire payload no longer carry a per-segment prefetch capability bit. The
+  retained navigation journey covers both imperative prefetch and the default
+  declarative Link path.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -51,8 +53,8 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Remove the now-redundant per-segment prefetch capability
-  signal from route-cache entries and optimistic route matching.
+- **Next action:** Remove residual Cache Components environment branches from
+  the client cache and navigation runtime.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -66,6 +68,31 @@
   passed.
 
 ## History
+
+### 2026-07-27: No per-route prefetch capability bit
+
+Removed `supportsPerSegmentPrefetching` from the RSC wire payload, navigation
+response, route-cache entry shape, and optimistic-route trie. Every supported
+route already uses the PPR segment protocol, so the bit could no longer change
+client behavior.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** Capability references fell from 32 to zero. Ten files no
+  longer thread a server-derived boolean through navigation and route
+  discovery.
+- **Leanness:** Authored framework source fell by 50 lines and 1,994 bytes.
+  Client-router source accounts for 40 lines and 1,683 bytes of that reduction.
+  The warm built distribution fell by 34,295 bytes overall and 8,388
+  JavaScript bytes. Test and dependency counts were unchanged.
+- **Runtime performance:** The retained navigation and PPR journeys passed all
+  13 assertions. The navigation fixture's server was ready in 75 milliseconds
+  and its first browser load took 180 milliseconds. These are directional
+  single-run observations.
+- **Iteration efficiency:** Types passed in 15.08 seconds, the 19-test fast
+  allowlist in 1.75 seconds, the core build in 23.42 seconds, and the two
+  focused browser journeys in 38.38 seconds. Total focused validation,
+  including lint, took about 80.13 seconds.
 
 ### 2026-07-27: One PPR route prefetch protocol
 

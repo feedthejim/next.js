@@ -40,7 +40,6 @@ export function createInitialRouterState({
     f: initialFlightData,
     q: initialRenderedSearch,
     i: initialCouldBeIntercepted,
-    S: initialSupportsPerSegmentPrefetching,
     s: initialStaleTime,
     l: initialStaticStageByteLength,
     h: initialHeadVaryParams,
@@ -114,7 +113,6 @@ export function createInitialRouterState({
       metadataVaryPath,
       initialCouldBeIntercepted,
       canonicalUrl,
-      initialSupportsPerSegmentPrefetching,
       false // hasDynamicRewrite
     )
 
