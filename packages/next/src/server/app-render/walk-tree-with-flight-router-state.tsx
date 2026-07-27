@@ -16,7 +16,6 @@ import {
   createRouteTreePrefetch,
 } from './create-flight-router-state-from-loader-tree'
 import type { AppRenderContext } from './app-render'
-import { hasLoadingComponentInTree } from './has-loading-component-in-tree'
 import { addSearchParamsIfPageSegment } from '../../shared/lib/segment'
 import { createComponentTree } from './create-component-tree'
 import { getSegmentParam } from '../../shared/lib/router/utils/get-segment-param'
@@ -29,7 +28,6 @@ export async function walkTreeWithFlightRouterState({
   loaderTreeToFilter,
   parentParams,
   flightRouterState,
-  parentIsInsideSharedLayout,
   rscHead,
   injectedCSS,
   injectedJS,
@@ -44,7 +42,6 @@ export async function walkTreeWithFlightRouterState({
   parentParams: { [key: string]: string | string[] }
   flightRouterState?: FlightRouterState
   rscHead: HeadData
-  parentIsInsideSharedLayout?: boolean
   injectedCSS: Set<string>
   injectedJS: Set<string>
   injectedFontPreloadTags: Set<string>
@@ -57,7 +54,6 @@ export async function walkTreeWithFlightRouterState({
   const {
     renderOpts: { nextFontManifest, experimental },
     query,
-    isPrefetch,
     getDynamicParamFromSegment,
     parsedRequestHeaders,
     workStore,
@@ -109,84 +105,6 @@ export async function walkTreeWithFlightRouterState({
     !matchSegment(actualSegment, flightRouterState[0]) ||
     // Explicit refresh
     flightRouterState[3] === 'refetch'
-
-  // Pre-PPR, the `loading` component signals to the router how deep to render the component tree
-  // to ensure prefetches are quick and inexpensive. If there's no `loading` component anywhere in the tree being rendered,
-  // the prefetch will be short-circuited to avoid requesting a potentially very expensive subtree. If there's a `loading`
-  // somewhere in the tree, we'll recursively render the component tree up until we encounter that loading component, and then stop.
-
-  // Check if we're inside the "new" part of the navigation — inside the
-  // shared layout. In the case of a prefetch, this can be true even if the
-  // segment matches, because the client might send a matching segment to
-  // indicate that it already has the data in its cache. But in order to find
-  // the correct loading boundary, we still need to track where the shared
-  // layout begins.
-  //
-  // TODO: We should rethink the protocol for dynamic requests. It might not
-  // make sense for the client to send a FlightRouterState, since that type is
-  // overloaded with other concerns.
-  const isInsideSharedLayout =
-    renderComponentsOnThisLevel ||
-    parentIsInsideSharedLayout ||
-    flightRouterState[3] === 'inside-shared-layout'
-
-  if (
-    isInsideSharedLayout &&
-    !experimental.isRoutePPREnabled &&
-    // If PPR is disabled, and this is a request for the route tree, then we
-    // never render any components. Only send the router state.
-    (parsedRequestHeaders.isRouteTreePrefetchRequest ||
-      // Otherwise, check for the presence of a `loading` component.
-      (isPrefetch &&
-        !Boolean(modules.loading) &&
-        !hasLoadingComponentInTree(loaderTreeToFilter)))
-  ) {
-    // Send only the router state.
-    // TODO: Even for a dynamic route, we should cache these responses,
-    // because they do not contain any render data (neither segment data nor
-    // the head). They can be made even more cacheable once we move the route
-    // params into a separate data structure.
-    const overriddenSegment =
-      flightRouterState &&
-      // TODO: Why does canSegmentBeOverridden exist? Why don't we always just
-      // use `actualSegment`? Is it to avoid overwriting some state that's
-      // tracked by the client? Dig deeper to see if we can simplify this.
-      canSegmentBeOverridden(actualSegment, flightRouterState[0])
-        ? flightRouterState[0]
-        : actualSegment
-
-    const routerState = parsedRequestHeaders.isRouteTreePrefetchRequest
-      ? // Route tree prefetch requests contain some extra information
-        await createRouteTreePrefetch(
-          loaderTreeToFilter,
-          hintTree,
-          prefetchInliningEnabled,
-          isStaticGeneration,
-          isBuildTimePrerendering,
-          getDynamicParamFromSegment,
-          rootLayoutIncluded
-        )
-      : await createFlightRouterStateFromLoaderTree(
-          loaderTreeToFilter,
-          hintTree,
-          prefetchInliningEnabled,
-          isStaticGeneration,
-          isBuildTimePrerendering,
-          getDynamicParamFromSegment,
-          query,
-          rootLayoutIncluded
-        )
-
-    return [
-      [
-        overriddenSegment,
-        routerState,
-        null,
-        [null, null],
-        true,
-      ] satisfies FlightDataSegment,
-    ]
-  }
 
   // Similar to the previous branch. This flag is sent by the client to request
   // only the metadata for a page. No segment data.
@@ -314,7 +232,6 @@ export async function walkTreeWithFlightRouterState({
       parentParams: currentParams,
       flightRouterState:
         flightRouterState && flightRouterState[1][parallelRouteKey],
-      parentIsInsideSharedLayout: isInsideSharedLayout,
       rscHead,
       injectedCSS: injectedCSSWithCurrentLayout,
       injectedJS: injectedJSWithCurrentLayout,

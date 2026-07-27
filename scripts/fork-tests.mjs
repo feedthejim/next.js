@@ -22,6 +22,10 @@ const browserSuites = new Map([
     'error-recovery',
     'test/e2e/app-dir/cache-components-errors/http-access-fallback-prerender.test.ts',
   ],
+  [
+    'navigation',
+    'test/e2e/app-dir/segment-cache/cached-navigations/cached-navigations-partial-prefetching.test.ts',
+  ],
 ])
 
 const arguments_ = process.argv.slice(2).filter((argument) => argument !== '--')
@@ -97,6 +101,6 @@ if (mode === 'fast') {
   })
 } else {
   throw new Error(
-    'Usage: pnpm fork-test [fast | browser [ppr|resume-cache|error-recovery]]'
+    'Usage: pnpm fork-test [fast | browser [ppr|resume-cache|error-recovery|navigation]]'
   )
 }

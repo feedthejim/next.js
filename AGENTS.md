@@ -135,10 +135,10 @@ many fast algorithm and state-machine tests
 ```
 
 Use `pnpm fork-test` for the fast App Router contract allowlist. Use
-`pnpm fork-test-browser -- <ppr|resume-cache|error-recovery>` for the relevant
-retained production-browser journey after stopping the watch build. Running
-`pnpm fork-test-browser` without a selection runs the complete retained browser
-allowlist.
+`pnpm fork-test-browser -- <ppr|resume-cache|error-recovery|navigation>` for
+the relevant retained production-browser journey after stopping the watch
+build. Running `pnpm fork-test-browser` without a selection runs the complete
+retained browser allowlist.
 
 Before changing the test strategy, measure build, server startup, browser
 startup, and test-body time separately. Optimize the measured dominant cost.

@@ -3,10 +3,9 @@ import { nextTestSetup } from 'e2e-utils'
 import type * as Playwright from 'playwright'
 import { createRouterAct } from 'router-act'
 
-// The `partial-prefetching` fixture enables Partial Prefetching globally via
-// the next-config `partialPrefetching: true`, which opts every route into
+// The fork enables Partial Prefetching globally, which opts every route into
 // runtime Cached Navigations even without a per-segment `prefetch` config.
-describe('cached navigations - global partialPrefetching', () => {
+describe('cached navigations - fork Partial Prefetching default', () => {
   const { next, isNextDev } = nextTestSetup({
     files: path.join(__dirname, 'partial-prefetching'),
   })
@@ -44,11 +43,10 @@ describe('cached navigations - global partialPrefetching', () => {
     await browser.back()
     expect(await browser.elementByCss('h1').text()).toBe('Home')
 
-    // Second navigation — under the global `partialPrefetching` config, the
-    // request-derived content (searchParams, cookies, headers) was
-    // runtime-cached from the first navigation and shows instantly, even with
-    // the dynamic request blocked. Only the truly dynamic connection() content
-    // needs a server request.
+    // Second navigation: request-derived content (searchParams, cookies,
+    // headers) was runtime-cached from the first navigation and shows
+    // instantly, even with the dynamic request blocked. Only the truly dynamic
+    // connection() content needs a server request.
     await act(async () => {
       await act(
         async () => {

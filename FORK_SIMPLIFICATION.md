@@ -17,7 +17,8 @@
   and production renderers, validation has one Partial Prefetching mode, and
   application-level PPR is unconditional. App Page route kind now directly
   selects PPR without application or per-route configuration helpers. App Page
-  component-tree generation has one Cache Components and PPR path.
+  component-tree generation and Flight tree walking have one Cache Components
+  and PPR path.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -33,8 +34,8 @@
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
 - **Next action:** Remove remaining App Page `isRoutePPREnabled` booleans from
-  tree walking, runtime-template, response-cache, and build protocols, then
-  collapse the client to one segment-cache prefetch protocol.
+  runtime-template, response-cache, and build protocols, then collapse the
+  client to one segment-cache prefetch protocol.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -46,6 +47,25 @@
   assertions passed.
 
 ## History
+
+### 2026-07-27: One Flight tree-walking model
+
+Deleted legacy loading-boundary prefetch truncation and its shared-layout state
+from the Flight tree walker. Added the existing Partial Prefetching cached
+navigation journey to the selectable fork browser allowlist and removed its
+obsolete feature flags. Authored framework and App Router renderer source each
+fell by 83 lines and 3,496 bytes, and route-PPR references fell by one. Under
+warm build conditions, the distribution observation was 60,672 bytes smaller,
+including 12,722 JavaScript bytes, but the prior total snapshot was not
+comparable. Types passed in 14.17 seconds, the 16-test fast contract passed in
+1.61 seconds, the core build passed in 21.67 seconds,
+the 12-assertion PPR journey passed in 24.92 seconds, and the one-assertion
+navigation journey passed in 14.31 seconds. The production server was ready in
+84 milliseconds and the first browser load took 105 milliseconds. A
+navigation-only duration was not isolated. The fixture's TypeScript 6 package
+currently misresolves generated `next/*.js` declarations, so the behavior
+fixture skips application type errors while core framework types remain a
+separate required gate.
 
 ### 2026-07-27: One App Page component-tree path
 
