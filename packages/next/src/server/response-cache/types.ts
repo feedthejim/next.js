@@ -22,11 +22,6 @@ export interface ResponseCacheBase {
        * True if this is a fallback request.
        */
       isFallback?: boolean
-
-      /**
-       * True if the route is enabled for PPR.
-       */
-      isRoutePPREnabled?: boolean
     }
   ): Promise<ResponseCacheEntry | null>
 }

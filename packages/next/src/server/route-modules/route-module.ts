@@ -1113,7 +1113,6 @@ export abstract class RouteModule<
     routeKind,
     isFallback,
     prerenderManifest,
-    isRoutePPREnabled,
     isOnDemandRevalidate,
     revalidateOnlyGenerated,
     responseGenerator,
@@ -1126,7 +1125,6 @@ export abstract class RouteModule<
     routeKind: RouteKind
     isFallback?: boolean
     prerenderManifest: DeepReadonly<PrerenderManifest>
-    isRoutePPREnabled?: boolean
     isOnDemandRevalidate?: boolean
     revalidateOnlyGenerated?: boolean
     responseGenerator: ResponseGenerator
@@ -1137,7 +1135,6 @@ export abstract class RouteModule<
     const cacheEntry = await responseCache.get(cacheKey, responseGenerator, {
       routeKind,
       isFallback,
-      isRoutePPREnabled,
       isOnDemandRevalidate,
       // A Next.js Segment Cache prefetch uses the `Next-Router-Prefetch`
       // header (surfaced as the `isPrefetchRSCRequest` request meta), not the

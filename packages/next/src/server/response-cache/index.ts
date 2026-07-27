@@ -15,7 +15,7 @@ import {
   routeKindToIncrementalCacheKind,
   toResponseCacheEntry,
 } from './utils'
-import type { RouteKind } from '../route-kind'
+import { RouteKind } from '../route-kind'
 
 /**
  * Parses an environment variable as a positive integer, returning the fallback
@@ -205,7 +205,6 @@ export default class ResponseCache implements ResponseCacheBase {
       isOnDemandRevalidate?: boolean
       isPrefetch?: boolean
       incrementalCache: IncrementalResponseCache
-      isRoutePPREnabled?: boolean
       isFallback?: boolean
       waitUntil?: (prom: Promise<any>) => void
 
@@ -263,7 +262,6 @@ export default class ResponseCache implements ResponseCacheBase {
       incrementalCache,
       isOnDemandRevalidate = false,
       isFallback = false,
-      isRoutePPREnabled = false,
       isPrefetch = false,
       waitUntil,
       routeKind,
@@ -280,7 +278,6 @@ export default class ResponseCache implements ResponseCacheBase {
             incrementalCache,
             isOnDemandRevalidate,
             isFallback,
-            isRoutePPREnabled,
             isPrefetch,
             routeKind,
             invocationID,
@@ -322,7 +319,6 @@ export default class ResponseCache implements ResponseCacheBase {
       incrementalCache: IncrementalResponseCache
       isOnDemandRevalidate: boolean
       isFallback: boolean
-      isRoutePPREnabled: boolean
       isPrefetch: boolean
       routeKind: RouteKind
       invocationID: string | undefined
@@ -338,7 +334,7 @@ export default class ResponseCache implements ResponseCacheBase {
       previousIncrementalCacheEntry = !this.minimal_mode
         ? await context.incrementalCache.get(key, {
             kind: routeKindToIncrementalCacheKind(context.routeKind),
-            isRoutePPREnabled: context.isRoutePPREnabled,
+            isRoutePPREnabled: context.routeKind === RouteKind.APP_PAGE,
             isFallback: context.isFallback,
           })
         : null
@@ -378,7 +374,7 @@ export default class ResponseCache implements ResponseCacheBase {
           ? await this.handleRevalidate(
               key,
               context.incrementalCache,
-              context.isRoutePPREnabled,
+              context.routeKind,
               context.isFallback,
               responseGenerator,
               previousIncrementalCacheEntry,
@@ -387,7 +383,7 @@ export default class ResponseCache implements ResponseCacheBase {
           : await this.revalidate(
               key,
               context.incrementalCache,
-              context.isRoutePPREnabled,
+              context.routeKind,
               context.isFallback,
               responseGenerator,
               previousIncrementalCacheEntry,
@@ -427,7 +423,7 @@ export default class ResponseCache implements ResponseCacheBase {
    *
    * @param key - The key to revalidate the cache entry for.
    * @param incrementalCache - The incremental cache to use to revalidate the cache entry.
-   * @param isRoutePPREnabled - Whether the route is PPR enabled.
+   * @param routeKind - The route kind that determines cache semantics.
    * @param isFallback - Whether the route is a fallback.
    * @param responseGenerator - The response generator to use to generate the response cache entry.
    * @param previousIncrementalCacheEntry - The previous cache entry to use to revalidate the cache entry.
@@ -439,7 +435,7 @@ export default class ResponseCache implements ResponseCacheBase {
   public async revalidate(
     key: string,
     incrementalCache: IncrementalResponseCache,
-    isRoutePPREnabled: boolean,
+    routeKind: RouteKind,
     isFallback: boolean,
     responseGenerator: ResponseGenerator,
     previousIncrementalCacheEntry: IncrementalResponseCacheEntry | null,
@@ -450,7 +446,7 @@ export default class ResponseCache implements ResponseCacheBase {
       const promise = this.handleRevalidate(
         key,
         incrementalCache,
-        isRoutePPREnabled,
+        routeKind,
         isFallback,
         responseGenerator,
         previousIncrementalCacheEntry,
@@ -467,12 +463,14 @@ export default class ResponseCache implements ResponseCacheBase {
   private async handleRevalidate(
     key: string,
     incrementalCache: IncrementalResponseCache,
-    isRoutePPREnabled: boolean,
+    routeKind: RouteKind,
     isFallback: boolean,
     responseGenerator: ResponseGenerator,
     previousIncrementalCacheEntry: IncrementalResponseCacheEntry | null,
     hasResolved: boolean
   ) {
+    const isRoutePPREnabled = routeKind === RouteKind.APP_PAGE
+
     try {
       // Generate the response cache entry using the response generator.
       const responseCacheEntry = await responseGenerator({

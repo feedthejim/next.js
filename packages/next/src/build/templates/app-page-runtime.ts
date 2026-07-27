@@ -1168,7 +1168,6 @@ export function createAppPageEntrypoint({
                 routeKind: RouteKind.APP_PAGE,
                 isFallback: true,
                 prerenderManifest,
-                isRoutePPREnabled: true,
                 responseGenerator: async () =>
                   doRender({
                     span,
@@ -1221,7 +1220,7 @@ export function createAppPageEntrypoint({
                       await responseCache.revalidate(
                         ssgCacheKey,
                         incrementalCache,
-                        true,
+                        RouteKind.APP_PAGE,
                         false,
                         (c) => {
                           return doRender({
@@ -1324,7 +1323,7 @@ export function createAppPageEntrypoint({
                     await responseCache.revalidate(
                       resolvedPathname,
                       incrementalCache,
-                      true,
+                      RouteKind.APP_PAGE,
                       false,
                       (c) =>
                         responseGenerator({
@@ -1516,7 +1515,6 @@ export function createAppPageEntrypoint({
             }),
           routeKind: RouteKind.APP_PAGE,
           isOnDemandRevalidate,
-          isRoutePPREnabled: true,
           req,
           nextConfig,
           prerenderManifest,

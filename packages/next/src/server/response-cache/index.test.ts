@@ -1,5 +1,9 @@
 import ResponseCache from './index'
-import { CachedRouteKind, type ResponseCacheEntry } from './types'
+import {
+  CachedRouteKind,
+  IncrementalCacheKind,
+  type ResponseCacheEntry,
+} from './types'
 import { RouteKind } from '../route-kind'
 import RenderResult from '../render-result'
 import { HTML_CONTENT_TYPE_HEADER } from '../../lib/constants'
@@ -27,6 +31,38 @@ function makeCacheEntry(html: string): ResponseCacheEntry {
 }
 
 describe('ResponseCache', () => {
+  it('derives PPR cache semantics from the route kind', async () => {
+    const cache = new ResponseCache(false)
+    const incrementalCache = mockIncrementalCache()
+
+    await cache.get('/app-page', async () => makeCacheEntry('app-page'), {
+      routeKind: RouteKind.APP_PAGE,
+      incrementalCache,
+    })
+
+    expect(incrementalCache.get).toHaveBeenCalledWith('/app-page', {
+      kind: IncrementalCacheKind.APP_PAGE,
+      isRoutePPREnabled: true,
+      isFallback: false,
+    })
+    expect(incrementalCache.set).toHaveBeenCalledWith(
+      '/app-page',
+      expect.anything(),
+      expect.objectContaining({ isRoutePPREnabled: true })
+    )
+
+    await cache.get('/app-route', async () => null, {
+      routeKind: RouteKind.APP_ROUTE,
+      incrementalCache,
+    })
+
+    expect(incrementalCache.get).toHaveBeenCalledWith('/app-route', {
+      kind: IncrementalCacheKind.APP_ROUTE,
+      isRoutePPREnabled: false,
+      isFallback: false,
+    })
+  })
+
   describe('minimal mode LRU population for batched invocations', () => {
     it('should populate LRU for all batched invocationIDs, not just the winner', async () => {
       const cache = new ResponseCache(true)

@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
-  "label": "unconditional-app-page-runtime-ppr",
-  "capturedAt": "2026-07-27T18:20:15.896Z",
+  "label": "route-kind-response-cache",
+  "capturedAt": "2026-07-27T18:24:17.579Z",
   "git": {
-    "baseHead": "92626e3205"
+    "baseHead": "5a09c69565"
   },
   "source": {
     "frameworkTracked": {
       "files": 2458,
-      "lines": 1095875,
-      "bytes": 51476660
+      "lines": 1095897,
+      "bytes": 51477256
     },
     "frameworkAuthored": {
       "files": 1753,
-      "lines": 301544,
-      "bytes": 9734211
+      "lines": 301566,
+      "bytes": 9734807
     },
     "vendoredCompiled": {
       "files": 705,
@@ -38,8 +38,8 @@
     },
     "pagesRouterPathProxy": {
       "files": 30,
-      "lines": 3544,
-      "bytes": 109254
+      "lines": 3543,
+      "bytes": 109214
     }
   },
   "publicConfigMembers": {
@@ -48,7 +48,7 @@
   },
   "legacyModeReferences": {
     "cacheComponents": 154,
-    "routePPR": 94,
+    "routePPR": 79,
     "appPPR": 15,
     "cacheComponentsEnv": 29,
     "pprEnv": 2,
@@ -68,24 +68,24 @@
   },
   "builtArtifacts": {
     "conditions": "warm-local-after-core-build",
-    "nextDistBytes": 180169986,
-    "nextDistJavaScriptBytes": 76551102
+    "nextDistBytes": 181651898,
+    "nextDistJavaScriptBytes": 76549606
   },
   "validationTimingConditions": "warm-local-watcher-stopped-two-browser-journeys",
   "validationTimingsMs": {
-    "types": 14800,
-    "focusedTests": 1850,
-    "browserStartup": 250,
+    "types": 14710,
+    "focusedTests": 1750,
+    "browserStartup": 127,
     "browserTestBody": null,
-    "browserTests": 41940,
-    "nextBuild": 22420,
+    "browserTests": 42830,
+    "nextBuild": 22550,
     "buildAll": null,
-    "total": 81010
+    "total": 81840
   },
   "runtimePerformance": {
     "conditions": "production-turbopack-navigation-fixture-warm-local",
     "devStartupMs": null,
-    "productionStartupMs": 78,
+    "productionStartupMs": 81,
     "pprShellFirstByteMs": null,
     "pprCompleteMs": null,
     "partialNavigationMs": null,

@@ -19,7 +19,8 @@
   selects PPR without application or per-route configuration helpers. App Page
   component-tree generation and Flight tree walking have one Cache Components
   and PPR path. The App Page runtime also treats PPR, Cache Components, and
-  resume-data capture as unconditional.
+  resume-data capture as unconditional. The response-cache boundary derives
+  PPR behavior from the canonical route kind instead of a second boolean.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -35,7 +36,7 @@
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
 - **Next action:** Remove remaining App Page `isRoutePPREnabled` booleans from
-  response-cache and build protocols, then collapse the client to one
+  build protocols and renderer options, then collapse the client to one
   segment-cache prefetch protocol.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
@@ -43,11 +44,30 @@
   performance metrics; each slice is committed; the worktree is clean; and no
   required follow-up is implicit.
 - **Last verified:** 2026-07-27 on `feedthejim/simplify-next-rendering`.
-  `pnpm --filter=next types`, the 16-test fast App Router allowlist,
+  `pnpm --filter=next types`, the 19-test fast App Router allowlist,
   `pnpm --filter=next build`, and 12 production Turbopack PPR partial-hydration
   assertions passed.
 
 ## History
+
+### 2026-07-27: Route-kind-derived response caching
+
+Removed the independently configurable route-PPR boolean from the
+route-module and response-cache protocols. Cache reads, writes, and
+revalidation now derive PPR semantics from the canonical `RouteKind`, which
+prevents adapters and callers from supplying contradictory route state. A
+direct response-cache test was added to the fast contract and proves both App
+Page and App Route mappings. Production source fell by 14 lines, but the
+authored-framework score increased by 22 lines and 596 bytes because the
+behavioral test added 36 net lines. Route-PPR references fell by 15. Built
+JavaScript fell by 1,496 bytes; total distribution bytes increased by
+1,481,912 because non-JavaScript build output churned. Types passed in 14.71
+seconds, the expanded 19-test fast contract passed in 1.75 seconds, the core
+build passed in 22.55 seconds, the PPR journey passed all 12 assertions in
+27.13 seconds, and the converted navigation journey passed in 15.70 seconds.
+The navigation fixture's production server was ready in 81 milliseconds and
+its first browser load took 127 milliseconds. Total validation time increased
+by 0.83 seconds, driven by 0.89 seconds of browser-run variation.
 
 ### 2026-07-27: Unconditional App Page runtime PPR
 
