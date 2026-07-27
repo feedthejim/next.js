@@ -9953,13 +9953,6 @@
     "flakey": [],
     "runtimeError": false
   },
-  "test/e2e/app-dir/segment-cache/dynamic-on-hover/dynamic-on-hover.test.ts": {
-    "passed": ["dynamic on hover prefetching is disabled"],
-    "failed": [],
-    "pending": [],
-    "flakey": [],
-    "runtimeError": false
-  },
   "test/e2e/app-dir/segment-cache/export/segment-cache-output-export.test.ts": {
     "passed": [
       "segment cache (output: \"export\") build test should not run during dev test run"

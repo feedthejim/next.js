@@ -1,6 +1,6 @@
 export type RouterTransitionType = 'push' | 'replace' | 'traverse'
 
-export type RouterTransitionPrefetchIntent = 'full' | 'auto' | 'none'
+export type RouterTransitionPrefetchIntent = 'auto' | 'none'
 
 export type RouterTransitionEvent = {
   id: string

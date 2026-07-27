@@ -143,7 +143,7 @@ describe('Instrumentation Client Hook', () => {
       expect(typeof start.event.id).toBe('string')
       expect(start.event.timestamp).toBeGreaterThan(0)
       expect(start.event.fromRoutes).toEqual(['/'])
-      expect(start.event.prefetchIntent).toBe('full')
+      expect(start.event.prefetchIntent).toBe('auto')
     })
 
     it('reports a null prefetch intent for programmatic navigation', async () => {

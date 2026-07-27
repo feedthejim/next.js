@@ -1,11 +1,9 @@
 import {
   FixCardAlignLeftIcon,
-  FixCardArrowUpIcon,
   FixCardDatabaseIcon,
   FixCardHistoryIcon,
   FixCardLayoutIcon,
   FixCardLoadingIcon,
-  FixCardMinusIcon,
   FixCardPointerClickIcon,
   FixCardMinusCircleIcon,
   FixCardServerStackIcon,
@@ -55,10 +53,6 @@ function getCardIcon(icon: FixCardIcon) {
       return <FixCardZapIcon />
     case 'layout':
       return <FixCardLayoutIcon />
-    case 'arrow-up':
-      return <FixCardArrowUpIcon />
-    case 'minus':
-      return <FixCardMinusIcon />
     default:
       icon satisfies never
       return null

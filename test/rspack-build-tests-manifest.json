@@ -7376,15 +7376,6 @@
     "flakey": [],
     "runtimeError": false
   },
-  "test/e2e/app-dir/segment-cache/dynamic-on-hover/dynamic-on-hover.test.ts": {
-    "passed": [
-      "dynamic on hover prefetches the dynamic data for a Link on hover"
-    ],
-    "failed": [],
-    "pending": [],
-    "flakey": [],
-    "runtimeError": false
-  },
   "test/e2e/app-dir/segment-cache/export/segment-cache-output-export.test.ts": {
     "passed": [
       "segment cache (output: \"export\") basic prefetch in output: \"export\" mode",

@@ -26,7 +26,10 @@
   from route identity rather than worker-provided PPR state. `BaseServer`
   recognizes App Page resume requests directly and no longer interprets
   manifest rendering modes as a runtime feature switch. Imperative
-  `router.prefetch()` now exposes only the fork's Partial Prefetching protocol.
+  `router.prefetch()` and declarative App Router links now expose only the
+  fork's Partial Prefetching protocol. The public full-prefetch intent, its
+  dynamic-on-hover upgrade, and its dedicated warning and overlay path are
+  absent.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -41,20 +44,54 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Remove `<Link prefetch={true}>` and the remaining internal
-  `FetchStrategy.Full` path, then delete the PPR-disabled loading-boundary
-  scheduler path.
+- **Next action:** Remove the remaining internal `FetchStrategy.Full` cache and
+  scheduler path, then delete the PPR-disabled loading-boundary scheduler path.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
   performance metrics; each slice is committed; the worktree is clean; and no
   required follow-up is implicit.
 - **Last verified:** 2026-07-27 on `feedthejim/simplify-next-rendering`.
-  `pnpm --filter=next types`, the 19-test fast App Router allowlist,
-  `pnpm --filter=next build`, the 34-assertion production Turbopack runtime
-  pack, and the imperative-prefetch navigation journey passed.
+  `pnpm --filter=next types`, the 19-test fast App Router allowlist, 108 focused
+  dev-overlay assertions, `pnpm --filter=next build`, the 34-assertion
+  production Turbopack runtime pack, the retained navigation journey, and the
+  transition-instrumentation journey passed.
 
 ## History
+
+### 2026-07-27: One declarative Link prefetch protocol
+
+Removed `prefetch={true}`, `unstable_dynamicOnHover`, the `'full'` transition
+intent, and the dedicated full-prefetch warning from App Router links. The
+warning's route-tree hint, parser, overlay guidance, icons, and 11-file
+development fixture were also removed because they no longer had a producer.
+The seven-file dynamic-on-hover fixture and its Rspack manifest entries were
+removed with that API.
+The top-level `next/jest` shim now accepts both intermediate and normalized
+compiled export shapes, eliminating an isolated-package bootstrap race exposed
+by the retained browser journey.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** App Router links now have one enabled prefetch intent and
+  one public protocol. `FetchStrategy.Full` references fell from 29 to 24, and
+  Cache Components environment checks fell from 29 to 26.
+- **Leanness:** Authored framework source fell by 377 lines and 13,927 bytes;
+  client-router source fell by 48 lines and 2,179 bytes; and the test inventory
+  fell by one development and one end-to-end test file. The rebuilt `dist` tree
+  is 181,462,033 bytes, including 76,500,372 JavaScript bytes, but the previous
+  artifact was not built under comparable conditions.
+- **Runtime performance:** The retained production navigation journey passed
+  with a 96-millisecond server startup and 93-millisecond first browser load.
+  Startup was 17 milliseconds slower than the preceding single run and first
+  load was unchanged, both directional local measurements. Navigation latency,
+  response bytes, and peak memory were not measured.
+- **Iteration efficiency:** Types passed in 14.03 seconds, the 19-test fast
+  allowlist in 1.92 seconds, the core build in 22.59 seconds, and the retained
+  navigation journey in 14.95 seconds. The affected 108-unit assertion run and
+  transition-instrumentation journey also passed. The 85.39-second complete
+  validation total includes those extra checks and is not comparable to the
+  preceding narrower validation.
 
 ### 2026-07-27: Four-dimensional slice scorecard
 

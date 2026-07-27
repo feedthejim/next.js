@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
-  "label": "four-dimensional-slice-scorecard",
-  "capturedAt": "2026-07-27T18:46:19.618Z",
+  "label": "single-link-prefetch-protocol",
+  "capturedAt": "2026-07-27T18:55:56.093Z",
   "git": {
-    "baseHead": "51d22a2fda"
+    "baseHead": "bf40a063cd"
   },
   "source": {
     "frameworkTracked": {
       "files": 2458,
-      "lines": 1095689,
-      "bytes": 51469875
+      "lines": 1095312,
+      "bytes": 51455948
     },
     "frameworkAuthored": {
       "files": 1753,
-      "lines": 301358,
-      "bytes": 9727426
+      "lines": 300981,
+      "bytes": 9713499
     },
     "vendoredCompiled": {
       "files": 705,
@@ -23,13 +23,13 @@
     },
     "appRender": {
       "files": 97,
-      "lines": 28296,
-      "bytes": 968742
+      "lines": 28291,
+      "bytes": 968429
     },
     "clientRouter": {
       "files": 39,
-      "lines": 15996,
-      "bytes": 572772
+      "lines": 15948,
+      "bytes": 570593
     },
     "webpackPathProxy": {
       "files": 267,
@@ -50,11 +50,11 @@
     "cacheComponents": 153,
     "routePPR": 0,
     "appPPR": 7,
-    "cacheComponentsEnv": 29,
+    "cacheComponentsEnv": 26,
     "pprEnv": 2,
     "cachedNavigationsEnv": 4,
     "prefetchKind": 0,
-    "fullPrefetchStrategy": 29
+    "fullPrefetchStrategy": 24
   },
   "packageDependencies": {
     "dependencies": 6,
@@ -62,32 +62,32 @@
     "peerDependencies": 6
   },
   "tests": {
-    "totalFiles": 1865,
-    "e2eFiles": 1110,
-    "developmentFiles": 297,
+    "totalFiles": 1863,
+    "e2eFiles": 1109,
+    "developmentFiles": 296,
     "productionFiles": 348,
     "unitFiles": 108
   },
   "builtArtifacts": {
-    "conditions": "existing dist not rebuilt; artifact delta non-comparable",
-    "nextDistBytes": 186769318,
-    "nextDistJavaScriptBytes": 80393495
+    "conditions": "warm local after clean core build and isolated package pack; previous comparable artifact unavailable",
+    "nextDistBytes": 181462033,
+    "nextDistJavaScriptBytes": 76500372
   },
-  "validationTimingConditions": "not run for governance-only instruction change",
+  "validationTimingConditions": "warm local; focusedTests is fork fast allowlist; browserTests is retained navigation journey; total also includes affected dev-overlay units and instrumentation journey",
   "validationTimingsMs": {
-    "types": null,
-    "focusedTests": null,
-    "browserStartup": null,
+    "types": 14030,
+    "focusedTests": 1920,
+    "browserStartup": 93,
     "browserTestBody": null,
-    "browserTests": null,
-    "nextBuild": null,
+    "browserTests": 14950,
+    "nextBuild": 22590,
     "buildAll": null,
-    "total": null
+    "total": 85390
   },
   "runtimePerformance": {
-    "conditions": null,
+    "conditions": "production Turbopack navigation fixture, warm local",
     "devStartupMs": null,
-    "productionStartupMs": null,
+    "productionStartupMs": 96,
     "pprShellFirstByteMs": null,
     "pprCompleteMs": null,
     "partialNavigationMs": null,

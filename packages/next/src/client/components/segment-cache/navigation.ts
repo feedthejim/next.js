@@ -7,7 +7,6 @@ import type {
 import type { CacheNode } from '../../../shared/lib/app-router-types'
 import type { HeadData } from '../../../shared/lib/app-router-types'
 import {
-  PrefetchHint,
   SubtreePrefetchHints,
   propagateSubtreeBits,
 } from '../../../shared/lib/app-router-types'
@@ -46,7 +45,6 @@ import { ScrollBehavior } from '../router-reducer/router-reducer-types'
 import { computeChangedPath } from '../router-reducer/compute-changed-path'
 import { isJavaScriptURLString } from '../../lib/javascript-url'
 import { UnknownDynamicStaleTime, computeDynamicStaleAt } from './bfcache'
-import { createLinkPrefetchPartialError } from '../../../shared/lib/instant-messages'
 
 /**
  * Navigate to a new URL, using the Segment Cache to construct a response.
@@ -248,52 +246,6 @@ export function navigateToKnownRoute(
 ): AppRouterState {
   // A version of navigate() that accepts the target route tree as an argument
   // rather than reading it from the prefetch cache.
-  if (
-    process.env.NODE_ENV !== 'production' &&
-    process.env.__NEXT_CACHE_COMPONENTS
-  ) {
-    // Warn when navigating via a `<Link prefetch={true}>` to a route that has
-    // not opted into Partial Prefetching. Such a link does a legacy "full"
-    // prefetch that includes the route's dynamic data, defeating the
-    // static/dynamic split that Cache Components provides.
-    //
-    // This runs at navigation time (rather than prefetch time) so that, in dev
-    // where we don't prefetch, the warning only appears when you actually
-    // navigate to the route — existing apps with many `prefetch={true}` links
-    // aren't flooded with warnings the moment they enable Cache Components.
-    //
-    // The warning is suppressed if any segment on the target route exports
-    // `instant = false`, which is the explicit API for opting a route out of
-    // this validation.
-    const link = getLinkForCurrentNavigation()
-    if (
-      link !== null &&
-      link.fetchStrategy === FetchStrategy.Full &&
-      (navigationSeed.routeTree.prefetchHints &
-        (PrefetchHint.SubtreeHasPartialPrefetching |
-          PrefetchHint.SubtreeHasInstantFalse)) ===
-        0
-    ) {
-      const error = createLinkPrefetchPartialError(url.pathname)
-      const ownerStack = 'ownerStack' in link ? link.ownerStack : undefined
-      if (ownerStack === undefined) {
-        console.error(
-          '' +
-            'Cannot associate the "prefetch={true}" warning with a specific <Link> making it harder to find the cause of the following warning. ' +
-            'This is a bug in Next.js.'
-        )
-      } else if (ownerStack !== null) {
-        // Replace the (useless) stack captured at the throw site — which
-        // points into router internals — with the Owner Stack captured when
-        // the <Link> rendered. That way the dev overlay associates this
-        // warning with the JSX that created the link, not with
-        // navigation.ts.
-        error.stack = `${error.name}: ${error.message}${ownerStack}`
-      }
-      console.error(error)
-    }
-  }
-
   // Instant Navigation Testing API: when the lock is held, restrict segment
   // reads to shell entries if the target route would only have prefetched
   // its shell.
