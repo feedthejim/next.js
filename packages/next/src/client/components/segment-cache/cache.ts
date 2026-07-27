@@ -2472,92 +2472,47 @@ export async function fetchSegmentPrefetchesUsingDynamicRequest(
     // staleAt that corresponds to whatever payload the spawned entries get
     // filled with below.
     let staleAtForSpawnedEntries = staleAt
-    if (cacheData === null) {
-      // No shell can be extracted without cache metadata (only present when
-      // Cached Navigations is enabled). For routes without a distinct App Shell
-      // the extraction below is a no-op anyway (`resolveShellStageData` returns
-      // null), so this just short-circuits that case.
+    const shellStageData = await resolveShellStageData(
+      cacheData,
+      serverData,
+      headers
+    )
+    if (shellStageData === null) {
       serverDataThatSatisfiesSpawnedEntries = serverData
     } else {
-      const shellStageData = await resolveShellStageData(
-        cacheData,
-        serverData,
-        headers
-      )
-      if (shellStageData === null) {
-        // No App Shell can be extracted. This usually means the entire response
-        // _is_ the App Shell. The other possibility (for now, until the feature
-        // is fully stabilized) is that App Shells are not yet enabled. Either
-        // way, there's nothing extra for us to do: fulfill the pending entries
-        // using the response from the server.
-        serverDataThatSatisfiesSpawnedEntries = serverData
+      // shellStageData is a fully-buffered stage decode, so read staleTime
+      // synchronously off the thenable status.
+      const shellStaleAt = readFulfilledStaleAt(now, shellStageData.s)
+      if (fetchStrategy === FetchStrategy.RuntimeShell) {
+        serverDataThatSatisfiesSpawnedEntries = shellStageData
+        staleAtForSpawnedEntries = shellStaleAt
+
+        writePrerenderResponseIntoCache(
+          now,
+          FetchStrategy.PPR,
+          serverData.f,
+          buildId,
+          serverData.h,
+          serverData.r ?? null,
+          staleAt,
+          dynamicRequestTree,
+          renderedSearch,
+          cacheData.isResponsePartial
+        )
       } else {
-        // Successfully extracted an App Shell that is a subset of the main
-        // response. Depending on the type of prefetch this is, we need to
-        // decide whether to fulfill the pending entries with the shell or with
-        // the entire response. In either scenario, we'll be inserting _both_
-        // versions of the response into the cache; the extra logic is only
-        // here so that we don't fulfill pending shell entries with something
-        // that's more concrete than what they expect.
-        // TODO: The only reason this matters is because during a navigation,
-        // if a segment is still pending, we render a promise that resolves to
-        // the eventual value of that segment. But that means we cannot
-        // eventually resolve that segment to something more concrete than what
-        // was already requested. Hence the extra logic here. A cleaner way to
-        // model this, though, is whenever we render a promise that resolves to
-        // the result of a pending entry, do one additional cache look-up right
-        // after the promise resolves, to ensure we never get a mismatching
-        // entry. Leaving this for a follow up.
-        // shellStageData is a fully-buffered stage decode, so read staleTime
-        // synchronously off the thenable status.
-        const shellStaleAt = readFulfilledStaleAt(now, shellStageData.s)
-        if (fetchStrategy === FetchStrategy.RuntimeShell) {
-          // This is a Shell prefetch, so the pending entries must be fulfilled
-          // with the shell.
-          serverDataThatSatisfiesSpawnedEntries = shellStageData
-          staleAtForSpawnedEntries = shellStaleAt
-
-          // Separately, we'll also cache the entire response, by upserting it
-          // into the cache.
-          writePrerenderResponseIntoCache(
-            now,
-            FetchStrategy.PPR,
-            serverData.f,
-            buildId,
-            serverData.h,
-            serverData.r ?? null,
-            staleAt,
-            dynamicRequestTree,
-            renderedSearch,
-            cacheData.isResponsePartial
-          )
-        } else {
-          // This is _not_ a Shell prefetch, so the pending entries should be
-          // fulfilled with the entire response.
-          serverDataThatSatisfiesSpawnedEntries = serverData
-
-          // Additionally, we might as well upsert the extracted Shell into the
-          // cache, too.
-
-          // `shellStageData` is only provided in cases where the shell is
-          // different from the main response. If they are equivalent, this
-          // branch is skipped. So it follows that any shell data reaches
-          // this path must be partial -- it does not represent the entire
-          // UI of the target page.
-          const isShellStagePartial = true
-          writePrerenderResponseIntoCache(
-            now,
-            FetchStrategy.RuntimeShell,
-            shellStageData.f,
-            buildId,
-            shellStageData.h,
-            shellStageData.r ?? null,
-            shellStaleAt,
-            dynamicRequestTree,
-            renderedSearch,
-            isShellStagePartial
-          )
-        }
+        serverDataThatSatisfiesSpawnedEntries = serverData
+        writePrerenderResponseIntoCache(
+          now,
+          FetchStrategy.RuntimeShell,
+          shellStageData.f,
+          buildId,
+          shellStageData.h,
+          shellStageData.r ?? null,
+          shellStaleAt,
+          dynamicRequestTree,
+          renderedSearch,
+          true
+        )
       }
     }
 
@@ -2579,7 +2534,7 @@ export async function fetchSegmentPrefetchesUsingDynamicRequest(
     const isResponsePartial =
       fetchStrategy === FetchStrategy.RuntimeShell ||
       (fetchStrategy === FetchStrategy.PPRRuntime &&
-        (cacheData?.isResponsePartial ?? false))
+        cacheData.isResponsePartial)
 
     const flightDatas = normalizeFlightData(
       serverDataThatSatisfiesSpawnedEntries.f
@@ -2736,17 +2691,11 @@ export function writeDynamicRenderResponseIntoCache(
       // itself was partial, exactly as we do for segments (see
       // `writeSeedDataIntoCache`). A non-partial response carries a complete
       // head; a partial (postponed) one does not.
-      //
-      // Without Cache Components, the server sends the correct isHeadPartial.
-      const isHeadPartial = process.env.__NEXT_CACHE_COMPONENTS
-        ? isResponsePartial
-        : flightDataEntry.isHeadPartial
-
       fulfillEntrySpawnedByRuntimePrefetch(
         now,
         fetchStrategy,
         head,
-        isHeadPartial,
+        isResponsePartial,
         staleAt,
         // For head entries, use the head-specific vary params passed as
         // parameter.
@@ -3269,16 +3218,13 @@ export async function processRuntimePrefetchStream(
  * response (Flight rows start with a hex digit or ':').
  *
  * If the first byte is not a recognized marker, the stream is returned intact
- * and `isPartial` is determined by the cachedNavigations experimental flag.
+ * and treated as partial because dynamic navigation responses may contain
+ * dynamic holes.
  */
 export async function stripIsPartialByte(
   stream: ReadableStream<Uint8Array>
 ): Promise<{ stream: ReadableStream<Uint8Array>; isPartial: boolean }> {
-  // When there is no recognized marker byte, the fallback depends on whether
-  // Cached Navigations is enabled. When enabled, dynamic navigation responses
-  // don't have a marker but may contain dynamic holes, so they are treated as
-  // partial. When disabled, unmarked responses are treated as non-partial.
-  const defaultIsPartial = !!process.env.__NEXT_EXPERIMENTAL_CACHED_NAVIGATIONS
+  const defaultIsPartial = true
 
   const reader = stream.getReader()
   const { done, value } = await reader.read()

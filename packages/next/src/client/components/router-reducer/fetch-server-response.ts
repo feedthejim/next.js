@@ -188,17 +188,11 @@ export async function fetchServerResponse(
       }
     }
 
-    // Typically, during a navigation, we decode the response using Flight's
-    // `createFromFetch` API, which accepts a `fetch` promise.
-    // TODO: Remove this check once the old PPR flag is removed
-    const isLegacyPPR =
-      process.env.__NEXT_PPR && !process.env.__NEXT_CACHE_COMPONENTS
-    const shouldImmediatelyDecode = !isLegacyPPR
     const res = await createFetch<NavigationFlightResponse>(
       url,
       headers,
       'auto',
-      shouldImmediatelyDecode,
+      true,
       options.signal
     )
 
@@ -250,20 +244,7 @@ export async function fetchServerResponse(
       ).waitForWebpackRuntimeHotUpdate()
     }
 
-    let flightResponsePromise = res.flightResponsePromise
-    if (flightResponsePromise === null) {
-      // Typically, `createFetch` would have already started decoding the
-      // Flight response. If it hasn't, though, we need to decode it now.
-      // TODO: This should only be reachable if legacy PPR is enabled (i.e. PPR
-      // without Cache Components). Remove this branch once legacy PPR
-      // is deleted.
-      flightResponsePromise =
-        createFromNextReadableStream<NavigationFlightResponse>(
-          res.body,
-          headers,
-          { allowPartialStream: postponed }
-        )
-    }
+    const flightResponsePromise = res.flightResponsePromise!
 
     const [flightResponse, cacheData] = await Promise.all([
       flightResponsePromise,
@@ -283,10 +264,11 @@ export async function fetchServerResponse(
       return doMpaNavigation(normalizedFlightData)
     }
 
-    const staticStageData =
-      cacheData !== null
-        ? await resolveStaticStageData(cacheData, flightResponse, headers)
-        : null
+    const staticStageData = await resolveStaticStageData(
+      cacheData,
+      flightResponse,
+      headers
+    )
 
     return {
       flightData: normalizedFlightData,
@@ -369,7 +351,7 @@ export type RSCResponse<T> = {
   status: number
   url: string
   flightResponsePromise: (Promise<T> & { _debugInfo?: Array<any> }) | null
-  cacheData: Promise<FetchResponseCacheData | null>
+  cacheData: Promise<FetchResponseCacheData>
 }
 
 type FetchResponseCacheData = {
@@ -386,64 +368,43 @@ type FetchResponseCacheData = {
  * Strips the leading isPartial byte from an RSC navigation response and
  * clones the body for segment cache extraction.
  *
- * When cache components is enabled, the server prepends a single byte:
+ * The server prepends a single byte:
  * '~' (0x7e) for partial, '#' (0x23) for complete. This must be stripped
  * before Flight decoding because it's not valid RSC data. The body is
  * cloned before Flight can consume it so the clone is available for later use.
  *
- * When cache components is disabled, returns the original response with
- * cacheData: null.
  */
 export async function processFetch(response: Response): Promise<{
   response: Response
-  cacheData: FetchResponseCacheData | null
+  cacheData: FetchResponseCacheData
 }> {
-  if (process.env.__NEXT_CACHE_COMPONENTS) {
-    if (!response.body) {
-      throw new InvariantError(
-        'Expected RSC navigation response to have a body'
-      )
-    }
-
-    const { stream, isPartial } = await stripIsPartialByte(response.body)
-
-    let responseStream: ReadableStream<Uint8Array>
-    let cacheData: FetchResponseCacheData
-
-    if (process.env.__NEXT_EXPERIMENTAL_CACHED_NAVIGATIONS) {
-      // Three readers needed: the main Flight decoder, the static-stage
-      // extractor, and the shell-stage extractor. Tee twice.
-      const [stream1, rest] = stream.tee()
-      const [staticBodyClone, shellBodyClone] = rest.tee()
-      responseStream = stream1
-      cacheData = {
-        isResponsePartial: isPartial,
-        staticBodyClone,
-        shellBodyClone,
-      }
-    } else {
-      responseStream = stream
-      cacheData = { isResponsePartial: isPartial }
-    }
-
-    const strippedResponse = new Response(responseStream, {
-      headers: response.headers,
-      status: response.status,
-      statusText: response.statusText,
-    })
-
-    // The Response constructor doesn't preserve `url` or `redirected` from
-    // the original. We need both: `url` for React DevTools and `redirected`
-    // for the redirect replay logic below.
-    Object.defineProperty(strippedResponse, 'url', { value: response.url })
-    Object.defineProperty(strippedResponse, 'redirected', {
-      value: response.redirected,
-    })
-
-    return { response: strippedResponse, cacheData }
+  if (!response.body) {
+    throw new InvariantError('Expected RSC navigation response to have a body')
   }
 
-  return { response, cacheData: null }
+  const { stream, isPartial } = await stripIsPartialByte(response.body)
+  const [responseStream, rest] = stream.tee()
+  const [staticBodyClone, shellBodyClone] = rest.tee()
+  const cacheData: FetchResponseCacheData = {
+    isResponsePartial: isPartial,
+    staticBodyClone,
+    shellBodyClone,
+  }
+  const strippedResponse = new Response(responseStream, {
+    headers: response.headers,
+    status: response.status,
+    statusText: response.statusText,
+  })
+
+  // The Response constructor doesn't preserve `url` or `redirected` from
+  // the original. We need both: `url` for React DevTools and `redirected`
+  // for the redirect replay logic below.
+  Object.defineProperty(strippedResponse, 'url', { value: response.url })
+  Object.defineProperty(strippedResponse, 'redirected', {
+    value: response.redirected,
+  })
+
+  return { response: strippedResponse, cacheData }
 }
 
 /**

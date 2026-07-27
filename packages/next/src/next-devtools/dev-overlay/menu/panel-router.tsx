@@ -130,7 +130,7 @@ const MenuPanel = () => {
                 </a>
               ),
             },
-        !!process.env.__NEXT_CACHE_COMPONENTS && {
+        {
           title: 'Cache Components is enabled.',
           label: 'Cache Components',
           value: 'Enabled',

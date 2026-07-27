@@ -27,9 +27,7 @@ const {
   instrumentParamsForClientValidation,
   instrumentSearchParamsForClientValidation,
   expectCompleteParamsInClientValidation,
-} = process.env.__NEXT_CACHE_COMPONENTS
-  ? (require('./instant-samples') as typeof import('./instant-samples'))
-  : {}
+} = require('./instant-samples') as typeof import('./instant-samples')
 
 /**
  * A [Client Component](https://nextjs.org/docs/app/building-your-application/rendering/client-components) hook
@@ -72,12 +70,8 @@ export function useSearchParams(): ReadonlyURLSearchParams {
 
   // During build-time instant validation, wrap with an proxy
   // so that accessing undeclared search params throws an error.
-  if (
-    typeof window === 'undefined' &&
-    process.env.__NEXT_CACHE_COMPONENTS &&
-    readonlySearchParams
-  ) {
-    return instrumentSearchParamsForClientValidation!(readonlySearchParams)
+  if (typeof window === 'undefined' && readonlySearchParams) {
+    return instrumentSearchParamsForClientValidation(readonlySearchParams)
   }
 
   // Instrument with Suspense DevTools (dev-only)
@@ -118,12 +112,8 @@ export function usePathname(): string {
 
   // During build-time instant validation, error if fallback params exist
   // because usePathname() can't return a sensible value without all params.
-  if (
-    typeof window === 'undefined' &&
-    process.env.__NEXT_CACHE_COMPONENTS &&
-    pathname
-  ) {
-    expectCompleteParamsInClientValidation!('usePathname()')
+  if (typeof window === 'undefined' && pathname) {
+    expectCompleteParamsInClientValidation('usePathname()')
     return pathname
   }
 
@@ -219,12 +209,8 @@ export function useParams<T extends Params = Params>(): T {
 
   // During build-time instant validation, wrap with a proxy
   // so that accessing undeclared params throws an error.
-  if (
-    typeof window === 'undefined' &&
-    process.env.__NEXT_CACHE_COMPONENTS &&
-    params
-  ) {
-    return instrumentParamsForClientValidation!(params)
+  if (typeof window === 'undefined' && params) {
+    return instrumentParamsForClientValidation(params)
   }
 
   // Instrument with Suspense DevTools (dev-only)
@@ -275,12 +261,8 @@ export function useSelectedLayoutSegments(
 
   // During build-time instant validation, error if fallback params exist
   // because useSelectedLayoutSegments() can't return a sensible value without all params.
-  if (
-    typeof window === 'undefined' &&
-    process.env.__NEXT_CACHE_COMPONENTS &&
-    context
-  ) {
-    expectCompleteParamsInClientValidation!('useSelectedLayoutSegments()')
+  if (typeof window === 'undefined' && context) {
+    expectCompleteParamsInClientValidation('useSelectedLayoutSegments()')
   }
 
   // Instrument with Suspense DevTools (dev-only)
@@ -328,8 +310,8 @@ export function useSelectedLayoutSegment(
 
   // During build-time instant validation, error if fallback params exist
   // because useSelectedLayoutSegment() can't return a sensible value without all params.
-  if (typeof window === 'undefined' && process.env.__NEXT_CACHE_COMPONENTS) {
-    expectCompleteParamsInClientValidation!('useSelectedLayoutSegment()')
+  if (typeof window === 'undefined') {
+    expectCompleteParamsInClientValidation('useSelectedLayoutSegment()')
   }
 
   // Instrument with Suspense DevTools (dev-only)

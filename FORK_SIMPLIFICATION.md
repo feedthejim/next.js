@@ -37,6 +37,9 @@
   loading-boundary scheduler traversal, and LoadingBoundary fetch strategy are
   absent. The route cache, optimistic matcher, navigation response, and RSC
   wire payload no longer carry a per-segment prefetch capability bit. The
+  client hydration, navigation response, segment cache, route-state Activity,
+  instant-validation, and development diagnostics paths no longer branch on
+  Cache Components, cached-navigation, or legacy PPR environment flags. The
   retained navigation journey covers both imperative prefetch and the default
   declarative Link path.
   Runtime-prefetch resume-cache installation is a directly testable renderer
@@ -53,8 +56,9 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Remove residual Cache Components environment branches from
-  the client cache and navigation runtime.
+- **Next action:** Remove the remaining server-side Cache Components
+  environment branches, then stop defining obsolete client and server mode
+  constants.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -68,6 +72,34 @@
   passed.
 
 ## History
+
+### 2026-07-27: One always-on client runtime
+
+Constant-folded Cache Components and cached navigation throughout client
+hydration, response decoding, segment-cache extraction, route-state
+preservation, navigation hooks, and development diagnostics. Flight responses
+now always strip the partial marker and expose static and shell clones, initial
+hydration always retains its cache stream, and inactive route trees always use
+React Activity preservation.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** Client references to the Cache Components,
+  cached-navigation, and legacy PPR environment switches fell from 17 to zero.
+  Response cache data is no longer nullable and the client has one hydration
+  and navigation protocol.
+- **Leanness:** Authored framework source fell by 130 lines and 6,125 bytes.
+  The client-router subset accounts for 94 lines and 5,099 bytes. The warm
+  built distribution fell by 86,353 bytes overall and 17,952 JavaScript bytes.
+  Test and dependency counts were unchanged.
+- **Runtime performance:** All 34 retained production browser assertions and
+  14 snapshots passed. The navigation fixture's server was ready in 76
+  milliseconds and its first browser load took 86 milliseconds. Navigation
+  latency, response bytes, and peak memory were not measured.
+- **Iteration efficiency:** Types passed in 14.16 seconds, the 19-test fast
+  allowlist in 1.80 seconds, the core build in 22.68 seconds, the complete
+  browser allowlist in 86.94 seconds, and 176 focused development-overlay
+  assertions in 2.13 seconds. Total measured validation took 127.71 seconds.
 
 ### 2026-07-27: No per-route prefetch capability bit
 

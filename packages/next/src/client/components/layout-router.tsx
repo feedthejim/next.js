@@ -673,7 +673,7 @@ export default function OuterLayoutRouter({
   }
 
   let maybeValidationBoundaryId: string | null = null
-  if (typeof window === 'undefined' && process.env.__NEXT_CACHE_COMPONENTS) {
+  if (typeof window === 'undefined') {
     maybeValidationBoundaryId = use(InstantValidationBoundaryContext)
   }
 
@@ -809,7 +809,6 @@ export default function OuterLayoutRouter({
 
     if (
       typeof window === 'undefined' &&
-      process.env.__NEXT_CACHE_COMPONENTS &&
       typeof maybeValidationBoundaryId === 'string'
     ) {
       templateValue = (
@@ -839,17 +838,15 @@ export default function OuterLayoutRouter({
       )
     }
 
-    if (process.env.__NEXT_CACHE_COMPONENTS) {
-      child = (
-        <Activity
-          name={debugNameToDisplay}
-          key={stateKey}
-          mode={stateKey === activeStateKey ? 'visible' : 'hidden'}
-        >
-          {child}
-        </Activity>
-      )
-    }
+    child = (
+      <Activity
+        name={debugNameToDisplay}
+        key={stateKey}
+        mode={stateKey === activeStateKey ? 'visible' : 'hidden'}
+      >
+        {child}
+      </Activity>
+    )
 
     children.push(child)
 
