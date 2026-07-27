@@ -30,8 +30,6 @@ use next_core::{
         get_tracing_compile_time_info,
     },
     next_telemetry::ProjectFeatureUsageSummary,
-    parse_segment_config_from_source,
-    segment_config::ParseSegmentMode,
     util::{NextRuntime, OptionEnvMap},
 };
 use rustc_hash::{FxHashMap, FxHashSet};
@@ -2030,11 +2028,10 @@ impl Project {
         let pages_error_endpoint = self.pages_project().error_endpoint().to_resolved().await?;
 
         let middleware = self.find_middleware();
-        let middleware = if let FindContextFileResult::Found(fs_path, _) = &*middleware.await? {
-            let is_proxy = fs_path.file_stem() == Some("proxy");
+        let middleware = if let FindContextFileResult::Found(..) = &*middleware.await? {
             Some(Middleware {
                 endpoint: self.middleware_endpoint().to_resolved().await?,
-                is_proxy,
+                is_proxy: true,
             })
         } else {
             None
@@ -2059,71 +2056,6 @@ impl Project {
             pages_error_endpoint,
         }
         .cell())
-    }
-
-    #[turbo_tasks::function]
-    async fn edge_middleware_context(self: Vc<Self>) -> Result<Vc<Box<dyn AssetContext>>> {
-        let mut transitions = vec![];
-
-        let app_dir = find_app_dir(self.project_path().owned().await?)
-            .owned()
-            .await?;
-        let app_project = *self.app_project().await?;
-
-        let ecmascript_client_reference_transition_name =
-            app_project.map(|_| AppProject::client_transition_name());
-
-        if let Some(app_project) = app_project {
-            transitions.push((
-                AppProject::client_transition_name(),
-                app_project
-                    .edge_ecmascript_client_reference_transition()
-                    .to_resolved()
-                    .await?,
-            ));
-        }
-
-        Ok(Vc::upcast(ModuleAssetContext::new(
-            TransitionOptions {
-                named_transitions: transitions.clone().into_iter().collect(),
-                ..Default::default()
-            }
-            .cell(),
-            self.edge_compile_time_info(),
-            get_server_module_options_context(
-                self.project_path().owned().await?,
-                self.execution_context(),
-                ServerContextType::Middleware {
-                    app_dir: app_dir.clone(),
-                    ecmascript_client_reference_transition_name:
-                        ecmascript_client_reference_transition_name.clone(),
-                },
-                self.next_mode(),
-                self.next_config(),
-                NextRuntime::Edge,
-                self.encryption_key(),
-                self.edge_compile_time_info().environment(),
-                self.client_compile_time_info().environment(),
-                // There is no NFT on edge
-                false,
-            ),
-            get_edge_resolve_options_context(
-                self.project_path().owned().await?,
-                ServerContextType::Middleware {
-                    app_dir: app_dir.clone(),
-                    ecmascript_client_reference_transition_name:
-                        ecmascript_client_reference_transition_name.clone(),
-                },
-                self.next_mode(),
-                self.next_config(),
-                self.execution_context(),
-                None, // root params can't be used in middleware
-            ),
-            Layer::new_with_user_friendly_name(
-                rcstr!("middleware-edge"),
-                rcstr!("Edge Middleware"),
-            ),
-        )))
     }
 
     #[turbo_tasks::function]
@@ -2210,25 +2142,7 @@ impl Project {
             .as_ref()
             .map(|_| AppProject::client_transition_name());
 
-        let is_proxy = fs_path.file_stem() == Some("proxy");
-        let config = parse_segment_config_from_source(
-            source,
-            if is_proxy {
-                ParseSegmentMode::Proxy
-            } else {
-                ParseSegmentMode::Base
-            },
-        );
-        let runtime = config.await?.runtime.unwrap_or(if is_proxy {
-            NextRuntime::NodeJs
-        } else {
-            NextRuntime::Edge
-        });
-
-        let middleware_asset_context = match runtime {
-            NextRuntime::NodeJs => self.node_middleware_context(),
-            NextRuntime::Edge => self.edge_middleware_context(),
-        };
+        let middleware_asset_context = self.node_middleware_context();
 
         Ok(Vc::upcast(MiddlewareEndpoint::new(
             self,
@@ -2236,8 +2150,6 @@ impl Project {
             source,
             app_dir.clone(),
             ecmascript_client_reference_transition_name,
-            config,
-            runtime,
         )))
     }
 

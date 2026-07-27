@@ -1,9 +1,9 @@
 {
   "schemaVersion": 2,
-  "label": "webpack Edge entry pipeline removed",
-  "capturedAt": "2026-07-27T22:49:04.196Z",
+  "label": "Turbopack Proxy collapsed to Node runtime",
+  "capturedAt": "2026-07-27T23:04:43.807Z",
   "git": {
-    "baseHead": "2c5f5ade68"
+    "baseHead": "2b9045af7f"
   },
   "source": {
     "frameworkTracked": {
@@ -33,8 +33,13 @@
     },
     "compilerRust": {
       "files": 977,
-      "lines": 51868,
-      "bytes": 1810462
+      "lines": 51850,
+      "bytes": 1809809
+    },
+    "nextApiRust": {
+      "files": 28,
+      "lines": 13335,
+      "bytes": 483001
     },
     "appApiRust": {
       "files": 1,
@@ -86,7 +91,8 @@
     "appRendererEdgeRuntimeReferences": 0,
     "applicationPageEdgeEntryReferences": 0,
     "frameworkEdgeRuntimeReferences": 137,
-    "compilerEdgeRuntimeReferences": 29
+    "compilerEdgeRuntimeReferences": 29,
+    "rustEdgeRuntimeReferences": 43
   },
   "packageDependencies": {
     "dependencies": 6,
@@ -94,41 +100,41 @@
     "peerDependencies": 6
   },
   "tests": {
-    "totalFiles": 1851,
-    "e2eFiles": 1103,
+    "totalFiles": 1849,
+    "e2eFiles": 1101,
     "developmentFiles": 290,
     "productionFiles": 348,
     "unitFiles": 108
   },
   "builtArtifacts": {
-    "conditions": "Warm core release build; local macOS arm64; watcher stopped",
+    "conditions": "Full bootstrap build; local macOS arm64; watcher stopped",
     "nextDistBytes": 179011481,
     "nextDistJavaScriptBytes": 75958080
   },
-  "validationTimingConditions": "Warm local macOS arm64; successful validation path; three parallel deletion agents; Node Proxy browser fixture installed from isolated package tarballs; no native or full bootstrap rebuild required",
+  "validationTimingConditions": "Warm local macOS arm64; successful validation path; three parallel deletion agents; full bootstrap and native rebuild; Node Proxy browser fixture installed from isolated package tarballs",
   "validationTimingsMs": {
-    "types": 15450,
+    "types": 15220,
     "directTests": null,
-    "focusedTests": 1960,
+    "focusedTests": 1870,
     "testSelectionOverhead": null,
     "httpTests": null,
     "httpTestBody": null,
     "browserStartup": null,
-    "browserTestBody": 22211,
-    "browserTests": 23360,
+    "browserTestBody": 14780,
+    "browserTests": 15930,
     "edgeDceBuild": null,
-    "nativeBuild": null,
-    "nextBuild": 25850,
-    "buildAll": null,
-    "total": 66620
+    "nativeBuild": 40320,
+    "nextBuild": 32120,
+    "buildAll": 57990,
+    "total": 91010
   },
   "runtimePerformance": {
     "conditions": "Warm local production Turbopack Node Proxy fixture; single observations, not benchmark claims",
     "devStartupMs": null,
-    "productionStartupMs": 102,
+    "productionStartupMs": 87,
     "routeHandlerRequestMs": null,
     "routeHandlerRevalidationMs": null,
-    "proxyNavigationMs": 759,
+    "proxyNavigationMs": 482,
     "edgeMiddlewareStartupMs": null,
     "edgeImageResponseMs": null,
     "edgeImageResponseBytes": null,

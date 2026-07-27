@@ -113,8 +113,15 @@
   branches are absent. webpack no longer has an Edge compiler entry pipeline:
   the App Page, App Route, Pages SSR, Pages API, middleware, instrumentation,
   asset, WebAssembly, and development Edge loaders and templates are gone.
-  `proxy.ts` remains a core API and follows the Node server entry path; its
-  Turbopack entry is the next Node-adapter seam.
+  `proxy.ts` remains a core API and follows one Node server entry path in both
+  webpack and Turbopack. Turbopack discovers only `proxy.*` or `src/proxy.*`
+  and unconditionally emits a Node chunk, NFT trace, and Node endpoint output.
+  Its Edge wrapper, chunk group, asset bindings, runtime selection, regions,
+  and Edge manifest entry are absent. Proxy matcher delivery continues through
+  the Node functions-config fallback. The shared Proxy executor still carries
+  historical Edge adapter structure internally; it is retained until its
+  request-store, cookies, rewrites, RSC headers, and `waitUntil` semantics move
+  together behind the Node adapter boundary.
   `fork-metrics.json` is the current scorecard, including static complexity,
   validation cost, and relevant runtime performance guardrails.
 - **Constraints:** Backward compatibility is out of scope. Do not add migration
@@ -128,22 +135,57 @@
   as the application compiler, Node.js as the only execution runtime,
   `proxy.ts` as the Node-only pre-route hook, and explicit platform adapter
   boundaries.
-- **Next action:** Collapse the Turbopack Proxy entry and middleware endpoint
-  to one Node-only implementation, then delete the Edge sandbox and compiled
-  runtime substrate. Continue through Turbopack Edge transitions and manifests
-  until the Edge runtime metrics reach zero.
+- **Next action:** Extract a Node-only Proxy executor from
+  `server/web/adapter.ts`, preserving request stores, cookies, rewrites, RSC
+  headers, and `waitUntil` across both consumers. Verify that dense contract,
+  then delete the Edge sandbox and compiled runtime substrate. Continue through
+  Turbopack Edge transitions and manifests until the Edge runtime metrics reach
+  zero.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
   performance metrics; each slice is committed; the worktree is clean; and no
   required follow-up is implicit.
 - **Last verified:** 2026-07-27 on `feedthejim/simplify-next-rendering`.
-  webpack has no Edge entry loader or template. Core types, the 56-test fast
-  contract, and the core release build passed. A production Turbopack fixture
-  verified that `proxy.ts` still runs in Node.js and redirects an App Router
-  request.
+  Turbopack Proxy discovery and output are Node-only. Rust checks, core types,
+  the 56-test fast contract, the full bootstrap build, and the production
+  Turbopack Proxy fixture passed. The fixture verified request-store cookies
+  and redirect behavior together.
 
 ## History
+
+### 2026-07-27: One Node-only Turbopack Proxy endpoint
+
+Collapsed Turbopack's Proxy discovery and endpoint graph to one Node.js
+implementation. Only `proxy.*` and `src/proxy.*` are discovered. The endpoint
+always produces the Node chunk, NFT trace, and Node output shape; Edge wrapping,
+chunking, asset and WebAssembly bindings, regions, environment packaging,
+runtime parsing, and Edge manifest entries are gone. The Node functions-config
+fallback remains the source of production Proxy matchers.
+
+Deleted the Edge-runtime configuration suite and the legacy simultaneous
+`middleware.ts` plus `proxy.ts` compatibility suite. The retained production
+fixture now proves that `proxy.ts` can read request-scoped cookies and redirect.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** Combined Rust Edge runtime markers fell from 47 to 43.
+  Proxy discovery modes fell from two to one, and Proxy runtime/compatibility
+  E2E modes fell from three to one. The new combined Rust metric includes
+  `next-api`, closing a previous scorecard blind spot.
+- **Leanness:** Rust compiler and endpoint source fell by 288 lines and 11,498
+  bytes with no file additions. The test inventory fell by two E2E files, and
+  122 lines of obsolete fixtures and tests were deleted. Package dependencies
+  and the comparable built `next` distribution were unchanged.
+- **Runtime performance:** The retained production Node Proxy fixture was ready
+  in 87 milliseconds and completed its cookie-backed redirect navigation in
+  482 milliseconds. These are warm-local guardrails, not benchmark claims.
+- **Iteration efficiency:** Three parallel agents handled the Rust endpoint,
+  test-matrix cleanup, and executor-boundary investigation. Types took 15.22
+  seconds, the 56-test fast contract took 1.87 seconds, the focused production
+  browser test took 15.93 seconds with a 14.78-second Jest body, and the full
+  bootstrap build took 57.99 seconds. The successful validation path totaled
+  91.01 seconds.
 
 ### 2026-07-27: No webpack Edge compiler
 

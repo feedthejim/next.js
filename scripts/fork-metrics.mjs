@@ -251,6 +251,10 @@ const compilerRustFiles = [
   ...worktreeFiles('crates/next-core'),
   ...worktreeFiles('crates/next-custom-transforms'),
 ].filter((file) => compilerSourceExtensions.has(extname(file)))
+const nextApiRustFiles = worktreeFiles('crates/next-api').filter((file) =>
+  compilerSourceExtensions.has(extname(file))
+)
+const runtimeRustFiles = [...compilerRustFiles, ...nextApiRustFiles]
 const webpackFiles = frameworkSourceFiles.filter(
   (file) =>
     file.includes('/webpack/') || /(^|[/.-])webpack([/.-]|$)/i.test(file)
@@ -288,6 +292,7 @@ const metrics = {
     appRender: summarize(appRenderFiles),
     clientRouter: summarize(clientRouterFiles),
     compilerRust: summarize(compilerRustFiles),
+    nextApiRust: summarize(nextApiRustFiles),
     appApiRust: summarize(appApiRustFiles),
     webpackPathProxy: summarize(webpackFiles),
     pagesRouterPathProxy: summarize(pagesRouterFiles),
@@ -403,6 +408,10 @@ const metrics = {
     ),
     compilerEdgeRuntimeReferences: countMatches(
       compilerRustFiles,
+      /\bNextRuntime::Edge\b|\bnext_edge\b|\bEdgeRuntime\b|\bRuntime::Edge\b/g
+    ),
+    rustEdgeRuntimeReferences: countMatches(
+      runtimeRustFiles,
       /\bNextRuntime::Edge\b|\bnext_edge\b|\bEdgeRuntime\b|\bRuntime::Edge\b/g
     ),
   },

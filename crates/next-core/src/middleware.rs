@@ -17,7 +17,7 @@ use crate::{next_config::NextConfig, util::load_next_js_template};
 #[turbo_tasks::function]
 pub async fn middleware_files(page_extensions: Vc<Vec<RcStr>>) -> Result<Vc<Vec<RcStr>>> {
     let extensions = page_extensions.await?;
-    let files = ["middleware.", "src/middleware.", "proxy.", "src/proxy."]
+    let files = ["proxy.", "src/proxy."]
         .into_iter()
         .flat_map(|f| {
             extensions
@@ -34,16 +34,12 @@ pub async fn get_middleware_module(
     asset_context: Vc<Box<dyn AssetContext>>,
     project_root: FileSystemPath,
     userland_module: ResolvedVc<Box<dyn Module>>,
-    is_proxy: bool,
     next_config: Vc<NextConfig>,
 ) -> Result<Vc<Box<dyn Module>>> {
     const INNER: &str = "INNER_MIDDLEWARE_MODULE";
-
-    let (file_type, function_name, page_path) = if is_proxy {
-        ("Proxy", "proxy", "/proxy")
-    } else {
-        ("Middleware", "middleware", "/middleware")
-    };
+    let file_type = "Proxy";
+    let function_name = "proxy";
+    let page_path = "/proxy";
 
     // Validate that the module has the required exports
     if let Some(ecma_module) =
@@ -138,8 +134,8 @@ pub async fn get_middleware_module(
 
 #[turbo_tasks::value]
 struct MiddlewareMissingExportIssue {
-    file_type: RcStr,     // "Proxy" or "Middleware"
-    function_name: RcStr, // "proxy" or "middleware"
+    file_type: RcStr,
+    function_name: RcStr,
     file_path: FileSystemPath,
 }
 
@@ -167,31 +163,17 @@ impl Issue for MiddlewareMissingExportIssue {
     }
 
     async fn description(&self) -> Result<Option<StyledString>> {
-        let type_description = if self.file_type == "Proxy" {
-            "proxy (previously called middleware)"
-        } else {
-            "middleware"
-        };
-
-        let migration_bullet = if self.file_type == "Proxy" {
-            "- You are migrating from `middleware` to `proxy`, but haven't updated the exported \
-             function.\n"
-        } else {
-            ""
-        };
-
         // Rest of the message goes in description to avoid formatIssue indentation
         let description_text = format!(
-            "This function is what Next.js runs for every request handled by this {}.\n\n\
+            "This function is what Next.js runs for every request handled by this Proxy.\n\n\
              Why this happens:\n\
-             {}\
              - The file exists but doesn't export a function.\n\
              - The export is not a function (e.g., an object or constant).\n\
              - There's a syntax error preventing the export from being recognized.\n\n\
              To fix it:\n\
              - Ensure this file has either a default or \"{}\" function export.\n\n\
-             Learn more: https://nextjs.org/docs/messages/middleware-to-proxy",
-            type_description, migration_bullet, self.function_name
+             Learn more: https://nextjs.org/docs/messages/proxy",
+            self.function_name
         );
 
         Ok(Some(StyledString::Text(description_text.into())))

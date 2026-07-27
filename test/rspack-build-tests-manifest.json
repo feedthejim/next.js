@@ -6131,25 +6131,7 @@
   },
   "test/e2e/app-dir/proxy-runtime-nodejs/proxy-runtime-nodejs.test.ts": {
     "passed": [
-      "proxy-runtime-nodejs should use nodejs runtime for proxy by default"
-    ],
-    "failed": [],
-    "pending": [],
-    "flakey": [],
-    "runtimeError": false
-  },
-  "test/e2e/app-dir/proxy-runtime/proxy-runtime.test.ts": {
-    "passed": [
-      "proxy-runtime should error when proxy file has runtime config export"
-    ],
-    "failed": [],
-    "pending": [],
-    "flakey": [],
-    "runtimeError": false
-  },
-  "test/e2e/app-dir/proxy-with-middleware/proxy-with-middleware.test.ts": {
-    "passed": [
-      "proxy-with-middleware should error when both middleware and proxy files are detected"
+      "proxy-runtime-node should apply a Node proxy redirect with request storage"
     ],
     "failed": [],
     "pending": [],
