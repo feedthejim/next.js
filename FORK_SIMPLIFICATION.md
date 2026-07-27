@@ -14,8 +14,9 @@
   prefetch setup, render-option types, and the normal static-generation
   pipeline now use one Cache Components, Partial Prefetching, and cached
   navigation model. Runtime-prefetch resume-cache installation is a directly
-  testable renderer seam.
-  `fork-metrics.json` is the current scorecard.
+  testable renderer seam. `pnpm fork-test` and `pnpm fork-test-browser` define
+  the early App Router contract allowlist. `fork-metrics.json` is the current
+  scorecard.
 - **Constraints:** Backward compatibility is out of scope. Do not add migration
   layers or special removed-feature errors. Preserve only behavior in the fork
   contract. Keep each independently verified slice committed before starting
@@ -24,20 +25,33 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Establish the first small App Router validation allowlist,
-  convert a representative prerender assertion below the browser boundary, and
-  then delete the renderer's legacy error-recovery prerender branch.
+- **Next action:** Delete the remaining non-Cache-Components dynamic RSC and
+  HTML rendering branches, then collapse the client to one segment-cache
+  prefetch protocol.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
   performance metrics; each slice is committed; the worktree is clean; and no
   required follow-up is implicit.
 - **Last verified:** 2026-07-27 on `feedthejim/simplify-next-rendering`.
-  `pnpm --filter=next types`, 26 focused renderer and router unit tests,
-  `pnpm --filter=next build`, and all 12 production Turbopack PPR partial
-  hydration assertions passed.
+  `pnpm --filter=next types`, the 16-test fast App Router allowlist,
+  `pnpm --filter=next build`, 16 production Turbopack HTTP fallback recovery
+  assertions, and five production resume-cache assertions passed.
 
 ## History
+
+### 2026-07-27: One prerender error-recovery path and test allowlist
+
+Deleted the unreachable `prerender-legacy` App Router error-recovery pipeline
+and made Cache Components recovery unconditional. Added explicit fast and
+browser App Router allowlist commands covering rendering-state algorithms,
+PPR hydration, resume caches, and HTTP fallback recovery. Authored framework
+and App Router renderer source each fell by 131 lines and 4,574 bytes, while
+Cache Components references fell by three. The fast allowlist passed 16 tests
+in 1.48 seconds wall time. The targeted production Turbopack recovery journey
+passed 16 tests and 14 snapshots, while the resume-cache journey passed five
+tests. Together they took 57.95 seconds including isolated-package preparation.
+Type checking and the core package build passed.
 
 ### 2026-07-27: Direct runtime-prefetch cache seam
 

@@ -134,6 +134,12 @@ many fast algorithm and state-machine tests
   + occasional real-platform conformance tests
 ```
 
+Use `pnpm fork-test` for the fast App Router contract allowlist. Use
+`pnpm fork-test-browser -- <ppr|resume-cache|error-recovery>` for the relevant
+retained production-browser journey after stopping the watch build. Running
+`pnpm fork-test-browser` without a selection runs the complete retained browser
+allowlist.
+
 Before changing the test strategy, measure build, server startup, browser
 startup, and test-body time separately. Optimize the measured dominant cost.
 
@@ -250,7 +256,7 @@ phases merely to reduce the number of commits.
       behavior to its cheapest trustworthy test.
 - [ ] Measure representative build, server-start, browser-start, and test-body
       costs and set local, pull-request, and main-branch budgets.
-- [ ] Identify a small upstream App Router test allowlist that protects the
+- [x] Identify a small upstream App Router test allowlist that protects the
       supported contract during early deletions.
 - [ ] Design the dense conformance application and determine which scenarios
       can invoke compiled handlers without a browser.

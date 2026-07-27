@@ -59,6 +59,8 @@
     "testheadless": "scripts/run-jest.sh --headless --",
     "genstats": "cross-env LOCAL_STATS=true node .github/actions/next-stats-action/src/index.js",
     "fork-metrics": "node scripts/fork-metrics.mjs",
+    "fork-test": "node scripts/fork-tests.mjs fast",
+    "fork-test-browser": "node scripts/fork-tests.mjs browser",
     "git-reset": "git reset --hard HEAD",
     "git-clean": "git clean -d -x -e node_modules -e packages -f",
     "typescript": "tsc --noEmit",
