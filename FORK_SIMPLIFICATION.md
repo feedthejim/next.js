@@ -49,8 +49,8 @@ PPR hydration, resume caches, and HTTP fallback recovery. Authored framework
 and App Router renderer source each fell by 131 lines and 4,574 bytes, while
 Cache Components references fell by three. The fast allowlist passed 16 tests
 in 1.48 seconds wall time. The targeted production Turbopack recovery journey
-passed 16 tests and 14 snapshots, while the resume-cache journey passed five
-tests. Together they took 57.95 seconds including isolated-package preparation.
+passed 16 tests and 14 snapshots in 39.65 seconds, while the resume-cache
+journey passed five tests in 18.30 seconds. Together they took 57.95 seconds.
 Type checking and the core package build passed.
 
 ### 2026-07-27: Direct runtime-prefetch cache seam
