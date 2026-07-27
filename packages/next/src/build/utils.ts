@@ -2,8 +2,6 @@ import type {
   NextConfigComplete,
   NextConfigRuntime,
 } from '../server/config-shared'
-import type { ExperimentalPPRConfig } from '../server/lib/experimental/ppr'
-import { checkIsRoutePPREnabled } from '../server/lib/experimental/ppr'
 import type { AssetBinding } from './webpack/loaders/get-module-build-info'
 import type { ServerRuntime } from '../types'
 import type { BuildManifest } from '../server/get-page-files'
@@ -705,7 +703,6 @@ export async function isPageStatic({
   cacheHandler,
   cacheHandlers,
   cacheLifeProfiles,
-  pprConfig,
   buildId,
   deploymentId,
   clientAssetToken,
@@ -733,7 +730,6 @@ export async function isPageStatic({
   cacheHandlers?: Record<string, string | undefined>
   cacheLifeProfiles: import('../server/config-shared').ResolvedCacheLifeProfiles
   nextConfigOutput: 'standalone' | 'export' | undefined
-  pprConfig: ExperimentalPPRConfig | undefined
   buildId: string
   deploymentId: string
   clientAssetToken: string
@@ -861,19 +857,7 @@ export async function isPageStatic({
 
         rootParamKeys = collectRootParamKeys(routeModule)
 
-        // A page supports partial prerendering if it is an app page and either
-        // the whole app has PPR enabled or this page has PPR enabled when we're
-        // in incremental mode.
-        isRoutePPREnabled =
-          routeModule.definition.kind === RouteKind.APP_PAGE &&
-          checkIsRoutePPREnabled(pprConfig)
-
-        // If force dynamic was set and we don't have PPR enabled, then set the
-        // revalidate to 0.
-        // TODO: (PPR) remove this once PPR is enabled by default
-        if (appConfig.dynamic === 'force-dynamic' && !isRoutePPREnabled) {
-          appConfig.revalidate = 0
-        }
+        isRoutePPREnabled = routeModule.definition.kind === RouteKind.APP_PAGE
 
         const route = parseNormalizedAppRoute(page)
 

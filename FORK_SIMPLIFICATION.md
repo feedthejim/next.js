@@ -15,11 +15,13 @@
   pipeline now use one Cache Components, Partial Prefetching, and cached
   navigation model. Dynamic RSC requests now use only the staged development
   and production renderers, validation has one Partial Prefetching mode, and
-  application-level PPR is unconditional. Runtime-prefetch resume-cache
-  installation is a directly testable renderer seam. `pnpm fork-test` and
-  `pnpm fork-test-browser` define the early App Router contract allowlist.
-  `fork-metrics.json` is the current scorecard, including static complexity,
-  validation cost, and relevant runtime performance guardrails.
+  application-level PPR is unconditional. App Page route kind now directly
+  selects PPR without application or per-route configuration helpers.
+  Runtime-prefetch resume-cache installation is a directly testable renderer
+  seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
+  Router contract allowlist. `fork-metrics.json` is the current scorecard,
+  including static complexity, validation cost, and relevant runtime
+  performance guardrails.
 - **Constraints:** Backward compatibility is out of scope. Do not add migration
   layers or special removed-feature errors. Preserve only behavior in the fork
   contract. Keep each independently verified slice committed before starting
@@ -29,9 +31,9 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Delete route-level incremental and disabled PPR
-  configuration, then collapse the client to one segment-cache prefetch
-  protocol.
+- **Next action:** Remove remaining App Page `isRoutePPREnabled` booleans from
+  component-tree, runtime-template, response-cache, and build protocols, then
+  collapse the client to one segment-cache prefetch protocol.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -43,6 +45,21 @@
   assertions passed.
 
 ## History
+
+### 2026-07-27: App Page route kind selects PPR
+
+Deleted the final PPR configuration checker and its build and development
+worker plumbing. App Pages now directly support PPR, while Route Handlers
+remain outside that rendering path. Authored framework source fell by one file,
+58 lines, and 2,231 bytes; the route-PPR reference proxy fell by one. The
+distribution observation is non-comparable because watch-output churn removed
+stale non-JavaScript artifacts; JavaScript was directionally 3,949 bytes
+smaller. Types passed in 21.09 seconds, two focused static-parameter fallback
+assertions plus the 16-test fast contract passed in 7.10 seconds, the core build
+passed in 26.52 seconds, and all 12 production PPR partial-hydration assertions
+passed in 24.44 seconds. The production server reported ready in 77
+milliseconds and the first browser load took 58 milliseconds. Single-run
+timing differences remain directional.
 
 ### 2026-07-27: Application PPR is unconditional
 

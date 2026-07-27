@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
-  "label": "application-ppr-always-on",
-  "capturedAt": "2026-07-27T18:01:53.563Z",
+  "label": "route-ppr-always-on",
+  "capturedAt": "2026-07-27T18:06:14.010Z",
   "git": {
-    "baseHead": "73b4a788d4"
+    "baseHead": "be166fa0da"
   },
   "source": {
     "frameworkTracked": {
-      "files": 2459,
-      "lines": 1096238,
-      "bytes": 51492530
+      "files": 2458,
+      "lines": 1096180,
+      "bytes": 51490299
     },
     "frameworkAuthored": {
-      "files": 1754,
-      "lines": 301907,
-      "bytes": 9750081
+      "files": 1753,
+      "lines": 301849,
+      "bytes": 9747850
     },
     "vendoredCompiled": {
       "files": 705,
@@ -48,7 +48,7 @@
   },
   "legacyModeReferences": {
     "cacheComponents": 169,
-    "routePPR": 118,
+    "routePPR": 117,
     "appPPR": 15,
     "cacheComponentsEnv": 29,
     "pprEnv": 2,
@@ -67,25 +67,25 @@
     "unitFiles": 108
   },
   "builtArtifacts": {
-    "conditions": "warm-local-after-core-build",
-    "nextDistBytes": 181858228,
-    "nextDistJavaScriptBytes": 76603968
+    "conditions": "not-comparable-after-watch-output-churn",
+    "nextDistBytes": 181846863,
+    "nextDistJavaScriptBytes": 76600019
   },
   "validationTimingConditions": "warm-local-watcher-stopped",
   "validationTimingsMs": {
-    "types": 14420,
-    "focusedTests": 1740,
-    "browserStartup": 199,
+    "types": 21090,
+    "focusedTests": 7100,
+    "browserStartup": 58,
     "browserTestBody": null,
-    "browserTests": 27680,
-    "nextBuild": 23070,
+    "browserTests": 24440,
+    "nextBuild": 26520,
     "buildAll": null,
-    "total": null
+    "total": 79150
   },
   "runtimePerformance": {
     "conditions": "production-turbopack-ppr-fixture-warm-local",
     "devStartupMs": null,
-    "productionStartupMs": 79,
+    "productionStartupMs": 77,
     "pprShellFirstByteMs": null,
     "pprCompleteMs": null,
     "partialNavigationMs": null,
