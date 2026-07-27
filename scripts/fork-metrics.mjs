@@ -393,6 +393,18 @@ const metrics = {
       appRendererRuntimeFiles,
       /\bNEXT_RUNTIME\b[^;\n]*\bedge\b|\bisEdgeRuntime\b|\bedge(?:Rsc|SSR)ModuleMapping\b|\b__NEXT_EDGE_PROJECT_DIR\b|\bisWebNextRequest\b/g
     ),
+    applicationPageEdgeEntryReferences: countMatches(
+      frameworkSourceFiles,
+      /\bnext-edge-(?:app-route|ssr)-loader\b|\bedge-(?:app-route|ssr(?:-app)?)\b|\bEdgeRouteModuleWrapper\b/g
+    ),
+    frameworkEdgeRuntimeReferences: countMatches(
+      frameworkSourceFiles,
+      /\bCOMPILER_NAMES\.edgeServer\b|\bisEdgeRuntime\b|\bNEXT_RUNTIME\b[^;\n]*\bedge\b|\bEdgeRuntime\b|\bSERVER_RUNTIME\.(?:edge|experimentalEdge)\b|\b__NEXT_EDGE_RUNTIME_PROVIDER\b/g
+    ),
+    compilerEdgeRuntimeReferences: countMatches(
+      compilerRustFiles,
+      /\bNextRuntime::Edge\b|\bnext_edge\b|\bEdgeRuntime\b|\bRuntime::Edge\b/g
+    ),
   },
   packageDependencies: {
     dependencies: Object.keys(nextPackage.dependencies ?? {}).length,
@@ -442,6 +454,7 @@ const metrics = {
     productionStartupMs: optionalNumber('production-startup-ms'),
     routeHandlerRequestMs: optionalNumber('route-handler-request-ms'),
     routeHandlerRevalidationMs: optionalNumber('route-handler-revalidation-ms'),
+    proxyNavigationMs: optionalNumber('proxy-navigation-ms'),
     edgeMiddlewareStartupMs: optionalNumber('edge-middleware-startup-ms'),
     edgeImageResponseMs: optionalNumber('edge-image-response-ms'),
     edgeImageResponseBytes: optionalNumber('edge-image-response-bytes'),

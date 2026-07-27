@@ -63,27 +63,10 @@ export function forEachEntryModule(
 
     const request = entryDependency.request
 
-    if (
-      !request.startsWith('next-edge-ssr-loader?') &&
-      !request.startsWith('next-edge-app-route-loader?') &&
-      !request.startsWith(`${getAppLoader()}?`)
-    )
-      continue
+    if (!request.startsWith(`${getAppLoader()}?`)) continue
 
     let entryModule: NormalModule =
       compilation.moduleGraph.getResolvedModule(entryDependency)
-
-    if (
-      request.startsWith('next-edge-ssr-loader?') ||
-      request.startsWith('next-edge-app-route-loader?')
-    ) {
-      entryModule.dependencies.forEach((dependency) => {
-        const modRequest: string | undefined = (dependency as any).request
-        if (modRequest?.includes(getAppLoader())) {
-          entryModule = compilation.moduleGraph.getResolvedModule(dependency)
-        }
-      })
-    }
 
     callback({ name, entryModule })
   }

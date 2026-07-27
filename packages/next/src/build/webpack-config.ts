@@ -641,19 +641,6 @@ export default async function getBaseWebpackConfig(
     babelLoader,
   ].filter(Boolean)
 
-  const middlewareLayerLoaders = [
-    'next-flight-loader',
-    // When using Babel, we will have to use SWC to do the optimization
-    // for middleware to tree shake the unused default optimized imports like "next/server".
-    // This will cause some performance overhead but
-    // acceptable as Babel will not be recommended.
-    getSwcLoader({
-      serverComponents: true,
-      bundleLayer: WEBPACK_LAYERS.middleware,
-    }),
-    babelLoader,
-  ].filter(Boolean)
-
   const reactRefreshLoaders = dev && isClient ? [getReactRefreshLoader()] : []
 
   // client components layers: SSR or browser
@@ -1391,12 +1378,6 @@ export default async function getBaseWebpackConfig(
         'next-flight-client-module-loader',
         'next-flight-server-reference-proxy-loader',
         'empty-loader',
-        'next-middleware-loader',
-        'next-edge-function-loader',
-        'next-edge-app-route-loader',
-        'next-edge-ssr-loader',
-        'next-middleware-asset-loader',
-        'next-middleware-wasm-loader',
         'next-app-loader',
         'next-route-loader',
         'next-font-loader',
@@ -1711,28 +1692,6 @@ export default async function getBaseWebpackConfig(
               // We won't bundle `new URL()` cases in Node.js bundler layer.
               parser: {
                 url: true,
-              },
-            },
-            {
-              ...codeCondition,
-              issuerLayer: WEBPACK_LAYERS.apiEdge,
-              use: apiRoutesLayerLoaders,
-              // In Edge runtime, we leave the url handling by default.
-              // The new URL assets will be converted into edge assets through assets loader.
-            },
-            {
-              test: codeCondition.test,
-              issuerLayer: WEBPACK_LAYERS.middleware,
-              use: middlewareLayerLoaders,
-              resolve: {
-                mainFields: getMainField(compilerType, true),
-                conditionNames: reactServerConditionNames,
-                alias: createVendoredReactAliases(bundledReactChannel, {
-                  reactProductionProfiling,
-                  layer: WEBPACK_LAYERS.middleware,
-                  isBrowser: isClient,
-                  isEdgeServer,
-                }),
               },
             },
             {
@@ -2270,25 +2229,6 @@ export default async function getBaseWebpackConfig(
   )
 
   const webpack5Config = webpackConfig as webpack.Configuration
-
-  if (isEdgeServer) {
-    webpack5Config.module?.rules?.unshift({
-      test: /\.wasm$/,
-      loader: 'next-middleware-wasm-loader',
-      type: 'javascript/auto',
-      resourceQuery: /module/i,
-    })
-    webpack5Config.module?.rules?.unshift({
-      dependency: 'url',
-      loader: 'next-middleware-asset-loader',
-      type: 'javascript/auto',
-      layer: WEBPACK_LAYERS.edgeAsset,
-    })
-    webpack5Config.module?.rules?.unshift({
-      issuerLayer: WEBPACK_LAYERS.edgeAsset,
-      type: 'asset/source',
-    })
-  }
 
   webpack5Config.experiments = {
     layers: true,

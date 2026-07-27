@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
-  "label": "Node-only App renderer",
-  "capturedAt": "2026-07-27T22:35:51.469Z",
+  "label": "webpack Edge entry pipeline removed",
+  "capturedAt": "2026-07-27T22:49:04.196Z",
   "git": {
-    "baseHead": "f16380dcf0"
+    "baseHead": "2c5f5ade68"
   },
   "source": {
     "frameworkTracked": {
-      "files": 2456,
-      "lines": 1092388,
-      "bytes": 51337838
+      "files": 2444,
+      "lines": 1090206,
+      "bytes": 51268269
     },
     "frameworkAuthored": {
-      "files": 1751,
-      "lines": 298057,
-      "bytes": 9595389
+      "files": 1739,
+      "lines": 295875,
+      "bytes": 9525820
     },
     "vendoredCompiled": {
       "files": 705,
@@ -42,9 +42,9 @@
       "bytes": 74098
     },
     "webpackPathProxy": {
-      "files": 267,
-      "lines": 138127,
-      "bytes": 7395409
+      "files": 261,
+      "lines": 137411,
+      "bytes": 7371902
     },
     "pagesRouterPathProxy": {
       "files": 30,
@@ -83,7 +83,10 @@
     "appRevalidateModeReferences": 0,
     "appRevalidateFixtureExports": 0,
     "appRevalidateTestModeReferences": 387,
-    "appRendererEdgeRuntimeReferences": 0
+    "appRendererEdgeRuntimeReferences": 0,
+    "applicationPageEdgeEntryReferences": 0,
+    "frameworkEdgeRuntimeReferences": 137,
+    "compilerEdgeRuntimeReferences": 29
   },
   "packageDependencies": {
     "dependencies": 6,
@@ -99,38 +102,39 @@
   },
   "builtArtifacts": {
     "conditions": "Warm core release build; local macOS arm64; watcher stopped",
-    "nextDistBytes": 179408798,
-    "nextDistJavaScriptBytes": 76105639
+    "nextDistBytes": 179011481,
+    "nextDistJavaScriptBytes": 75958080
   },
-  "validationTimingConditions": "Warm local macOS arm64; successful validation path; three parallel mechanical removal agents; browser fixtures installed from isolated package tarballs; no native or full bootstrap rebuild required",
+  "validationTimingConditions": "Warm local macOS arm64; successful validation path; three parallel deletion agents; Node Proxy browser fixture installed from isolated package tarballs; no native or full bootstrap rebuild required",
   "validationTimingsMs": {
-    "types": 13730,
-    "directTests": 1510,
-    "focusedTests": 1770,
+    "types": 15450,
+    "directTests": null,
+    "focusedTests": 1960,
     "testSelectionOverhead": null,
     "httpTests": null,
     "httpTestBody": null,
     "browserStartup": null,
-    "browserTestBody": 55439,
-    "browserTests": 62580,
+    "browserTestBody": 22211,
+    "browserTests": 23360,
     "edgeDceBuild": null,
     "nativeBuild": null,
-    "nextBuild": 31650,
+    "nextBuild": 25850,
     "buildAll": null,
-    "total": 111240
+    "total": 66620
   },
   "runtimePerformance": {
-    "conditions": "Warm local production Turbopack PPR, resume-cache, and Partial Prefetching fixtures; single observations, not benchmark claims",
+    "conditions": "Warm local production Turbopack Node Proxy fixture; single observations, not benchmark claims",
     "devStartupMs": null,
-    "productionStartupMs": 94,
+    "productionStartupMs": 102,
     "routeHandlerRequestMs": null,
     "routeHandlerRevalidationMs": null,
+    "proxyNavigationMs": 759,
     "edgeMiddlewareStartupMs": null,
     "edgeImageResponseMs": null,
     "edgeImageResponseBytes": null,
     "pprShellFirstByteMs": null,
     "pprCompleteMs": null,
-    "partialNavigationMs": 611,
+    "partialNavigationMs": null,
     "partialNavigationResponseBytes": null,
     "fastRefreshMaxMs": null,
     "fastRefreshSamples": null,

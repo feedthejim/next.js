@@ -26,15 +26,7 @@ const TEMPLATES_ESM_FOLDER = path.normalize(
  * @returns the loaded file with the replacements
  */
 export async function loadEntrypoint(
-  entrypoint:
-    | 'app-page'
-    | 'app-route'
-    | 'edge-app-route'
-    | 'edge-ssr'
-    | 'edge-ssr-app'
-    | 'middleware'
-    | 'pages'
-    | 'pages-api',
+  entrypoint: 'app-page' | 'app-route' | 'pages' | 'pages-api',
   replacements: Record<`VAR_${string}`, string>,
   injections?: Record<string, string>,
   imports?: Record<string, string | null>

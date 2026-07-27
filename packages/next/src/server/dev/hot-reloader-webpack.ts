@@ -20,7 +20,6 @@ import {
   createEntrypoints,
   finalizeEntrypoint,
   getClientEntry,
-  getEdgeServerEntry,
   getAppEntry,
   runDependingOnPageType,
   getInstrumentationEntry,
@@ -774,12 +773,6 @@ export default class HotReloaderWebpack implements NextJsHotReloaderInterface {
               entrypoints: entrypoints.server,
               ...info,
             }),
-            getBaseWebpackConfig(this.dir, {
-              ...commonWebpackOptions,
-              compilerType: COMPILER_NAMES.edgeServer,
-              entrypoints: entrypoints.edgeServer,
-              ...info,
-            }),
           ])
         })
     })
@@ -904,8 +897,6 @@ export default class HotReloaderWebpack implements NextJsHotReloaderInterface {
         const entrypoints = await defaultEntry(...args)
         const isClientCompilation = config.name === COMPILER_NAMES.client
         const isNodeServerCompilation = config.name === COMPILER_NAMES.server
-        const isEdgeServerCompilation =
-          config.name === COMPILER_NAMES.edgeServer
 
         await Promise.all(
           Object.keys(entries).map(async (entryKey) => {
@@ -918,11 +909,7 @@ export default class HotReloaderWebpack implements NextJsHotReloaderInterface {
               )
             const [, key /* pageType */, , page] = result! // this match should always happen
 
-            if (key === COMPILER_NAMES.client && !isClientCompilation) return
-            if (key === COMPILER_NAMES.server && !isNodeServerCompilation)
-              return
-            if (key === COMPILER_NAMES.edgeServer && !isEdgeServerCompilation)
-              return
+            if (key !== config.name) return
 
             const isEntry = entryData.type === EntryTypes.ENTRY
             const isChildEntry = entryData.type === EntryTypes.CHILD_ENTRY
@@ -998,78 +985,6 @@ export default class HotReloaderWebpack implements NextJsHotReloaderInterface {
               page,
               pageRuntime,
               pageType,
-              onEdgeServer: () => {
-                // TODO-APP: verify if child entry should support.
-                if (!isEdgeServerCompilation || !isEntry) return
-                entries[entryKey].status = BUILDING
-
-                if (isInstrumentation) {
-                  const normalizedBundlePath = bundlePath.replace('src/', '')
-                  entrypoints[normalizedBundlePath] = finalizeEntrypoint({
-                    compilerType: COMPILER_NAMES.edgeServer,
-                    name: normalizedBundlePath,
-                    value: getInstrumentationEntry({
-                      absolutePagePath: entryData.absolutePagePath,
-                      isEdgeServer: true,
-                      isDev: true,
-                    }),
-                    isServerComponent: true,
-                    hasAppDir,
-                  })
-                  return
-                }
-                const appDirLoader = isAppPath
-                  ? getAppEntry({
-                      name: bundlePath,
-                      page,
-                      appPaths: entryData.appPaths,
-                      allNormalizedAppPaths: null, // Not available in dev mode
-                      pagePath: posix.join(
-                        APP_DIR_ALIAS,
-                        relative(
-                          this.appDir!,
-                          entryData.absolutePagePath
-                        ).replace(/\\/g, '/')
-                      ),
-                      appDir: this.appDir!,
-                      pageExtensions: this.config.pageExtensions,
-                      rootDir: this.dir,
-                      isDev: true,
-                      tsconfigPath: this.config.typescript.tsconfigPath,
-                      basePath: this.config.basePath,
-                      assetPrefix: this.config.assetPrefix,
-                      nextConfigOutput: this.config.output,
-                      preferredRegion: staticInfo?.preferredRegion,
-                      middlewareConfig: Buffer.from(
-                        JSON.stringify(staticInfo?.middleware || {})
-                      ).toString('base64'),
-                      isGlobalNotFoundEnabled: this.config.experimental
-                        .globalNotFound
-                        ? true
-                        : undefined,
-                    }).import
-                  : undefined
-
-                entrypoints[bundlePath] = finalizeEntrypoint({
-                  compilerType: COMPILER_NAMES.edgeServer,
-                  name: bundlePath,
-                  value: getEdgeServerEntry({
-                    absolutePagePath: entryData.absolutePagePath,
-                    rootDir: this.dir,
-                    buildId: this.buildId,
-                    bundlePath,
-                    config: this.config,
-                    isDev: true,
-                    page,
-                    pages: this.pagesMapping,
-                    isServerComponent,
-                    appDirLoader,
-                    pagesType: isAppPath ? PAGE_TYPES.APP : PAGE_TYPES.PAGES,
-                    preferredRegion: staticInfo?.preferredRegion,
-                  }),
-                  hasAppDir,
-                })
-              },
               onClient: () => {
                 if (!isClientCompilation) return
                 if (isChildEntry) {
@@ -1123,19 +1038,7 @@ export default class HotReloaderWebpack implements NextJsHotReloaderInterface {
                     hasAppDir,
                   })
                 } else if (isMiddlewareFile(page)) {
-                  value = getEdgeServerEntry({
-                    absolutePagePath: entryData.absolutePagePath,
-                    rootDir: this.dir,
-                    buildId: this.buildId,
-                    bundlePath,
-                    config: this.config,
-                    isDev: true,
-                    page,
-                    pages: this.pagesMapping,
-                    isServerComponent,
-                    pagesType: PAGE_TYPES.PAGES,
-                    preferredRegion: staticInfo?.preferredRegion,
-                  })
+                  value = relativeRequest
                 } else if (isAppPath) {
                   // This path normalization is critical for webpack to resolve the next internals as entry.
                   const pagePath = entryData.absolutePagePath.startsWith(

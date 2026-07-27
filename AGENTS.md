@@ -30,9 +30,12 @@ configuration:
 - Turbopack is the only application compiler and bundler.
 - Server Components, Server Actions, Route Handlers, metadata, streaming,
   `use cache`, cache tags, and cache lifetimes are core features.
-- A local Node.js adapter works by default.
+- `proxy.ts` is the core pre-route request hook and runs only in Node.js.
+- Node.js is the only framework execution runtime. The local Node.js adapter
+  works by default.
 - Other deployment platforms integrate through explicit build and runtime
-  adapter contracts.
+  adapter contracts around the Node.js runtime. Adapters must not introduce a
+  second framework runtime.
 
 Backward compatibility with removed Next.js features is not a goal. Do not add
 deprecation periods, compatibility flags, codemods, bespoke unsupported-feature
@@ -54,7 +57,9 @@ does not include:
 - legacy full-dynamic and loading-boundary prefetch models
 - route segment configuration from the previous caching model, including
   `dynamic`, `fetchCache`, and route-level `revalidate`
-- application-selected `runtime = 'edge'`
+- the Edge Runtime, including Edge execution of application entries,
+  middleware, Proxy, API routes, and instrumentation, plus its sandbox,
+  compiler transitions, and deployment output
 - custom servers, minimal mode, standalone output, or separate serverless
   execution modes
 - a special `next export` pipeline
@@ -90,6 +95,11 @@ protect an in-contract behavior, then delete or replace it.
 - Platform adapters declare capabilities such as streaming, atomic writes, tag
   invalidation, background work, and distributed coordination. Missing
   required capabilities should fail at the platform boundary.
+- Portability comes from the typed adapter contract, not from maintaining
+  parallel Node.js, Web Runtime, Worker, Deno, or Bun framework
+  implementations.
+- Proxy discovery is framework-owned, while Proxy execution and lifecycle
+  effects use the same Node.js adapter capabilities as application requests.
 
 ### Testing and CI Philosophy
 
@@ -273,11 +283,6 @@ observe the same property.
 
 ### Open Questions
 
-- Should the first production runtime be Node.js-only behind portable
-  capabilities, or must the initial runtime also execute in Workers, Deno, and
-  Bun?
-- Does Proxy remain a core application API, become an adapter-owned pre-route
-  hook, or get removed?
 - Are image optimization and `next/font` core features or optional packages?
 - Which instrumentation surface remains after framework telemetry is removed?
 - What exact opt-in policy should runtime-data prefetching use beyond the
@@ -286,7 +291,8 @@ observe the same property.
   smaller diagnostics surface?
 - How frequently should the fork synchronize React, Turbopack, and App Router
   behavior from upstream canary?
-- Which deployment adapter should be the first non-Node conformance target?
+- Which deployment adapter should be the first non-local Node.js conformance
+  target?
 - Should static output be a standard deployment adapter or be omitted
   initially?
 - What package and CLI names should the fork eventually publish under?
@@ -341,6 +347,8 @@ phases merely to reduce the number of commits.
 - [ ] Define portable runtime request, response, lifecycle, asset, cache, and
       observability capabilities.
 - [ ] Implement the local Node.js adapter as the default platform.
+- [ ] Route `proxy.ts` through the Node.js adapter without an Edge compiler or
+      sandbox.
 - [ ] Replace post-build `.next` interpretation with direct deployment-graph
       consumption.
 - [ ] Define an atomic versioned PPR artifact and typed resume operation.

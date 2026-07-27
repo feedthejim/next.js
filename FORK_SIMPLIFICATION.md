@@ -85,8 +85,7 @@
   exports in both page and Route Handler entry files. App endpoint output now
   has one Node.js chunking, manifest, tracing, and output-path implementation:
   the Edge output variant and its middleware-manifest packaging are gone. The
-  separate Edge SSR transition remains only as a shared compiler capability
-  for Edge middleware and instrumentation while those products remain.
+  separate Edge SSR transition remains in the Turbopack compiler temporarily.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. App routes have one dynamic-parameter model:
@@ -111,7 +110,11 @@
   Server Actions, resume-data cache, incremental-cache integration, and App
   Route compiled-module dispatcher now have one Node.js implementation. Their
   Edge request, stream, compression, manifest, module-map, and runtime-selection
-  branches are absent.
+  branches are absent. webpack no longer has an Edge compiler entry pipeline:
+  the App Page, App Route, Pages SSR, Pages API, middleware, instrumentation,
+  asset, WebAssembly, and development Edge loaders and templates are gone.
+  `proxy.ts` remains a core API and follows the Node server entry path; its
+  Turbopack entry is the next Node-adapter seam.
   `fork-metrics.json` is the current scorecard, including static complexity,
   validation cost, and relevant runtime performance guardrails.
 - **Constraints:** Backward compatibility is out of scope. Do not add migration
@@ -122,25 +125,58 @@
   its delta. Never reuse a stale measurement.
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
-  as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Delete the unreachable App Edge webpack entry chain. Keep
-  the shared Edge compiler transition until Proxy/middleware and
-  instrumentation have an explicit platform policy. Then remove
-  `experimental_ppr`.
+  as the application compiler, Node.js as the only execution runtime,
+  `proxy.ts` as the Node-only pre-route hook, and explicit platform adapter
+  boundaries.
+- **Next action:** Collapse the Turbopack Proxy entry and middleware endpoint
+  to one Node-only implementation, then delete the Edge sandbox and compiled
+  runtime substrate. Continue through Turbopack Edge transitions and manifests
+  until the Edge runtime metrics reach zero.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
   performance metrics; each slice is committed; the worktree is clean; and no
   required follow-up is implicit.
 - **Last verified:** 2026-07-27 on `feedthejim/simplify-next-rendering`.
-  The Node-only App renderer has no scoped Edge runtime or module-map
-  references. Core types, 37 direct cache and action assertions, the 56-test
-  fast contract, the core release build, and 19 production browser assertions
-  passed. The browser contract covers PPR shell hydration, resume-cache
-  restoration, Server Action rerenders and invalidation, and Partial
-  Prefetching navigation.
+  webpack has no Edge entry loader or template. Core types, the 56-test fast
+  contract, and the core release build passed. A production Turbopack fixture
+  verified that `proxy.ts` still runs in Node.js and redirects an App Router
+  request.
 
 ## History
+
+### 2026-07-27: No webpack Edge compiler
+
+Deleted the complete webpack Edge entry pipeline for App Pages, App Routes,
+Pages SSR, Pages API, middleware, instrumentation, Edge assets, and WebAssembly.
+Production entry construction and webpack development now build only client
+and Node server entries. Removed the Edge route wrapper and all eleven
+Edge-specific loaders and templates.
+
+`proxy.ts` remains part of the product. webpack now places it on the Node server
+path, while the retained Turbopack entry continues to execute Proxy through the
+Node endpoint. The shared Proxy template is intentionally retained until its
+internal Edge adapter is replaced by the Node adapter in the next slice.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** Application-page Edge entry markers fell from 21 to
+  zero. The broader framework Edge runtime proxy fell from 146 to 137
+  references; the Rust compiler proxy remains 29 and is the next deletion
+  frontier. webpack no longer has a third compiler entry graph.
+- **Leanness:** Authored framework source fell by 12 files, 2,182 lines, and
+  69,569 bytes. The webpack-path proxy fell by six files, 716 lines, and 23,507
+  bytes. The comparable core distribution fell by 397,317 bytes overall and
+  147,559 JavaScript bytes. Rust, tests, and dependency counts were unchanged.
+- **Runtime performance:** The retained production Node Proxy fixture was ready
+  in 102 milliseconds and completed its browser navigation in 759 milliseconds.
+  These are warm-local guardrails, not improvement claims.
+- **Iteration efficiency:** Three faster agents deleted disjoint entry,
+  loader, and template surfaces while integration and validation remained
+  centralized. Types took 15.45 seconds, the 56-test fast contract took 1.96
+  seconds, the core release took 25.85 seconds, and the focused Node Proxy
+  browser test took 23.36 seconds with a 22.21-second Jest body. The successful
+  validation path totaled 66.62 seconds.
 
 ### 2026-07-27: One Node-only App renderer
 
