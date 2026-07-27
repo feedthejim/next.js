@@ -89,15 +89,14 @@ Across the four scorecard dimensions:
   `dist` tree is 180,840,647 bytes, including 76,369,965 JavaScript bytes, but
   its lifecycle is not comparable with the preceding snapshot.
 - **Runtime performance:** All 34 retained production browser assertions
-  passed. The navigation fixture's server was ready in 76 milliseconds and
-  its first browser load took 85 milliseconds. Navigation latency, response
-  bytes, and peak memory were not measured.
-- **Iteration efficiency:** Types passed in 14.49 seconds, the 19-test fast
-  allowlist in 1.81 seconds, the core build in 25.29 seconds, and the complete
-  retained browser allowlist in 76.98 seconds. Total validation took 118.57
-  seconds. The build was 3.31 seconds slower than the preceding single run,
-  while the browser scope was broader, so neither timing is a regression
-  claim.
+  passed. In the scorecard's focused navigation run, the server was ready in
+  78 milliseconds and its first browser load took 87 milliseconds. Navigation
+  latency, response bytes, and peak memory were not measured.
+- **Iteration efficiency:** Types passed in 13.89 seconds, the 19-test fast
+  allowlist in 1.82 seconds, the core build in 22.18 seconds, and the focused
+  navigation and PPR browser journeys in 37.22 seconds. Total validation,
+  including focused lint, took 76.86 seconds. These single local measurements
+  are directional, not regression claims.
 
 ### 2026-07-27: No internal Full prefetch protocol
 

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "label": "no-loading-boundary-prefetch-protocol",
-  "capturedAt": "2026-07-27T19:12:43.260Z",
+  "capturedAt": "2026-07-27T19:13:22.555Z",
   "git": {
     "baseHead": "f774ca8fc2"
   },
@@ -70,7 +70,7 @@
     "unitFiles": 108
   },
   "builtArtifacts": {
-    "conditions": "warm local after core build and focused browser fixture packs; comparable to prior warm core-build snapshot",
+    "conditions": "warm local after core build and focused browser fixture packs; previous artifact lifecycle differs, delta non-comparable",
     "nextDistBytes": 180840647,
     "nextDistJavaScriptBytes": 76369965
   },
