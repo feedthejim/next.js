@@ -42,8 +42,8 @@
   Cache Components, cached-navigation, or legacy PPR environment flags. The
   server runtime and build-time define map no longer expose those rendering
   mode switches either. Node-only image caching and instant-validation modules
-  are selected through explicit runtime capabilities.
-  retained navigation journey covers both imperative prefetch and the default
+  are selected through explicit runtime capabilities. The retained navigation
+  journey covers both imperative prefetch and the default
   declarative Link path.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
@@ -100,15 +100,19 @@ Across the four scorecard dimensions:
   13 assertions. The navigation server was ready in 144 milliseconds and its
   first browser load took 89 milliseconds. Startup was 68 milliseconds slower
   than the preceding single run, while first load was three milliseconds
-  slower. These are directional local observations.
+  slower. An isolated production Edge middleware server was ready in 76
+  milliseconds and generated a 4,712-byte image in 116 milliseconds. These are
+  directional local observations.
 - **Iteration efficiency:** Types passed in 14.31 seconds, the 19-test fast
   allowlist in 1.80 seconds, the final core build in 22.16 seconds, five focused
   fetch and image-response units in 1.33 seconds, and the two browser journeys
   in 33.57 seconds. The prescribed legacy webpack edge fixture exited after
   8.12 seconds because its application-selected Edge Runtime is intentionally
   incompatible with the fork's always-on Cache Components contract, before it
-  could exercise DCE. Total measured iteration cost, including that
-  out-of-contract attempt, was 81.29 seconds.
+  could exercise DCE. A 3.45-second isolated webpack build then confirmed that
+  the supported Edge middleware bundle excluded the Node-only cache module.
+  Total measured iteration cost, including the out-of-contract attempt and
+  runtime check, was 84.93 seconds.
 
 ### 2026-07-27: One always-on client runtime
 
