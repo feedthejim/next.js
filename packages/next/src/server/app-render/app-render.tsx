@@ -60,7 +60,6 @@ import {
   getClientPrerender,
   processPrelude as processPreludeOp,
   createDocumentClosingStream,
-  teeStream,
   renderToWebFizzStream,
   renderToNodeFlightStream,
   renderToNodeFizzStream,
@@ -2576,32 +2575,14 @@ async function renderToHTMLOrFlightImpl(
     serverActions,
     assetPrefix = '',
     enableTainting,
-    cacheComponents,
-    setIsrStatus,
   } = renderOpts
-
-  const { cachedNavigations } = renderOpts.experimental
 
   // We need to expose the bundled `require` API globally for
   // react-server-dom-webpack. This is a hack until we find a better way.
   if (ComponentMod.__next_app__) {
     const isTracingEnabled =
       getTracer().getActiveScopeSpan()?.isRecording() ?? false
-    installGlobalModuleLoadingHandlers(
-      ComponentMod,
-      cacheComponents,
-      isTracingEnabled
-    )
-  }
-
-  if (process.env.__NEXT_DEV_SERVER && setIsrStatus && !cacheComponents) {
-    // Reset the ISR status at start of request.
-    const { pathname } = new URL(req.url || '/', 'http://n')
-    setIsrStatus(
-      pathname,
-      // Only pages using the Node runtime can use ISR, Edge is always dynamic.
-      process.env.NEXT_RUNTIME === 'edge' ? false : undefined
-    )
+    installGlobalModuleLoadingHandlers(ComponentMod, true, isTracingEnabled)
   }
 
   if (
@@ -2897,24 +2878,6 @@ async function renderToHTMLOrFlightImpl(
     )
     const requestStore = createRequestStore()
 
-    if (
-      process.env.__NEXT_DEV_SERVER &&
-      setIsrStatus &&
-      !cacheComponents &&
-      // Only pages using the Node runtime can use ISR, so we only need to
-      // update the status for those.
-      // The type check here ensures that `req` is correctly typed, and the
-      // environment variable check provides dead code elimination.
-      process.env.NEXT_RUNTIME !== 'edge' &&
-      isNodeNextRequest(req)
-    ) {
-      req.originalRequest.on('end', () => {
-        const { pathname } = new URL(req.url || '/', 'http://n')
-        const isStatic = !requestStore.usedDynamic && !workStore.forceDynamic
-        setIsrStatus(pathname, isStatic)
-      })
-    }
-
     // MARK: RSC request
     if (isRSCRequest) {
       if (isRuntimePrefetchRequest) {
@@ -2928,8 +2891,7 @@ async function renderToHTMLOrFlightImpl(
       } else {
         if (
           process.env.__NEXT_DEV_SERVER &&
-          process.env.NEXT_RUNTIME !== 'edge' &&
-          cacheComponents
+          process.env.NEXT_RUNTIME !== 'edge'
         ) {
           // MARK: RSC devCacheComponents
           return generateDynamicFlightRenderResultWithStagesInDev(
@@ -2939,16 +2901,13 @@ async function renderToHTMLOrFlightImpl(
             createRequestStore,
             fallbackParams
           )
-        } else if (cacheComponents && cachedNavigations) {
+        } else {
           // MARK: RSC cacheComponents
           return generateStagedDynamicFlightRenderResultNode(
             req,
             ctx,
             requestStore
           )
-        } else {
-          // MARK: RSC dynamic
-          return generateDynamicFlightRenderResult(req, ctx, requestStore)
         }
       }
     }
@@ -3028,29 +2987,6 @@ async function renderToHTMLOrFlightImpl(
       didExecuteServerAction ? undefined : createRequestStore,
       fallbackParams
     )
-
-    // Forward an invalid-dynamic-usage error recorded by `'use cache'` only
-    // when userland caught it (try/catch around the cache call). If userland
-    // didn't catch, the rejection propagated into the React render, and React's
-    // `serverComponentsErrorHandler` already stamped a digest on the error and
-    // emitted it as a Flight error chunk — surfacing it again here would
-    // duplicate the entry in the dev overlay.
-    //
-    // The cacheComponents paths forward this themselves via
-    // `runValidationInDev` and the validation-skipped fallback in
-    // `generateDynamicFlightRenderResultWithStagesInDev`. Here we cover the
-    // non-cacheComponents dev path where neither runs.
-    if (
-      process.env.__NEXT_DEV_SERVER &&
-      !cacheComponents &&
-      workStore.invalidDynamicUsageError &&
-      !(workStore.invalidDynamicUsageError as { digest?: unknown }).digest
-    ) {
-      void logMessagesAndSendErrorsToBrowser(
-        [workStore.invalidDynamicUsageError],
-        ctx
-      )
-    }
 
     // If we have pending revalidates, wait until they are all resolved.
     const maybeRevalidatesPromise = executeRevalidates(workStore)
@@ -3278,10 +3214,7 @@ async function renderToStream(
     shouldWaitOnAllReady,
     subresourceIntegrityManifest,
     supportsDynamicResponse,
-    cacheComponents,
   } = renderOpts
-
-  const { cachedNavigations } = renderOpts.experimental
 
   const { ServerInsertedHTMLProvider, renderServerInsertedHTML } =
     createServerInsertedHTML()
@@ -3438,9 +3371,7 @@ async function renderToStream(
       if (
         process.env.__NEXT_DEV_SERVER &&
         // Edge routes never prerender so we don't have a Prerender environment for anything in edge runtime
-        process.env.NEXT_RUNTIME !== 'edge' &&
-        // We only have a Prerender environment for projects opted into cacheComponents
-        cacheComponents
+        process.env.NEXT_RUNTIME !== 'edge'
       ) {
         let debugChannelClientStream: ReplayableNodeStream | undefined
 
@@ -3551,11 +3482,10 @@ async function renderToStream(
             requestId
           )
         }
-      } else if (cacheComponents && cachedNavigations) {
-        // Production Cache Components + Cached Navigations: use staged
-        // rendering so the RSC payload includes the static stage byte length
-        // (`l` field), enabling the client to cache the static subset during
-        // hydration.
+      } else {
+        // Production rendering is always staged so the RSC payload includes
+        // the static stage byte length (`l` field), enabling the client to
+        // cache the static subset during hydration.
 
         const selectStaleTime = createSelectStaleTime(experimental)
         const staleTimeIterable = new StaleTimeIterable()
@@ -3687,92 +3617,6 @@ async function renderToStream(
         )
 
         reactServerResult = new ReactServerResult(flightStream)
-      } else {
-        // MARK: nodeStreams RSC
-        if (process.env.__NEXT_USE_NODE_STREAMS) {
-          // This is a dynamic render. We don't do dynamic tracking because we're not prerendering
-          const RSCPayload: RSCPayload & RSCPayloadDevProperties =
-            await workUnitAsyncStorage.run(
-              requestStore,
-              getRSCPayload,
-              tree,
-              ctx,
-              { is404: res.statusCode === 404 }
-            )
-
-          const debugChannel = setReactDebugChannel && createNodeDebugChannel()
-
-          if (debugChannel) {
-            const [readableSsr, readableBrowser] = teeStream(
-              debugChannel.clientSide.readable
-            )
-
-            reactDebugStream = readableSsr
-
-            setReactDebugChannel(
-              { readable: readableBrowser },
-              htmlRequestId,
-              requestId
-            )
-          }
-
-          reactServerResult = new ReactServerResult(
-            workUnitAsyncStorage.run(
-              requestStore,
-              renderToNodeFlightStream,
-              ctx.componentMod,
-              RSCPayload,
-              clientModules,
-              {
-                filterStackFrame,
-                onError: serverComponentsErrorHandler,
-                debugChannel: debugChannel?.serverSide,
-              }
-            )
-          )
-        } else {
-          // MARK: webStreams RSC
-          // This is a dynamic render. We don't do dynamic tracking because we're not prerendering
-          const RSCPayload: RSCPayload & RSCPayloadDevProperties =
-            await workUnitAsyncStorage.run(
-              requestStore,
-              getRSCPayload,
-              tree,
-              ctx,
-              { is404: res.statusCode === 404 }
-            )
-
-          const debugChannel = setReactDebugChannel && createWebDebugChannel()
-
-          if (debugChannel) {
-            const [readableSsr, readableBrowser] = teeStream(
-              debugChannel.clientSide.readable
-            )
-
-            reactDebugStream = readableSsr
-
-            setReactDebugChannel(
-              { readable: readableBrowser },
-              htmlRequestId,
-              requestId
-            )
-          }
-
-          reactServerResult = new ReactServerResult(
-            workUnitAsyncStorage.run(
-              requestStore,
-              renderToWebFlightStream,
-              ctx.componentMod,
-              RSCPayload,
-              clientModules,
-              {
-                filterStackFrame,
-                onError: serverComponentsErrorHandler,
-                debugChannel: debugChannel?.serverSide,
-              }
-            )
-          )
-        }
       }
 
       // React doesn't start rendering synchronously but we want the RSC render to have a chance to start

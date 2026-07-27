@@ -1,20 +1,20 @@
 {
   "schemaVersion": 1,
-  "label": "single-prerender-error-recovery-and-allowlist",
-  "capturedAt": "2026-07-27T17:50:22.979Z",
+  "label": "single-staged-dynamic-rsc-path",
+  "capturedAt": "2026-07-27T17:53:37.309Z",
   "git": {
-    "baseHead": "a50bde5aa2"
+    "baseHead": "c2e8d8eece"
   },
   "source": {
     "frameworkTracked": {
       "files": 2459,
-      "lines": 1096627,
-      "bytes": 51506719
+      "lines": 1096471,
+      "bytes": 51501354
     },
     "frameworkAuthored": {
       "files": 1754,
-      "lines": 302296,
-      "bytes": 9764270
+      "lines": 302140,
+      "bytes": 9758905
     },
     "vendoredCompiled": {
       "files": 705,
@@ -23,8 +23,8 @@
     },
     "appRender": {
       "files": 97,
-      "lines": 28860,
-      "bytes": 990346
+      "lines": 28704,
+      "bytes": 984981
     },
     "clientRouter": {
       "files": 25,
@@ -47,7 +47,7 @@
     "experimentalConfig": 149
   },
   "legacyModeReferences": {
-    "cacheComponents": 192,
+    "cacheComponents": 179,
     "routePPR": 125,
     "appPPR": 16,
     "cacheComponentsEnv": 29,
@@ -67,16 +67,16 @@
     "unitFiles": 108
   },
   "builtArtifacts": {
-    "conditions": "not-comparable-after-watch-build-output",
-    "nextDistBytes": 182095801,
-    "nextDistJavaScriptBytes": 76663740
+    "conditions": "warm-local-after-core-build",
+    "nextDistBytes": 182006964,
+    "nextDistJavaScriptBytes": 76644573
   },
   "validationTimingConditions": "warm-local-watcher-stopped",
   "validationTimingsMs": {
-    "types": 14186,
-    "focusedTests": 1483,
-    "browserTests": 57947,
-    "nextBuild": 22019,
+    "types": 17006,
+    "focusedTests": 2300,
+    "browserTests": 29719,
+    "nextBuild": 23273,
     "buildAll": null
   }
 }

@@ -13,10 +13,11 @@
   Flight router-state construction, resume-cache serialization, runtime
   prefetch setup, render-option types, and the normal static-generation
   pipeline now use one Cache Components, Partial Prefetching, and cached
-  navigation model. Runtime-prefetch resume-cache installation is a directly
-  testable renderer seam. `pnpm fork-test` and `pnpm fork-test-browser` define
-  the early App Router contract allowlist. `fork-metrics.json` is the current
-  scorecard.
+  navigation model. Dynamic RSC requests now use only the staged development
+  and production renderers. Runtime-prefetch resume-cache installation is a
+  directly testable renderer seam. `pnpm fork-test` and
+  `pnpm fork-test-browser` define the early App Router contract allowlist.
+  `fork-metrics.json` is the current scorecard.
 - **Constraints:** Backward compatibility is out of scope. Do not add migration
   layers or special removed-feature errors. Preserve only behavior in the fork
   contract. Keep each independently verified slice committed before starting
@@ -25,9 +26,9 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Delete the remaining non-Cache-Components dynamic RSC and
-  HTML rendering branches, then collapse the client to one segment-cache
-  prefetch protocol.
+- **Next action:** Delete the remaining non-Cache-Components dynamic HTML
+  rendering branches, then collapse the client to one segment-cache prefetch
+  protocol.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -35,10 +36,23 @@
   required follow-up is implicit.
 - **Last verified:** 2026-07-27 on `feedthejim/simplify-next-rendering`.
   `pnpm --filter=next types`, the 16-test fast App Router allowlist,
-  `pnpm --filter=next build`, 16 production Turbopack HTTP fallback recovery
-  assertions, and five production resume-cache assertions passed.
+  `pnpm --filter=next build`, and 12 production Turbopack PPR partial-hydration
+  assertions passed.
 
 ## History
+
+### 2026-07-27: One staged dynamic RSC path
+
+Deleted the unreachable non-Cache-Components dynamic RSC renderer. Development
+keeps its validation-aware staged renderer, while production uses the staged
+renderer required by Partial Prefetching. Authored framework and App Router
+renderer source each fell by 156 lines and 5,365 bytes, and Cache Components
+references fell by 13. The built distribution was directionally 88,837 bytes
+smaller, including 19,167 fewer JavaScript bytes, but the previous snapshot's
+watch-build conditions make that comparison non-equivalent. The 16-test fast
+allowlist passed in 2.30 seconds, types passed in 17.01 seconds, the core build
+passed in 23.27 seconds, and all 12 production PPR partial-hydration assertions
+passed in 29.72 seconds including package preparation.
 
 ### 2026-07-27: One prerender error-recovery path and test allowlist
 
