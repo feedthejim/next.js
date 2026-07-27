@@ -56,7 +56,10 @@
   registration no longer depend on a Cache Components configuration value.
   Render-server initialization and startup reporting no longer transport that
   value either: development and build startup report the product invariant
-  directly.
+  directly. App render options and work stores likewise carry no Cache
+  Components mode field. App development requests always compute the
+  most-specific fallback-param set, and export always uses the staged
+  static-shell partition.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -71,8 +74,9 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Remove the remaining runtime Cache Components gate from
-  `BaseServer` request rendering.
+- **Next action:** Collapse the development fallback and warmup test matrix to
+  the always-on Partial Prefetching model, retaining a cheap fallback-route
+  selection contract instead of stale mode-specific browser expectations.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -88,6 +92,46 @@
   revalidation assertions.
 
 ## History
+
+### 2026-07-27: One render work-store mode
+
+Removed the Cache Components boolean from App render options, every render
+producer, App Route contexts, and the work-store shape. The corresponding
+work-store status field had no consumer and is gone. `BaseServer` now always
+computes per-URL fallback params for App routes, and export always partitions
+static shells into the staged initial and final phases. Three retained
+development fixtures also stopped declaring the removed public option.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** Cache Components references fell from 102 to 88.
+  Fourteen framework modules no longer transport or interpret the render mode,
+  and export has one path-partition algorithm instead of a true/false split.
+- **Leanness:** Authored framework source fell by 27 lines and 941 bytes. The
+  final warm release distribution fell by 12,061 bytes overall and 3,410
+  JavaScript bytes. Test and dependency counts were unchanged.
+- **Runtime performance:** The production Turbopack Route Handler fixture was
+  ready in 75 milliseconds, served its first cached request in 87
+  milliseconds, and completed revalidation in 229 milliseconds. These are
+  directional warm-local observations.
+- **Iteration efficiency:** Types passed in 13.72 seconds, the 19-test fast
+  allowlist in 1.93 seconds, 16 direct tracer assertions in 1.15 seconds, the
+  three-assertion production fixture in 20.62 seconds with a 19.45-second Jest
+  body, and the final core build in 21.97 seconds. The initial and final core
+  builds plus productive validation cost 80.43 seconds. Investigation of two
+  stale development fallback suites added 75.62 measured seconds; two
+  one-case diagnostics were not timed, so the 156.05-second measured total is
+  a lower bound.
+
+The fallback investigation showed that `BaseServer` selects the correct
+most-specific route and fallback set, and temporarily restoring the deleted
+work-store field did not change the result. The warmup suite still labels two
+partially covered cases as `Server` instead of its old `Prerender` and
+`Prefetch` expectations, while the fully covered case passes. The fallback
+validation suite no longer opens its expected blocking redbox. These are
+pre-existing always-on-model test drift, not effects of the removed field.
+They remain the explicit next test-simplification slice rather than being
+silently accepted.
 
 ### 2026-07-27: Cache Components is a startup invariant
 

@@ -601,7 +601,6 @@ describe('local span recording', () => {
           isStaticGeneration: false,
           page: '/products/[id]/page',
           route: '/products/[id]',
-          cacheComponentsEnabled: true,
         } as WorkStore
         const requestStore = {
           type: 'request',

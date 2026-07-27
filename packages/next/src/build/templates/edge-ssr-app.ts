@@ -163,7 +163,6 @@ async function requestHandler(
       logServerFunctions:
         typeof nextConfig.logging === 'object' &&
         Boolean(nextConfig.logging.serverFunctions),
-      cacheComponents: true,
       partialPrefetching: true,
       validationLevel: nextConfig.experimental.instantInsights.validationLevel,
       experimental: {

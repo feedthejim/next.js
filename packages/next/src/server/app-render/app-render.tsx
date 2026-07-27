@@ -5978,8 +5978,6 @@ function buildDevValidationWorkStore(
     shouldTrackFetchMetrics: false,
     reactServerErrorsByDigest: new Map(),
     afterContext: noopAfterContext,
-    // Dev validation only ever runs under Cache Components.
-    cacheComponentsEnabled: true,
     validationLevel: message.validationLevel,
   }
 }
@@ -7571,7 +7569,6 @@ async function validateInstantConfigInBuildWithSample(
       onTaskError() {},
     }),
 
-    cacheComponentsEnabled: true,
     validationLevel: outerWorkStore.validationLevel,
     previouslyRevalidatedTags: [],
     refreshTagsByCacheKind: new Map(),

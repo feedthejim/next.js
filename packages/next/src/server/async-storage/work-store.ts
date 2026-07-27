@@ -35,7 +35,6 @@ export type WorkStoreContext = {
      */
     hmrRefreshHash?: string
     isOnDemandRevalidate?: boolean
-    cacheComponents: boolean
     validationLevel: ValidationLevel
     fetchCache?: AppSegmentConfig['fetchCache']
     isPossibleServerAction?: boolean
@@ -156,7 +155,6 @@ export function createWorkStore({
     nonce,
 
     afterContext: createAfterContext(renderOpts),
-    cacheComponentsEnabled: renderOpts.cacheComponents,
     validationLevel: renderOpts.validationLevel,
     previouslyRevalidatedTags,
     refreshTagsByCacheKind: createRefreshTagsByCacheKind(),

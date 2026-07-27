@@ -328,7 +328,6 @@ export async function adapter(
                 // it'll surface loudly instead of silently using a misleading
                 // default.
                 staticPageGenerationTimeout: 0,
-                cacheComponents: false,
                 // Proxy doesn't run instant validation; the level value is
                 // irrelevant here.
                 // TODO: remove validationLevel and other global config from renderOpts

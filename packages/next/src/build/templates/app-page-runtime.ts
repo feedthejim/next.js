@@ -878,7 +878,6 @@ export function createAppPageEntrypoint({
                   isDebugDynamicAccesses: isDebugDynamicAccesses,
                 }
               : {}),
-            cacheComponents: true,
             partialPrefetching: true,
             // A fallback shell can only be upgraded to a concrete version if at
             // least one of its fallback params is a `generateStaticParams`

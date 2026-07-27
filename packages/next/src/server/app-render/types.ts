@@ -96,7 +96,6 @@ export interface RenderOptsPartial {
   previewProps: __ApiPreviewProps | undefined
   err?: Error | null
   basePath: string
-  cacheComponents: true
   partialPrefetching: true
   validationLevel: ValidationLevel
   trailingSlash: boolean

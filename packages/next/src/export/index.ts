@@ -481,7 +481,6 @@ async function exportAppImpl(
     assetPrefix: nextConfig.assetPrefix.replace(/\/$/, ''),
     distDir,
     basePath: nextConfig.basePath,
-    cacheComponents: nextConfig.cacheComponents ?? false,
     partialPrefetching: nextConfig.partialPrefetching,
     validationLevel: nextConfig.experimental.instantInsights.validationLevel,
     trailingSlash: nextConfig.trailingSlash,
@@ -740,32 +739,28 @@ async function exportAppImpl(
     ).flat()
   }
 
-  let initialPhaseExportPaths: ExportPathEntry[] = []
+  const initialPhaseExportPaths: ExportPathEntry[] = []
   const finalPhaseExportPaths: ExportPathEntry[] = []
 
-  if (renderOpts.cacheComponents) {
-    // Only run instant validation once per route, even if multiple param sets from generateStaticParams exist.
-    const routesWithInstantValidation = new Set<string>()
+  // Only run instant validation once per route, even if multiple param sets from generateStaticParams exist.
+  const routesWithInstantValidation = new Set<string>()
 
-    for (const exportPath of allExportPaths) {
-      if (exportPath._allowEmptyStaticShell) {
-        finalPhaseExportPaths.push(exportPath)
-      } else {
-        initialPhaseExportPaths.push(exportPath)
-      }
-
-      // Always mark routes for potential build validation. The actual
-      // decision of whether to validate is made per-route by
-      // anySegmentNeedsInstantValidationInBuild, which checks both the
-      // default validation level and per-segment level overrides.
-      const route = exportPath.page
-      if (!routesWithInstantValidation.has(route)) {
-        exportPath._runInstantValidation = true
-        routesWithInstantValidation.add(route)
-      }
+  for (const exportPath of allExportPaths) {
+    if (exportPath._allowEmptyStaticShell) {
+      finalPhaseExportPaths.push(exportPath)
+    } else {
+      initialPhaseExportPaths.push(exportPath)
     }
-  } else {
-    initialPhaseExportPaths = allExportPaths
+
+    // Always mark routes for potential build validation. The actual
+    // decision of whether to validate is made per-route by
+    // anySegmentNeedsInstantValidationInBuild, which checks both the
+    // default validation level and per-segment level overrides.
+    const route = exportPath.page
+    if (!routesWithInstantValidation.has(route)) {
+      exportPath._runInstantValidation = true
+      routesWithInstantValidation.add(route)
+    }
   }
 
   const totalExportPaths =

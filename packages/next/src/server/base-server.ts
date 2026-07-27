@@ -582,7 +582,6 @@ export default abstract class Server<
       isExperimentalCompile: this.nextConfig.experimental.isExperimentalCompile,
       // `htmlLimitedBots` is passed to server as serialized config in string format
       htmlLimitedBots: this.nextConfig.htmlLimitedBots,
-      cacheComponents: true,
       partialPrefetching: true,
       validationLevel:
         this.nextConfig.experimental.instantInsights.validationLevel,
@@ -2428,48 +2427,43 @@ export default abstract class Server<
         )
       }
 
-      if (isAppPath && this.nextConfig.cacheComponents) {
-        if (pathsResults.prerenderedRoutes?.length) {
-          // Replicate, on demand, the per-URL fallback set a production build
-          // writes to the prerender manifest. Production matches the requested
-          // URL to the most-specific prerendered route and defers that route's
-          // `fallbackRouteParams` (so `generateStaticParams`-covered params
-          // resolve in the static shell and only the uncovered ones are
-          // deferred). The dev prerender manifest isn't populated for these
-          // ad-hoc routes, but `getStaticPaths` already computed every
-          // prerendered route here, so we do the same match: among the routes
-          // whose canonical regex matches this URL, pick the one with the
-          // fewest fallback params (the most-specific) and thread it via the
-          // `fallbackParams` meta. A fully-covered concrete route (e.g.
-          // `/blog/a`) has zero fallback params and is the most-specific match
-          // for its own URL, so it must be considered alongside the others: it
-          // wins over the base dynamic route (`/blog/[slug]`) and leaves its
-          // statically-known params out of the deferred set.
-          let perUrlFallbackRouteParams: NonNullable<
-            (typeof pathsResults.prerenderedRoutes)[number]['fallbackRouteParams']
-          > | null = null
-          for (const route of pathsResults.prerenderedRoutes) {
-            const fallbackRouteParams = route.fallbackRouteParams ?? []
-            if (!getRouteRegex(route.pathname).re.test(urlPathname)) {
-              continue
-            }
-            if (
-              perUrlFallbackRouteParams === null ||
-              fallbackRouteParams.length < perUrlFallbackRouteParams.length
-            ) {
-              perUrlFallbackRouteParams = fallbackRouteParams
-            }
+      if (isAppPath && pathsResults.prerenderedRoutes?.length) {
+        // Replicate, on demand, the per-URL fallback set a production build
+        // writes to the prerender manifest. Production matches the requested
+        // URL to the most-specific prerendered route and defers that route's
+        // `fallbackRouteParams` (so `generateStaticParams`-covered params
+        // resolve in the static shell and only the uncovered ones are
+        // deferred). The dev prerender manifest isn't populated for these
+        // ad-hoc routes, but `getStaticPaths` already computed every
+        // prerendered route here, so we do the same match: among the routes
+        // whose canonical regex matches this URL, pick the one with the
+        // fewest fallback params (the most-specific) and thread it via the
+        // `fallbackParams` meta. A fully-covered concrete route (e.g.
+        // `/blog/a`) has zero fallback params and is the most-specific match
+        // for its own URL, so it must be considered alongside the others: it
+        // wins over the base dynamic route (`/blog/[slug]`) and leaves its
+        // statically-known params out of the deferred set.
+        let perUrlFallbackRouteParams: NonNullable<
+          (typeof pathsResults.prerenderedRoutes)[number]['fallbackRouteParams']
+        > | null = null
+        for (const route of pathsResults.prerenderedRoutes) {
+          const fallbackRouteParams = route.fallbackRouteParams ?? []
+          if (!getRouteRegex(route.pathname).re.test(urlPathname)) {
+            continue
           }
           if (
-            perUrlFallbackRouteParams &&
-            perUrlFallbackRouteParams.length > 0
+            perUrlFallbackRouteParams === null ||
+            fallbackRouteParams.length < perUrlFallbackRouteParams.length
           ) {
-            addRequestMeta(
-              req,
-              'fallbackParams',
-              createOpaqueFallbackRouteParams(perUrlFallbackRouteParams)!
-            )
+            perUrlFallbackRouteParams = fallbackRouteParams
           }
+        }
+        if (perUrlFallbackRouteParams && perUrlFallbackRouteParams.length > 0) {
+          addRequestMeta(
+            req,
+            'fallbackParams',
+            createOpaqueFallbackRouteParams(perUrlFallbackRouteParams)!
+          )
         }
       }
     }

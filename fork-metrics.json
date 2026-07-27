@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
-  "label": "one-cache-components-startup-contract",
-  "capturedAt": "2026-07-27T19:59:07.600Z",
+  "label": "one-render-work-store-mode",
+  "capturedAt": "2026-07-27T20:12:30.725Z",
   "git": {
-    "baseHead": "7e1fc69a53"
+    "baseHead": "05af06c0e7"
   },
   "source": {
     "frameworkTracked": {
       "files": 2458,
-      "lines": 1094017,
-      "bytes": 51402257
+      "lines": 1093990,
+      "bytes": 51401316
     },
     "frameworkAuthored": {
       "files": 1753,
-      "lines": 299686,
-      "bytes": 9659808
+      "lines": 299659,
+      "bytes": 9658867
     },
     "vendoredCompiled": {
       "files": 705,
@@ -23,8 +23,8 @@
     },
     "appRender": {
       "files": 97,
-      "lines": 28280,
-      "bytes": 968131
+      "lines": 28275,
+      "bytes": 967944
     },
     "clientRouter": {
       "files": 39,
@@ -47,7 +47,7 @@
     "experimentalConfig": 149
   },
   "legacyModeReferences": {
-    "cacheComponents": 102,
+    "cacheComponents": 88,
     "routePPR": 0,
     "appPPR": 0,
     "cacheComponentsEnv": 0,
@@ -72,32 +72,32 @@
     "unitFiles": 108
   },
   "builtArtifacts": {
-    "conditions": "warm local after core build and focused Turbopack development startup test; comparable to prior warm core-build snapshot",
-    "nextDistBytes": 180666509,
-    "nextDistJavaScriptBytes": 76325094
+    "conditions": "warm local after final core release build; comparable to prior warm core-build snapshot",
+    "nextDistBytes": 180654448,
+    "nextDistJavaScriptBytes": 76321684
   },
-  "validationTimingConditions": "warm local; directTests is compiled logger assertion; focusedTests is fork fast allowlist; httpTests is focused Turbopack development startup and Route Handler fixture",
+  "validationTimingConditions": "warm local; directTests is tracer unit file; focusedTests is fork fast allowlist; httpTests is production Route Handler fixture; testSelectionOverhead is measured stale development fallback test investigation and excludes two unmeasured one-case diagnostics; total includes the initial and final core builds",
   "validationTimingsMs": {
-    "types": 14280,
-    "directTests": 60,
-    "focusedTests": 1760,
-    "testSelectionOverhead": null,
-    "httpTests": 15620,
-    "httpTestBody": 14527,
+    "types": 13720,
+    "directTests": 1150,
+    "focusedTests": 1930,
+    "testSelectionOverhead": 75620,
+    "httpTests": 20620,
+    "httpTestBody": 19447,
     "browserStartup": null,
     "browserTestBody": null,
     "browserTests": null,
     "edgeDceBuild": null,
-    "nextBuild": 21250,
+    "nextBuild": 21970,
     "buildAll": null,
-    "total": 52970
+    "total": 156050
   },
   "runtimePerformance": {
-    "conditions": "first startup of isolated Turbopack development Route Handler fixture after warm package build",
-    "devStartupMs": 338,
-    "productionStartupMs": null,
-    "routeHandlerRequestMs": null,
-    "routeHandlerRevalidationMs": null,
+    "conditions": "production Turbopack Route Handler fixture, warm local",
+    "devStartupMs": null,
+    "productionStartupMs": 75,
+    "routeHandlerRequestMs": 87,
+    "routeHandlerRevalidationMs": 229,
     "edgeMiddlewareStartupMs": null,
     "edgeImageResponseMs": null,
     "edgeImageResponseBytes": null,

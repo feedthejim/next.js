@@ -113,7 +113,7 @@ export type AppRouteSharedContext = {
  * handler for app routes.
  */
 export interface AppRouteRouteHandlerContext extends RouteModuleHandleContext {
-  renderOpts: Omit<WorkStoreContext['renderOpts'], 'cacheComponents'> &
+  renderOpts: WorkStoreContext['renderOpts'] &
     Pick<RenderOptsPartial, 'onInstrumentationRequestError'> &
     CollectedCacheInfo
   previewProps: DeepReadonly<__ApiPreviewProps>
@@ -760,10 +760,7 @@ export class AppRouteRouteModule extends RouteModule<
     // Get the context for the static generation.
     const staticGenerationContext: WorkStoreContext = {
       page: this.definition.page,
-      renderOpts: {
-        ...context.renderOpts,
-        cacheComponents: true,
-      },
+      renderOpts: context.renderOpts,
       buildId: context.sharedContext.buildId,
       deploymentId: context.sharedContext.deploymentId,
       previouslyRevalidatedTags: [],

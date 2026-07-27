@@ -140,7 +140,6 @@ export interface WorkStore {
   readonly assetPrefix?: string
   readonly nonce?: string
 
-  cacheComponentsEnabled: boolean
   validationLevel: ValidationLevel
 
   /**
