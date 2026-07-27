@@ -121,8 +121,6 @@ export function getDefineEnv({
   const nextPublicEnv = getNextPublicEnvironmentVariables()
   const nextConfigEnv = getNextConfigEnv(config)
 
-  const isUseCacheEnabled = !!config.experimental.useCache
-
   const defineEnv: DefineEnv = {
     // internal field to identify the plugin config
     __NEXT_DEFINE_ENV: true,
@@ -180,7 +178,6 @@ export function getDefineEnv({
     ),
     'process.env.__NEXT_REQUEST_INSIGHTS':
       dev && !!config.experimental.requestInsights,
-    'process.env.__NEXT_USE_CACHE': isUseCacheEnabled,
     'process.env.__NEXT_USE_NODE_STREAMS': isEdgeServer ? false : true,
 
     'process.env.NEXT_SUPPORTS_IMMUTABLE_ASSETS':

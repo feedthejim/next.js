@@ -204,10 +204,12 @@ pub async fn get_server_resolve_options_context(
         custom_conditions.push(rcstr!("react-server"));
     };
 
-    if *next_config.enable_cache_components().await?
-        // Middleware shouldn't use the "next-js" condition because it doesn't have all Next.js APIs available
-        && !matches!(ty, ServerContextType::Middleware { .. } |  ServerContextType::Instrumentation { .. })
-    {
+    // Middleware shouldn't use the "next-js" condition because it doesn't have
+    // all Next.js APIs available.
+    if !matches!(
+        ty,
+        ServerContextType::Middleware { .. } | ServerContextType::Instrumentation { .. }
+    ) {
         custom_conditions.push(rcstr!("next-js"));
     };
 

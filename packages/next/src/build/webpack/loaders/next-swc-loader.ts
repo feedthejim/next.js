@@ -168,7 +168,6 @@ async function loaderTransform(
     bundleLayer,
     esm,
     cacheHandlers: nextConfig.cacheHandlers,
-    useCacheEnabled: nextConfig.experimental?.useCache,
     taintEnabled: nextConfig.experimental?.taint,
     trackDynamicImports,
     pageExtensions: nextConfig.pageExtensions,

@@ -69,6 +69,10 @@
   Route diagnostic. Normalized and serialized runtime config no longer carries
   an always-true Cache Components field. Compiler export conditions and the
   remaining webpack HMR client classification consume the invariant directly.
+  `"use cache"`, `cacheLife()`, and `cacheTag()` likewise have no enable flag:
+  JavaScript and Turbopack compiler options, resolver conditions, and runtime
+  APIs all consume the product invariant directly. The Rust config model no
+  longer accepts Cache Components or use-cache booleans.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -83,10 +87,10 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Remove the compatibility-only `experimental.dynamicIO` and
-  `experimental.useCache` configuration aliases, then rewrite route-segment
-  incompatibility diagnostics around the product invariant rather than deleted
-  option names.
+- **Next action:** Remove legacy route-segment configuration modes and their
+  compatibility diagnostics from the App Router compiler, beginning with
+  errors that still describe `cacheComponents` or `experimental.useCache` as
+  selectable options.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -102,9 +106,49 @@
   revalidation assertions. The retained generic Blocking Route redbox
   assertion passed without the removed Cache Components config key. All 20
   isolated config assertions also passed with no selectable Cache Components
-  field in normalized config.
+  or use-cache field in normalized config. The five-assertion production
+  resume-cache journey passed against the rebuilt local Turbopack binding.
 
 ## History
+
+### 2026-07-27: No use-cache configuration mode
+
+Removed `experimental.useCache` from the public type, schema, defaults, and
+normalization, along with the compatibility-only fatal guidance for
+`experimental.dynamicIO`. Removed `__NEXT_USE_CACHE` from application defines
+and the corresponding runtime guards from `cacheLife()` and `cacheTag()`.
+Webpack and SWC options now supply the always-on compiler capability directly.
+
+The same mode also existed independently in Turbopack's Rust config model.
+Removed its top-level and experimental booleans and both selector functions.
+Client, server, RSC, Server Action, dynamic-import, and `next-js` resolver
+configuration now receive the invariant directly. The fork browser harness now
+honors an explicit `NEXT_TEST_NATIVE_DIR`, allowing Rust slices to validate the
+freshly rebuilt binding instead of silently testing the published package.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** `ExperimentalConfig` fell from 149 to 148 members.
+  Exact `experimental.useCache`, `dynamicIO`, `__NEXT_USE_CACHE`, and Rust
+  Cache Components and use-cache selector references fell to zero. Cache
+  Components references in authored framework source fell from 75 to 70.
+- **Leanness:** The source and harness diff is 55 net lines smaller. Authored
+  framework source fell by 36 lines and 1,156 bytes. The comparable warm
+  distribution fell by 7,098 bytes overall and 2,773 JavaScript bytes. Test
+  counts and dependencies were unchanged.
+- **Runtime performance:** The production Turbopack resume-cache fixture was
+  ready in 76 milliseconds. All five cache, Server Action, and tag-revalidation
+  assertions passed, proving `"use cache"` compilation and runtime restoration
+  without an enable bit. This single warm-local observation is a guardrail, not
+  a performance claim.
+- **Iteration efficiency:** All 20 config assertions passed in 1.47 seconds,
+  types in 13.64 seconds, and the 56-test fast contract in 1.82 seconds.
+  Initial dependency-backed `next-core` checking took 103.61 seconds, the
+  required native bootstrap took 241.26 seconds, the final resume-cache journey
+  took 24.89 seconds with a 15.24-second Jest body, and the final core build
+  took 22.02 seconds. Productive validation cost 408.71 seconds. Sandbox
+  retries, an initial pre-Rust build, and two runs against the published native
+  binding added 138.40 seconds, for 547.11 seconds of measured iteration.
 
 ### 2026-07-27: No internal Cache Components config field
 

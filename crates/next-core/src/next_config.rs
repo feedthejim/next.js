@@ -176,7 +176,6 @@ pub struct NextConfig {
     target: Option<String>,
     typescript: TypeScriptConfig,
     use_file_system_public_routes: bool,
-    cache_components: Option<bool>,
     supports_immutable_assets: Option<bool>,
 
     adapter_path: Option<RcStr>,
@@ -1289,10 +1288,6 @@ pub struct ExperimentalConfig {
     web_vitals_attribution: Option<Vec<RcStr>>,
     server_actions: Option<ServerActionsOrLegacyBool>,
     sri: Option<SubResourceIntegrity>,
-    /// @deprecated - use top-level cache_components instead.
-    /// This field is kept for backwards compatibility during migration.
-    cache_components: Option<bool>,
-    use_cache: Option<bool>,
     durable_use_cache_entries: Option<bool>,
     runtime_server_deployment_id: Option<bool>,
     expose_testing_api_in_production_build: Option<bool>,
@@ -2340,23 +2335,6 @@ impl NextConfig {
             self.experimental
                 .expose_testing_api_in_production_build
                 .unwrap_or(false),
-        )
-    }
-
-    #[turbo_tasks::function]
-    pub fn enable_cache_components(&self) -> Vc<bool> {
-        Vc::cell(self.cache_components.unwrap_or(false))
-    }
-
-    #[turbo_tasks::function]
-    pub fn enable_use_cache(&self) -> Vc<bool> {
-        Vc::cell(
-            self.experimental
-                .use_cache
-                // "use cache" was originally implicitly enabled with the
-                // cacheComponents flag, so we transfer the value for cacheComponents to the
-                // explicit useCache flag to ensure backwards compatibility.
-                .unwrap_or(self.cache_components.unwrap_or(false)),
         )
     }
 

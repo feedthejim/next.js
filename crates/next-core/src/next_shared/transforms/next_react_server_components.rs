@@ -34,8 +34,8 @@ pub async fn get_next_react_server_components_transform_rule(
     app_dir: Option<FileSystemPath>,
 ) -> Result<ModuleRule> {
     let enable_mdx_rs = next_config.mdx_rs().await?.is_some();
-    let cache_components_enabled = *next_config.enable_cache_components().await?;
-    let use_cache_enabled = *next_config.enable_use_cache().await?;
+    let cache_components_enabled = true;
+    let use_cache_enabled = true;
     let taint_enabled = *next_config.enable_taint().await?;
     let page_extensions = next_config
         .page_extensions()

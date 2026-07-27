@@ -233,7 +233,7 @@ describe('config', () => {
       expect(config).not.toHaveProperty('cacheComponents')
       expect(config.partialPrefetching).toBe(true)
       expect(config.experimental.ppr).toBe(true)
-      expect(config.experimental.useCache).toBe(true)
+      expect(config.experimental).not.toHaveProperty('useCache')
       expect(config.experimental.cachedNavigations).toBe(true)
     })
   })

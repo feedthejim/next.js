@@ -1228,12 +1228,6 @@ export interface ExperimentalConfig {
   useCacheTimeout?: number
 
   /**
-   * Enables the use of the `"use cache"` directive.
-   * @deprecated use top-level `cacheComponents` instead
-   */
-  useCache?: boolean
-
-  /**
    * Enables durable `"use cache"` remote cache entries across deployments. Only implemented for
    * Turbopack.
    */
@@ -2159,7 +2153,6 @@ export const defaultConfig = Object.freeze({
     transitionIndicator: false,
     gestureTransition: false,
     inlineCss: false,
-    useCache: undefined,
     slowModuleDetection: undefined,
     globalNotFound: false,
     browserDebugInfoInTerminal: 'warn',

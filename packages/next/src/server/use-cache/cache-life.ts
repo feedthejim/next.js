@@ -24,12 +24,6 @@ type CacheLifeProfiles =
   | (string & {})
 
 export function cacheLife(profile: CacheLifeProfiles | CacheLife): void {
-  if (!process.env.__NEXT_USE_CACHE) {
-    throw new Error(
-      '`cacheLife()` is only available with the `cacheComponents` config.'
-    )
-  }
-
   const workUnitStore = workUnitAsyncStorage.getStore()
 
   switch (workUnitStore?.type) {

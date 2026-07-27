@@ -73,7 +73,6 @@ function getBaseSWCOptions({
   bundleLayer,
   isCacheComponents,
   cacheHandlers,
-  useCacheEnabled,
   taintEnabled,
   trackDynamicImports,
   pageExtensions,
@@ -97,7 +96,6 @@ function getBaseSWCOptions({
   bundleLayer?: WebpackLayerName
   isCacheComponents?: boolean
   cacheHandlers?: NextConfig['cacheHandlers']
-  useCacheEnabled?: boolean
   taintEnabled?: boolean
   trackDynamicImports?: boolean
   pageExtensions?: string[]
@@ -225,7 +223,7 @@ function getBaseSWCOptions({
         ? {
             isReactServerLayer,
             cacheComponentsEnabled: isCacheComponents,
-            useCacheEnabled,
+            useCacheEnabled: true,
             taintEnabled,
             pageExtensions: pageExtensions || [],
           }
@@ -235,7 +233,7 @@ function getBaseSWCOptions({
         ? {
             isReactServerLayer,
             isDevelopment: development,
-            useCacheEnabled,
+            useCacheEnabled: true,
             hashSalt: serverReferenceHashSalt,
             cacheKinds: ['default', 'remote', 'private'].concat(
               cacheHandlers ? Object.keys(cacheHandlers) : []
@@ -418,7 +416,6 @@ export function getLoaderSWCOptions({
   bundleLayer,
   esm,
   cacheHandlers,
-  useCacheEnabled,
   taintEnabled,
   trackDynamicImports,
   pageExtensions,
@@ -449,7 +446,6 @@ export function getLoaderSWCOptions({
   serverReferenceHashSalt: string
   bundleLayer?: WebpackLayerName
   cacheHandlers: NextConfig['cacheHandlers']
-  useCacheEnabled?: boolean
   taintEnabled?: boolean
   trackDynamicImports?: boolean
   pageExtensions?: string[]
@@ -473,7 +469,6 @@ export function getLoaderSWCOptions({
     esm: !!esm,
     isCacheComponents,
     cacheHandlers,
-    useCacheEnabled,
     taintEnabled,
     trackDynamicImports,
     pageExtensions,

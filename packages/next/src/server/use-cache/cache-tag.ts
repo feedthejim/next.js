@@ -2,12 +2,6 @@ import { workUnitAsyncStorage } from '../app-render/work-unit-async-storage.exte
 import { validateTags } from '../lib/patch-fetch'
 
 export function cacheTag(...tags: string[]): void {
-  if (!process.env.__NEXT_USE_CACHE) {
-    throw new Error(
-      '`cacheTag()` is only available with the `cacheComponents` config.'
-    )
-  }
-
   const workUnitStore = workUnitAsyncStorage.getStore()
 
   switch (workUnitStore?.type) {
