@@ -295,8 +295,6 @@ import {
   type AdvanceableRenderStage,
 } from './staged-rendering'
 import {
-  anySegmentHasRuntimePrefetchEnabled,
-  anySegmentHasPartialPrefetchingEnabled,
   isPageAllowedToBlock,
   anySegmentNeedsInstantValidationInDev,
   anySegmentNeedsInstantValidationInBuild,
@@ -694,7 +692,6 @@ async function generateDynamicRSCPayload(
     // without skipping shared layouts.
     const needsFullTree =
       process.env.__NEXT_DEV_SERVER &&
-      ctx.renderOpts.cacheComponents &&
       !(
         requestStore?.type === 'request' &&
         isBypassingCachesInDev(requestStore, workStore)
@@ -1379,7 +1376,7 @@ async function generateDynamicFlightRenderResultWithStagesInDev(
       setCacheStatus('ready', htmlRequestId)
     }
 
-    const prefetchMode = await getPrefetchingModeForPage(renderOpts, loaderTree)
+    const prefetchMode = PrefetchingMode.Partial
 
     // A client navigation into a runtime-prefetch route extends the shell
     // through the runtime-prefetchable content: it has already settled on the
@@ -1393,17 +1390,10 @@ async function generateDynamicFlightRenderResultWithStagesInDev(
     if (initialRequestStore.isHmrRefresh === true) {
       prefetchStage = RenderStage.Static
     } else {
-      if (prefetchMode === PrefetchingMode.Partial) {
-        // TODO(app-shells): model `partialPrefetching: "unstable_eager"`
-        // TODO(app-shells): if this navigation came from <Link prefetch={true} />,
-        // we should show the shell for a speculative prefetch
-        // (which can have more data than the app shell)
-        prefetchStage = RenderStage.ShellRuntime
-      } else {
-        prefetchStage = (await anySegmentHasRuntimePrefetchEnabled(loaderTree))
-          ? RenderStage.Runtime
-          : RenderStage.Static
-      }
+      // TODO(app-shells): if this navigation came from <Link prefetch={true} />,
+      // we should show the shell for a speculative prefetch
+      // (which can have more data than the app shell)
+      prefetchStage = RenderStage.ShellRuntime
     }
 
     // With Server Components HMR cancellation enabled, a superseded HMR refresh
@@ -2183,11 +2173,8 @@ async function getRSCPayload(
     ],
     m: missingSlots,
     G: [GlobalError, globalErrorStyles],
-    // Tells the client whether this route supports per-segment prefetching.
-    // With Cache Components, all routes support it. Without it, only fully
-    // static pages do, because their per-segment prefetch responses are
-    // generated during static generation (build or ISR).
-    S: workStore.isStaticGeneration || ctx.renderOpts.cacheComponents,
+    // Every route supports per-segment prefetching.
+    S: true,
     h: getMetadataVaryParamsAccumulator(),
     r: getRootParamsVaryParamsAccumulator() ?? undefined,
     s: staleTimeIterable,
@@ -2338,11 +2325,8 @@ async function getErrorRSCPayload(
       ] as FlightDataPath,
     ],
     G: [GlobalError, globalErrorStyles],
-    // Tells the client whether this route supports per-segment prefetching.
-    // With Cache Components, all routes support it. Without it, only fully
-    // static pages do, because their per-segment prefetch responses are
-    // generated during static generation (build or ISR).
-    S: workStore.isStaticGeneration || ctx.renderOpts.cacheComponents,
+    // Every route supports per-segment prefetching.
+    S: true,
     h: getMetadataVaryParamsAccumulator(),
     r: getRootParamsVaryParamsAccumulator() ?? undefined,
   } satisfies InitialRSCPayload)
@@ -2474,12 +2458,10 @@ export type BinaryStreamOf<T> = AnyStream
  * `renderToHTMLOrFlightImpl` closure scope through globalThis.__next_require__.
  * V8 shares a single Context object per scope for all closures; by creating
  * these closures in their own function scope, the globalThis references only
- * retain `instrumented` and `cacheComponents`, not request-specific data like
- * req/res/workStore.
+ * retain `instrumented`, not request-specific data like req/res/workStore.
  */
 function installGlobalModuleLoadingHandlers(
   ComponentMod: AppPageModule,
-  cacheComponents: boolean,
   isTracingEnabled: boolean
 ) {
   const instrumented = wrapClientComponentLoader(ComponentMod, isTracingEnabled)
@@ -2489,9 +2471,6 @@ function installGlobalModuleLoadingHandlers(
   // to treat chunk/module loading with similar semantics as cache reads to avoid
   // module loading from causing a prerender to abort too early.
   const shouldTrackModuleLoading = () => {
-    if (!cacheComponents) {
-      return false
-    }
     if (process.env.__NEXT_DEV_SERVER) {
       return true
     }
@@ -2582,7 +2561,7 @@ async function renderToHTMLOrFlightImpl(
   if (ComponentMod.__next_app__) {
     const isTracingEnabled =
       getTracer().getActiveScopeSpan()?.isRecording() ?? false
-    installGlobalModuleLoadingHandlers(ComponentMod, true, isTracingEnabled)
+    installGlobalModuleLoadingHandlers(ComponentMod, isTracingEnabled)
   }
 
   if (
@@ -3413,11 +3392,7 @@ async function renderToStream(
           // or draft mode.
           !isBypassingCachesInDev(requestStore, workStore)
         ) {
-          const loaderTree = ctx.componentMod.routeModule.userland.loaderTree
-          const prefetchMode = await getPrefetchingModeForPage(
-            renderOpts,
-            loaderTree
-          )
+          const prefetchMode = PrefetchingMode.Partial
 
           const { stream: serverStream, debugChannel: returnedDebugChannel } =
             await stagedRenderWithCachesInDev({
@@ -4353,7 +4328,6 @@ function runDevValidationInBackground(
         const devRenderDidError = getDevRenderDidError()
 
         const lazyInputs = await prepareValidationInputs(
-          prefetchMode,
           navigationKind,
           result,
           requestStore,
@@ -4566,7 +4540,6 @@ function createMemoizedThunk<T>(cb: () => T): MemoizedThunk<T> {
 }
 
 async function prepareValidationInputs(
-  prefetchMode: PrefetchingMode,
   navigationKind: DevNavigationKind,
   result: StagedDevRenderResult,
   requestStore: RequestStore,
@@ -4595,29 +4568,17 @@ async function prepareValidationInputs(
     inputsFromNavigation = null
   }
 
-  if (prefetchMode === PrefetchingMode.Partial) {
-    return prepareValidationInputsInPartialPrefetching(
-      navigationKind,
-      requestStore,
-      ctx,
-      prerenderResumeDataCache,
-      createRequestStore,
-      getPayload,
-      onError,
-      inputsFromNavigation,
-      validationAbortSignal
-    )
-  } else {
-    return prepareValidationInputsInLegacyPrefetching(
-      ctx,
-      prerenderResumeDataCache,
-      createRequestStore,
-      getPayload,
-      onError,
-      inputsFromNavigation,
-      validationAbortSignal
-    )
-  }
+  return prepareValidationInputsInPartialPrefetching(
+    navigationKind,
+    requestStore,
+    ctx,
+    prerenderResumeDataCache,
+    createRequestStore,
+    getPayload,
+    onError,
+    inputsFromNavigation,
+    validationAbortSignal
+  )
 }
 
 async function prepareValidationInputsInPartialPrefetching(
@@ -4716,75 +4677,6 @@ async function prepareValidationInputsInPartialPrefetching(
   return { instantInputs, staticInputs }
 }
 
-async function prepareValidationInputsInLegacyPrefetching(
-  ctx: AppRenderContext,
-  prerenderResumeDataCache: ReturnType<typeof createPrerenderResumeDataCache>,
-  createRequestStore: () => RequestStore,
-  getPayload: (requestStore: RequestStore) => Promise<RSCPayload>,
-  onError: (error: unknown) => void,
-  inputsFromNavigation: ResolvedValidationInputs | null,
-  validationAbortSignal: AbortSignal
-): Promise<PrepareValidationInputsResult> {
-  const loaderTree = ctx.componentMod.routeModule.userland.loaderTree
-  const needsInstantValidation =
-    await anySegmentNeedsInstantValidationInDev(loaderTree)
-
-  // We're not in partialPrefetching, so we can use the same inputs for both
-  // instant validation and static shell validation.
-  if (inputsFromNavigation) {
-    // The main render is reusable.
-    const instantInputs = needsInstantValidation ? inputsFromNavigation : null
-    const staticInputs = inputsFromNavigation
-    return { instantInputs, staticInputs }
-  }
-
-  const LAZY_FULL_RENDER = createLazyDevValidationInputs(async () => {
-    const shouldRenderWithAppShell = false
-    const prefetchMode = PrefetchingMode.LegacySpeculative
-    const inputs = await renderWithWarmCachesForValidationInDev(
-      ctx,
-      createRequestStore,
-      getPayload,
-      onError,
-      prerenderResumeDataCache,
-      prefetchMode,
-      shouldRenderWithAppShell,
-      validationAbortSignal
-    )
-    if (forwardErrorsFromWarmRender(inputs, ctx)) {
-      return VALIDATION_BAILOUT
-    }
-    return inputs
-  })
-
-  const LAZY_RUNTIME_PRERENDER = createLazyDevValidationInputs(async () => {
-    const inputs = await prerenderWithWarmCachesForStaticValidationInDev(
-      ctx,
-      createRequestStore,
-      getPayload,
-      onError,
-      prerenderResumeDataCache,
-      validationAbortSignal
-    )
-    if (forwardErrorsFromWarmRender(inputs, ctx)) {
-      return VALIDATION_BAILOUT
-    }
-    return inputs
-  })
-
-  // If instant validation is needed, we need to perform a full rerender.
-  // Otherwise, a prerender is enough.
-  if (needsInstantValidation) {
-    const instantInputs = LAZY_FULL_RENDER
-    const staticInputs = instantInputs
-    return { instantInputs, staticInputs }
-  } else {
-    const instantInputs = null
-    const staticInputs = LAZY_RUNTIME_PRERENDER
-    return { instantInputs, staticInputs }
-  }
-}
-
 async function resolveLazyDevValidationInputs(
   resolvedOrLazyInputs: DevValidationInputs | LazyDevValidationInputs,
   ctx: AppRenderContext
@@ -4839,35 +4731,11 @@ interface StagedDevRenderSetup {
 }
 
 export enum PrefetchingMode {
-  LegacySpeculative = 1,
-  Partial = 2,
-}
-
-async function getPrefetchingModeForPage(
-  renderOpts: Pick<RenderOpts, 'partialPrefetching'>,
-  loaderTree: LoaderTree
-): Promise<PrefetchingMode> {
-  const debug =
-    process.env.NEXT_PRIVATE_DEBUG_VALIDATION === '1' ? console.log : undefined
-
-  // TODO(app-shells): support "unstable_eager"
-  if (renderOpts.partialPrefetching) {
-    debug?.('using prefetching mode Partial because of next.config.js')
-    return PrefetchingMode.Partial
-  }
-  if (await anySegmentHasPartialPrefetchingEnabled(loaderTree)) {
-    debug?.('using prefetching mode Partial because of segment config')
-    return PrefetchingMode.Partial
-  }
-
-  debug?.('using prefetching mode LegacySpeculative')
-  return PrefetchingMode.LegacySpeculative
+  Partial = 1,
 }
 
 function getSyncIOMode(prefetchMode: PrefetchingMode): SyncIOMode {
   switch (prefetchMode) {
-    case PrefetchingMode.LegacySpeculative:
-      return SyncIOMode.AllowedInRuntimeOrDynamic
     case PrefetchingMode.Partial:
       return SyncIOMode.AllowedInDynamic
   }
@@ -6170,7 +6038,7 @@ export async function runValidationInDevFromSnapshot(
   // so `react-server-dom-*` can resolve client references during the validation
   // prerenders, exactly as the main render does after loading its module.
   if (componentMod.__next_app__) {
-    installGlobalModuleLoadingHandlers(componentMod, true, false)
+    installGlobalModuleLoadingHandlers(componentMod, false)
   }
 
   // `requestFallbackRouteParams` reproduces `ctx.getDynamicParamFromSegment`
@@ -6839,7 +6707,7 @@ async function validateStagedShell(
  * detect dynamic holes without Suspense.
  */
 async function validateInstantConfigs(
-  prefetchMode: PrefetchingMode,
+  _prefetchMode: PrefetchingMode,
   accumulatedChunks: AccumulatedStreamChunks,
   debugChunks: null | Array<Uint8Array>,
   startTime: number,
@@ -7011,21 +6879,9 @@ async function validateInstantConfigs(
       validationSampleTracking,
     }
 
-    let dynamicHoleKind: DynamicHoleKind
-    switch (prefetchKind) {
-      case ValidationPrefetchKind.Shell: {
-        dynamicHoleKind = payloadResult.hasAmbiguousErrors
-          ? DynamicHoleKind.Link
-          : DynamicHoleKind.Dynamic
-        break
-      }
-      case ValidationPrefetchKind.LegacySpeculative: {
-        dynamicHoleKind = payloadResult.hasAmbiguousErrors
-          ? DynamicHoleKind.Runtime
-          : DynamicHoleKind.Dynamic
-        break
-      }
-    }
+    const dynamicHoleKind = payloadResult.hasAmbiguousErrors
+      ? DynamicHoleKind.Link
+      : DynamicHoleKind.Dynamic
 
     let result: NavigationValidationResult
     try {
@@ -7185,10 +7041,7 @@ async function validateInstantConfigs(
 
   let impairedValidation: null | Error | AggregateError = null
 
-  const prefetchKind =
-    prefetchMode === PrefetchingMode.Partial
-      ? ValidationPrefetchKind.Shell
-      : ValidationPrefetchKind.LegacySpeculative
+  const prefetchKind = ValidationPrefetchKind.Shell
 
   for (let depth = maxDepth - 1; depth >= 0; depth--) {
     const maxGroupDepth = groupDepthsByUrlDepth[depth]
@@ -7294,7 +7147,7 @@ async function renderWithRestartOnCacheMissInValidation(
   requestStore: RequestStore
 }> {
   const { componentMod: ComponentMod } = ctx
-  const shouldRenderAppShell = prefetchMode === PrefetchingMode.Partial
+  const shouldRenderAppShell = true
 
   const { clientModules } = getClientReferenceManifest()
   const renderFlightStream = process.env.__NEXT_USE_NODE_STREAMS
@@ -7651,10 +7504,7 @@ async function validateInstantConfigInBuildWithSample(
 
   const { workStore: outerWorkStore } = outerCtx
   const loaderTree = outerCtx.componentMod.routeModule.userland.loaderTree
-  const prefetchMode = await getPrefetchingModeForPage(
-    outerCtx.renderOpts,
-    loaderTree
-  )
+  const prefetchMode = PrefetchingMode.Partial
 
   const route = outerWorkStore.route
 
@@ -9767,8 +9617,7 @@ async function collectSegmentData(
     // prerender accessed no runtime data that disqualifies a static
     // attempt. The fallback-param upgradeability rule is applied at access
     // time — see trackRuntimeDataAccessed — so only the settled value is
-    // read here. Only the modern (cacheComponents) prerender tracks
-    // accesses; legacy prerenders conservatively never set the hint.
+    // read here. The prerender tracks accesses and stores the settled hint.
     const hintCell =
       prerenderStore.type === 'prerender'
         ? prerenderStore.shouldAttemptStaticPrefetch
@@ -9798,14 +9647,10 @@ async function collectSegmentData(
     // during ISR/revalidation.
     const manifestHints = renderOpts.prefetchHints?.[pagePath]
     if (manifestHints === undefined) {
-      if (!prefetchInlining || !renderOpts.cacheComponents) {
-        // Without cacheComponents, dynamic pages have no static shell
-        // and therefore no prerender pass to compute hints; and with
-        // inlining disabled, a missing entry just means the route didn't
-        // qualify for the static-prefetch hint at build. Either way this
-        // is expected — skip the hint system for this route and let
-        // prefetching proceed normally without inlining decisions (the
-        // client goes straight to runtime prefetches where it matters).
+      if (!prefetchInlining) {
+        // With inlining disabled, a missing entry means the route did not
+        // qualify for the static-prefetch hint at build. Skip the hint system
+        // and let the client proceed directly to runtime prefetching.
         hints = null
       } else {
         // TODO(#91407): No hints found for this route. This currently
@@ -9855,7 +9700,7 @@ async function collectSegmentData(
   // above), so we need to merge them in here. At runtime/ISR the hints
   // are already embedded in the FlightRouterState, so this is null.
   metadata.segmentData = await ComponentMod.collectSegmentData(
-    renderOpts.cacheComponents,
+    true,
     fullPageDataBuffer,
     staleTime,
     clientModules,

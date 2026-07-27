@@ -14,10 +14,10 @@
   prefetch setup, render-option types, and the normal static-generation
   pipeline now use one Cache Components, Partial Prefetching, and cached
   navigation model. Dynamic RSC requests now use only the staged development
-  and production renderers. Runtime-prefetch resume-cache installation is a
-  directly testable renderer seam. `pnpm fork-test` and
-  `pnpm fork-test-browser` define the early App Router contract allowlist.
-  `fork-metrics.json` is the current scorecard.
+  and production renderers, and validation has one Partial Prefetching mode.
+  Runtime-prefetch resume-cache installation is a directly testable renderer
+  seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
+  Router contract allowlist. `fork-metrics.json` is the current scorecard.
 - **Constraints:** Backward compatibility is out of scope. Do not add migration
   layers or special removed-feature errors. Preserve only behavior in the fork
   contract. Keep each independently verified slice committed before starting
@@ -26,9 +26,9 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Delete the remaining non-Cache-Components dynamic HTML
-  rendering branches, then collapse the client to one segment-cache prefetch
-  protocol.
+- **Next action:** Delete the remaining legacy PPR and Cache Components gates
+  in the App Router renderer, then collapse the client to one segment-cache
+  prefetch protocol.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -40,6 +40,20 @@
   assertions passed.
 
 ## History
+
+### 2026-07-27: One Partial Prefetching renderer mode
+
+Removed per-page prefetch-mode detection, the legacy speculative validation
+pipeline, and false-mode Cache Components gates from RSC payload and prefetch
+hint generation. Development validation and production rendering now share one
+Partial Prefetching model. Authored framework and App Router renderer source
+each fell by 155 lines and 5,773 bytes, and Cache Components references fell by 10. Under matching warm core-build conditions, the distribution fell by
+111,994 bytes, including 30,514 JavaScript bytes. The 16-test fast allowlist
+passed in 2.31 seconds, types passed in 18.45 seconds, the core build passed in
+26.24 seconds, and all 12 production PPR partial-hydration assertions passed in
+31.74 seconds including package preparation. These single-run timings were
+1.44 to 2.97 seconds slower than the prior slice, so they remain directional
+and should be repeated if the increase persists.
 
 ### 2026-07-27: One staged dynamic RSC path
 
