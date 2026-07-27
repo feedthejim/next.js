@@ -46,8 +46,8 @@
   required follow-up is implicit.
 - **Last verified:** 2026-07-27 on `feedthejim/simplify-next-rendering`.
   `pnpm --filter=next types`, the 19-test fast App Router allowlist,
-  `pnpm --filter=next build`, and 12 production Turbopack PPR partial-hydration
-  assertions passed.
+  `pnpm --filter=next build`, 12 production Turbopack PPR partial-hydration
+  assertions, and the Partial Prefetching navigation journey passed.
 
 ## History
 
@@ -63,11 +63,12 @@ The warm built distribution fell by 38,149 bytes, including 8,729 JavaScript
 bytes. Types passed in 14.97 seconds, the 19-test fast contract passed in 1.81
 seconds, the core build passed in 22.57 seconds, and the targeted PPR journey
 passed all 12 assertions in 24.98 seconds. The production server was ready in
-73 milliseconds and the first browser load took 61 milliseconds. Total
-validation fell by 17.51 seconds because this export-focused slice ran one
-browser journey instead of two, not because of a demonstrated framework speed
-improvement. Comparable type, fast-test, and build timings changed by no more
-than 0.26 seconds.
+73 milliseconds and the first browser load took 61 milliseconds. The Partial
+Prefetching navigation journey also passed as a separate behavior guardrail.
+Total validation fell by 17.51 seconds because this export-focused slice
+recorded one browser journey instead of two, not because of a demonstrated
+framework speed improvement. Comparable type, fast-test, and build timings
+changed by no more than 0.26 seconds.
 
 ### 2026-07-27: Route-kind-derived response caching
 
