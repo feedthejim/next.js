@@ -3,6 +3,7 @@ import {
   createOpaqueFallbackRouteParams,
   getFallbackRouteParams,
   getPlaceholderFallbackRouteParams,
+  selectFallbackRouteParams,
 } from './fallback-params'
 import type { FallbackRouteParam } from '../../build/static-paths/types'
 import type AppPageRouteModule from '../route-modules/app-page/module'
@@ -119,6 +120,34 @@ describe('placeholder fallback route params', () => {
       { paramName: 'slug', paramType: 'catchall' },
       { paramName: 'optional', paramType: 'optional-catchall' },
     ])
+  })
+})
+
+describe('selectFallbackRouteParams', () => {
+  const lang = { paramName: 'lang', paramType: 'dynamic' } as const
+  const id = { paramName: 'id', paramType: 'dynamic' } as const
+  const routes = [
+    {
+      pathname: '/mixed/[lang]/[id]',
+      fallbackRouteParams: [lang, id],
+    },
+    {
+      pathname: '/mixed/en/[id]',
+      fallbackRouteParams: [id],
+    },
+    {
+      pathname: '/mixed/en/x',
+      fallbackRouteParams: undefined,
+    },
+  ]
+
+  it.each([
+    ['/mixed/en/123', [id]],
+    ['/mixed/fr/123', [lang, id]],
+    ['/mixed/en/x', []],
+    ['/other', null],
+  ])('selects the fallback params for %s', (pathname, expected) => {
+    expect(selectFallbackRouteParams(routes, pathname)).toEqual(expected)
   })
 })
 

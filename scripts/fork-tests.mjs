@@ -4,6 +4,7 @@ import { resolve } from 'node:path'
 
 const fastSuites = [
   'packages/next/src/server/app-render/postponed-state.test.ts',
+  'packages/next/src/server/request/fallback-params.test.ts',
   'packages/next/src/server/response-cache/index.test.ts',
   'packages/next/src/server/resume-data-cache/resume-data-cache.test.ts',
   'test/unit/app-dir/flight-router-state/flight-router-state.test.ts',

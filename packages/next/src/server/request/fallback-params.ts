@@ -1,11 +1,20 @@
 import { resolveRouteParamsFromTree } from '../../build/static-paths/utils'
-import type { FallbackRouteParam } from '../../build/static-paths/types'
+import type {
+  FallbackRouteParam,
+  PrerenderedRoute,
+} from '../../build/static-paths/types'
 import type { DynamicParamTypesShort } from '../../shared/lib/app-router-types'
 import { dynamicParamTypes } from '../app-render/get-short-dynamic-param-type'
 import type AppPageRouteModule from '../route-modules/app-page/module'
 import { parseNormalizedAppRoute } from '../../shared/lib/router/routes/app'
 import { extractPathnameRouteParamSegmentsFromLoaderTree } from '../../build/static-paths/app/extract-pathname-route-param-segments-from-loader-tree'
 import { getParamProperties } from '../../shared/lib/router/utils/get-segment-param'
+import { getRouteRegex } from '../../shared/lib/router/utils/route-regex'
+
+type FallbackRouteCandidate = Pick<
+  PrerenderedRoute,
+  'pathname' | 'fallbackRouteParams'
+>
 
 export type OpaqueFallbackRouteParamValue = [
   /**
@@ -104,6 +113,25 @@ export function getPlaceholderFallbackRouteParams(
       (Array.isArray(value) && value.length === 1 && value[0] === placeholder)
     )
   })
+}
+
+export function selectFallbackRouteParams(
+  routes: readonly FallbackRouteCandidate[],
+  pathname: string
+): readonly FallbackRouteParam[] | null {
+  let selected: readonly FallbackRouteParam[] | null = null
+
+  for (const route of routes) {
+    const fallbackRouteParams = route.fallbackRouteParams ?? []
+    if (
+      getRouteRegex(route.pathname).re.test(pathname) &&
+      (selected === null || fallbackRouteParams.length < selected.length)
+    ) {
+      selected = fallbackRouteParams
+    }
+  }
+
+  return selected
 }
 
 /**

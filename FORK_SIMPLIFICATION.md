@@ -57,11 +57,13 @@
   Render-server initialization and startup reporting no longer transport that
   value either: development and build startup report the product invariant
   directly. App render options and work stores likewise carry no Cache
-  Components mode field. App development requests always compute the
-  most-specific fallback-param set, and export always uses the staged
-  static-shell partition. The development warmup suite now has one Partial
-  Prefetching model across four fixture and load-mode entry points instead of
-  an eight-file on/off matrix.
+  Components mode field. App development requests select the most-specific
+  fallback-param set through a directly tested request-layer contract, and
+  export always uses the staged static-shell partition. The development warmup
+  suite now has one Partial Prefetching model across four fixture and load-mode
+  entry points instead of an eight-file on/off matrix, and no longer provisions
+  mixed-param routes to retest the request-layer selection algorithm in a
+  browser.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -76,16 +78,16 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Move mixed static and fallback param selection into a cheap
-  request-layer contract, then delete its stale warmup browser routes and
-  assertions.
+- **Next action:** Resolve the stale development fallback-validation browser
+  suite against the always-on diagnostics contract, then resume removing Cache
+  Components configuration plumbing at compiler and route-analysis boundaries.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
   performance metrics; each slice is committed; the worktree is clean; and no
   required follow-up is implicit.
 - **Last verified:** 2026-07-27 on `feedthejim/simplify-next-rendering`.
-  `pnpm --filter=next types`, the 19-test fast App Router allowlist, 108 focused
+  `pnpm --filter=next types`, the 56-test fast App Router allowlist, 108 focused
   dev-overlay assertions, `pnpm --filter=next build`, the 34-assertion
   production Turbopack runtime pack, the retained navigation journey, all 12
   PPR partial-hydration assertions, the transition-instrumentation journey, and
@@ -94,6 +96,42 @@
   revalidation assertions.
 
 ## History
+
+### 2026-07-27: Direct fallback-route selection contract
+
+Moved development fallback-route precedence into the request module and
+covered the base dynamic route, a more-specific partially covered route, a
+fully concrete route, and a non-match directly. `BaseServer` now delegates to
+that function. Deleted the three shared mixed-param browser cases, which
+expanded to 12 tests across the four retained warmup entry points, along with
+their four duplicated route fixture files. The fallback-param test file is now
+part of the fast fork contract.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** Route matching and fallback-set precedence now have one
+  named owner and four direct cases. The development warmup suite no longer
+  couples this request algorithm to two fixture copies, server restarts,
+  browser navigation, and render-phase log labels.
+- **Leanness:** The repository source and fixture diff is 171 net lines
+  smaller. Authored framework source increased by 48 lines and 952 bytes
+  because the extracted seam and its direct test are tracked there. Total test
+  file counts are unchanged because coverage moved into an existing unit file.
+  The comparable warm distribution increased by 7,418 bytes overall and 108
+  JavaScript bytes. These small framework and artifact increases buy a stable
+  contract while removing much larger browser-fixture machinery.
+- **Runtime performance:** The retained Turbopack navigation and initial-load
+  fixtures reached ready state in 280 and 275 milliseconds, with both focused
+  cache assertions passing. The production algorithm is unchanged apart from
+  delegating the same selection loop, so this directional startup observation
+  is a guardrail rather than a performance claim.
+- **Iteration efficiency:** All 37 fallback-param assertions passed directly in
+  1.41 seconds. Types passed in 14.41 seconds, the expanded 56-test fast
+  allowlist in 1.82 seconds, the two retained browser assertions in 22.18
+  seconds with a 21.07-second Jest body, and the core build in 21.82 seconds.
+  Total measured validation cost was 61.64 seconds, 3.00 seconds above the
+  preceding slice because this run includes the new direct contract and
+  browser-run variation.
 
 ### 2026-07-27: One development warmup matrix
 

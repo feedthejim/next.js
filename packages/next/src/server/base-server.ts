@@ -62,7 +62,6 @@ import { isDynamicRoute } from '../shared/lib/router/utils'
 import { execOnce } from '../shared/lib/utils'
 import { isBlockedPage } from './utils'
 import { getBotType, isBot } from '../shared/lib/router/utils/is-bot'
-import { getRouteRegex } from '../shared/lib/router/utils/route-regex'
 import RenderResult from './render-result'
 import { removeTrailingSlash } from '../shared/lib/router/utils/remove-trailing-slash'
 import { denormalizePagePath } from '../shared/lib/page-path/denormalize-page-path'
@@ -155,7 +154,10 @@ import { fixMojibake } from './lib/fix-mojibake'
 import { setCacheBustingSearchParamWithHash } from '../client/components/router-reducer/set-cache-busting-search-param'
 import type { CacheControl } from './lib/cache-control'
 import type { PrerenderedRoute } from '../build/static-paths/types'
-import { createOpaqueFallbackRouteParams } from './request/fallback-params'
+import {
+  createOpaqueFallbackRouteParams,
+  selectFallbackRouteParams,
+} from './request/fallback-params'
 import { RouteKind } from './route-kind'
 import type { ErrorModule } from './load-default-error-components'
 import {
@@ -2443,21 +2445,10 @@ export default abstract class Server<
         // for its own URL, so it must be considered alongside the others: it
         // wins over the base dynamic route (`/blog/[slug]`) and leaves its
         // statically-known params out of the deferred set.
-        let perUrlFallbackRouteParams: NonNullable<
-          (typeof pathsResults.prerenderedRoutes)[number]['fallbackRouteParams']
-        > | null = null
-        for (const route of pathsResults.prerenderedRoutes) {
-          const fallbackRouteParams = route.fallbackRouteParams ?? []
-          if (!getRouteRegex(route.pathname).re.test(urlPathname)) {
-            continue
-          }
-          if (
-            perUrlFallbackRouteParams === null ||
-            fallbackRouteParams.length < perUrlFallbackRouteParams.length
-          ) {
-            perUrlFallbackRouteParams = fallbackRouteParams
-          }
-        }
+        const perUrlFallbackRouteParams = selectFallbackRouteParams(
+          pathsResults.prerenderedRoutes,
+          urlPathname
+        )
         if (perUrlFallbackRouteParams && perUrlFallbackRouteParams.length > 0) {
           addRequestMeta(
             req,

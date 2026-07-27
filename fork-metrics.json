@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
-  "label": "one-dev-warmup-matrix",
-  "capturedAt": "2026-07-27T20:17:07.922Z",
+  "label": "direct-fallback-route-selection",
+  "capturedAt": "2026-07-27T20:22:30.842Z",
   "git": {
-    "baseHead": "b25e893c30"
+    "baseHead": "9bfd28f8e4"
   },
   "source": {
     "frameworkTracked": {
       "files": 2458,
-      "lines": 1093990,
-      "bytes": 51401316
+      "lines": 1094038,
+      "bytes": 51402268
     },
     "frameworkAuthored": {
       "files": 1753,
-      "lines": 299659,
-      "bytes": 9658867
+      "lines": 299707,
+      "bytes": 9659819
     },
     "vendoredCompiled": {
       "files": 705,
@@ -73,28 +73,28 @@
   },
   "builtArtifacts": {
     "conditions": "warm local after final core release build; comparable to prior warm core-build snapshot",
-    "nextDistBytes": 180654448,
-    "nextDistJavaScriptBytes": 76321684
+    "nextDistBytes": 180661866,
+    "nextDistJavaScriptBytes": 76321792
   },
-  "validationTimingConditions": "warm local; focusedTests is fork fast allowlist; browserTests is two retained Turbopack warmup entry points with one fully covered param assertion each",
+  "validationTimingConditions": "warm local; directTests is fallback-param request contract; focusedTests is 56-assertion fork fast allowlist; browserTests is two retained Turbopack warmup entry points with one fully covered cache assertion each",
   "validationTimingsMs": {
-    "types": 13950,
-    "directTests": null,
-    "focusedTests": 1790,
+    "types": 14410,
+    "directTests": 1410,
+    "focusedTests": 1820,
     "testSelectionOverhead": null,
     "httpTests": null,
     "httpTestBody": null,
     "browserStartup": null,
-    "browserTestBody": 19712,
-    "browserTests": 20860,
+    "browserTestBody": 21072,
+    "browserTests": 22180,
     "edgeDceBuild": null,
-    "nextBuild": 22040,
+    "nextBuild": 21820,
     "buildAll": null,
-    "total": 58640
+    "total": 61640
   },
   "runtimePerformance": {
     "conditions": "isolated Turbopack development warmup fixtures for retained initial-load and navigation entry points",
-    "devStartupMs": 295,
+    "devStartupMs": 280,
     "productionStartupMs": null,
     "routeHandlerRequestMs": null,
     "routeHandlerRevalidationMs": null,
