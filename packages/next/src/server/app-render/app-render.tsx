@@ -9189,14 +9189,11 @@ async function prerenderToStream(
               ? DynamicHTMLPreludeState.Empty
               : DynamicHTMLPreludeState.Full,
             fallbackRouteParams,
-            resumeDataCache,
-            cacheComponents
+            resumeDataCache
           )
         } else {
-          metadata.postponed = await getDynamicDataPostponedState(
-            resumeDataCache,
-            cacheComponents
-          )
+          metadata.postponed =
+            await getDynamicDataPostponedState(resumeDataCache)
         }
         reactServerResult.consume()
         return {
@@ -9414,15 +9411,12 @@ async function prerenderToStream(
               ? DynamicHTMLPreludeState.Empty
               : DynamicHTMLPreludeState.Full,
             fallbackRouteParams,
-            resumeDataCache,
-            cacheComponents
+            resumeDataCache
           )
         } else {
           // Dynamic Data case.
-          metadata.postponed = await getDynamicDataPostponedState(
-            resumeDataCache,
-            cacheComponents
-          )
+          metadata.postponed =
+            await getDynamicDataPostponedState(resumeDataCache)
         }
         // Regardless of whether this is the Dynamic HTML or Dynamic Data case we need to ensure we include
         // server inserted html in the static response because the html that is part of the prerender may depend on it
@@ -9447,10 +9441,7 @@ async function prerenderToStream(
         }
       } else if (fallbackRouteParams && fallbackRouteParams.size > 0) {
         // Rendering the fallback case.
-        metadata.postponed = await getDynamicDataPostponedState(
-          resumeDataCache,
-          cacheComponents
-        )
+        metadata.postponed = await getDynamicDataPostponedState(resumeDataCache)
 
         const pprFallbackDynamicOpts = {
           getServerInsertedHTML,
@@ -9965,8 +9956,7 @@ async function prerenderToStream(
         let errorHtmlStream: AnyStream = prelude
         if (originalFlightPrerenderResultIsDynamic) {
           metadata.postponed = await getDynamicDataPostponedState(
-            originalResumeDataCache,
-            cacheComponents
+            originalResumeDataCache
           )
           originalFlightPrerenderResult.consume()
           errorServerResult.consume()

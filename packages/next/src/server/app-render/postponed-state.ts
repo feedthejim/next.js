@@ -79,8 +79,7 @@ export async function getDynamicHTMLPostponedState(
   postponed: ReactPostponed,
   preludeState: DynamicHTMLPreludeState,
   fallbackRouteParams: OpaqueFallbackRouteParams | null,
-  resumeDataCache: PrerenderResumeDataCache | RenderResumeDataCache,
-  isCacheComponentsEnabled: boolean
+  resumeDataCache: PrerenderResumeDataCache | RenderResumeDataCache
 ): Promise<string> {
   const data: DynamicHTMLPostponedState['data'] = [preludeState, postponed]
   const dataString = JSON.stringify(data)
@@ -90,8 +89,7 @@ export async function getDynamicHTMLPostponedState(
   if (!fallbackRouteParams || fallbackRouteParams.size === 0) {
     // Serialized as `<postponedString.length>:<postponedString><renderResumeDataCache>`
     return `${dataString.length}:${dataString}${await stringifyResumeDataCache(
-      createRenderResumeDataCache(resumeDataCache),
-      isCacheComponentsEnabled
+      createRenderResumeDataCache(resumeDataCache)
     )}`
   }
 
@@ -104,14 +102,13 @@ export async function getDynamicHTMLPostponedState(
   const postponedString = `${replacementsString.length}${replacementsString}${dataString}`
 
   // Serialized as `<postponedString.length>:<postponedString><renderResumeDataCache>`
-  return `${postponedString.length}:${postponedString}${await stringifyResumeDataCache(resumeDataCache, isCacheComponentsEnabled)}`
+  return `${postponedString.length}:${postponedString}${await stringifyResumeDataCache(resumeDataCache)}`
 }
 
 export async function getDynamicDataPostponedState(
-  resumeDataCache: PrerenderResumeDataCache | RenderResumeDataCache,
-  isCacheComponentsEnabled: boolean
+  resumeDataCache: PrerenderResumeDataCache | RenderResumeDataCache
 ): Promise<string> {
-  return `4:null${await stringifyResumeDataCache(createRenderResumeDataCache(resumeDataCache), isCacheComponentsEnabled)}`
+  return `4:null${await stringifyResumeDataCache(createRenderResumeDataCache(resumeDataCache))}`
 }
 
 export function parsePostponedState(

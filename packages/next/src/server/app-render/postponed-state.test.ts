@@ -21,8 +21,6 @@ export function createMockOpaqueFallbackRouteParams(
   return new Map(Object.entries(params))
 }
 
-const isCacheComponentsEnabled = process.env.__NEXT_CACHE_COMPONENTS === 'true'
-
 describe('getDynamicHTMLPostponedState', () => {
   it('serializes a HTML postponed state with fallback params', async () => {
     const key = '%%drp:slug:e9615126684e5%%'
@@ -53,8 +51,7 @@ describe('getDynamicHTMLPostponedState', () => {
       { [key]: key, nested: { [key]: key } } as any,
       DynamicHTMLPreludeState.Full,
       fallbackRouteParams,
-      prerenderResumeDataCache,
-      isCacheComponentsEnabled
+      prerenderResumeDataCache
     )
 
     const parsed = parsePostponedState(state, { slug: '123' }, undefined)
@@ -96,8 +93,7 @@ describe('getDynamicHTMLPostponedState', () => {
       { key: 'value' } as any,
       DynamicHTMLPreludeState.Full,
       null,
-      createPrerenderResumeDataCache(),
-      isCacheComponentsEnabled
+      createPrerenderResumeDataCache()
     )
     expect(state).toMatchInlineSnapshot(`"19:[1,{"key":"value"}]null"`)
   })
@@ -111,8 +107,7 @@ describe('getDynamicHTMLPostponedState', () => {
       { [key]: key } as any,
       DynamicHTMLPreludeState.Full,
       fallbackRouteParams,
-      createPrerenderResumeDataCache(),
-      isCacheComponentsEnabled
+      createPrerenderResumeDataCache()
     )
 
     const value = 'hello'
@@ -139,8 +134,7 @@ describe('getDynamicHTMLPostponedState', () => {
 describe('getDynamicDataPostponedState', () => {
   it('serializes a data postponed state with fallback params', async () => {
     const state = await getDynamicDataPostponedState(
-      createPrerenderResumeDataCache(),
-      isCacheComponentsEnabled
+      createPrerenderResumeDataCache()
     )
     expect(state).toMatchInlineSnapshot(`"4:nullnull"`)
   })

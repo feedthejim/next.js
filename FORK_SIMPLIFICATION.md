@@ -9,9 +9,10 @@
   paths, public options, dependencies, and expensive test combinations.
 - **Current shape:** Branch `feedthejim/simplify-next-rendering` from
   `1f65c7646e`. `AGENTS.md` contains the product contract, architecture
-  principles, supported-behavior map, and phased checklist. Configuration and
-  Flight router-state construction now use one rendering and Partial
-  Prefetching model. `fork-metrics.json` is the current scorecard.
+  principles, supported-behavior map, and phased checklist. Configuration,
+  Flight router-state construction, and resume-cache serialization now use one
+  Cache Components and Partial Prefetching model. `fork-metrics.json` is the
+  current scorecard.
 - **Constraints:** Backward compatibility is out of scope. Do not add migration
   layers or special removed-feature errors. Preserve only behavior in the fork
   contract. Keep each independently verified slice committed before starting
@@ -28,10 +29,20 @@
   performance metrics; each slice is committed; the worktree is clean; and no
   required follow-up is implicit.
 - **Last verified:** 2026-07-27 on `feedthejim/simplify-next-rendering`.
-  `pnpm --filter=next types`, three focused Flight router-state unit tests, and
-  `pnpm --filter=next build` passed.
+  `pnpm --filter=next types`, 12 focused postponed-state and resume-cache unit
+  tests, and two consecutive `pnpm --filter=next build` runs passed.
 
 ## History
+
+### 2026-07-27: Single resume-cache wire format
+
+Removed the Cache Components format parameter from postponed-state and resume
+cache serialization. Non-prerenderable cache entries are now always omitted,
+and the dual-mode test branches are gone. Authored framework source fell by 53
+lines, App Router renderer source fell by 19 lines, and Cache Components
+references fell by seven. All 12 focused serialization tests pass. Warm package
+build observations settled near 22 seconds. Dist size is marked non-comparable
+because a stopped watcher raced with clean output generation during this slice.
 
 ### 2026-07-27: Always-partial Flight router state
 

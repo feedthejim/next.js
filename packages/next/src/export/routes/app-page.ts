@@ -244,10 +244,7 @@ export async function exportAppPage(
       cacheControl,
       fetchMetrics,
       renderResumeDataCache: renderResumeDataCache
-        ? await stringifyResumeDataCache(
-            renderResumeDataCache,
-            renderOpts.cacheComponents
-          )
+        ? await stringifyResumeDataCache(renderResumeDataCache)
         : undefined,
     }
   } catch (err) {

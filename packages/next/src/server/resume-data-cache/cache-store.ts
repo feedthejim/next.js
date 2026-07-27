@@ -120,8 +120,7 @@ export function parseUseCacheCacheStore(
  * @returns A promise that resolves to an array of key-value pairs with serialized values
  */
 export async function serializeUseCacheCacheStore(
-  entries: IterableIterator<[string, Promise<CollectedCacheResult>]>,
-  isCacheComponentsEnabled: boolean
+  entries: IterableIterator<[string, Promise<CollectedCacheResult>]>
 ): Promise<Array<[string, UseCacheCacheStoreSerialized] | null>> {
   return Promise.all(
     Array.from(entries).map(([key, value]) => {
@@ -134,9 +133,8 @@ export async function serializeUseCacheCacheStore(
             readRootParamNames,
           }) => {
             if (
-              isCacheComponentsEnabled &&
-              (entry.revalidate === 0 ||
-                entry.expire < MIN_PRERENDERABLE_EXPIRE)
+              entry.revalidate === 0 ||
+              entry.expire < MIN_PRERENDERABLE_EXPIRE
             ) {
               // The entry was omitted from the prerender result, and subsequently
               // does not need to be included in the serialized RDC.

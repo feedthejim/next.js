@@ -219,6 +219,7 @@ const metrics = {
     unitFiles: testFiles.filter((file) => file.startsWith('test/unit/')).length,
   },
   builtArtifacts: {
+    conditions: args.get('artifact-conditions') ?? null,
     nextDistBytes: directoryBytes('packages/next/dist'),
     nextDistJavaScriptBytes: directoryBytes(
       'packages/next/dist',
