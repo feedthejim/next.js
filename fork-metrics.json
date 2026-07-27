@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
-  "label": "canonical-app-page-render-cache",
-  "capturedAt": "2026-07-27T18:28:53.036Z",
+  "label": "route-kind-static-paths",
+  "capturedAt": "2026-07-27T18:32:51.310Z",
   "git": {
-    "baseHead": "7c8ed1e60b"
+    "baseHead": "b4dcc86dd5"
   },
   "source": {
     "frameworkTracked": {
       "files": 2458,
-      "lines": 1095843,
-      "bytes": 51475455
+      "lines": 1095817,
+      "bytes": 51474410
     },
     "frameworkAuthored": {
       "files": 1753,
-      "lines": 301512,
-      "bytes": 9733006
+      "lines": 301486,
+      "bytes": 9731961
     },
     "vendoredCompiled": {
       "files": 705,
@@ -48,7 +48,7 @@
   },
   "legacyModeReferences": {
     "cacheComponents": 153,
-    "routePPR": 57,
+    "routePPR": 2,
     "appPPR": 15,
     "cacheComponentsEnv": 29,
     "pprEnv": 2,
@@ -68,24 +68,24 @@
   },
   "builtArtifacts": {
     "conditions": "warm-local-after-core-build",
-    "nextDistBytes": 181613749,
-    "nextDistJavaScriptBytes": 76540877
+    "nextDistBytes": 181610959,
+    "nextDistJavaScriptBytes": 76539863
   },
-  "validationTimingConditions": "warm-local-watcher-stopped-ppr-browser-journey",
+  "validationTimingConditions": "warm-local-watcher-stopped-static-path-unit-suite",
   "validationTimingsMs": {
-    "types": 14970,
-    "focusedTests": 1810,
-    "browserStartup": 61,
+    "types": 14650,
+    "focusedTests": 5370,
+    "browserStartup": null,
     "browserTestBody": null,
-    "browserTests": 24980,
-    "nextBuild": 22570,
+    "browserTests": null,
+    "nextBuild": 21930,
     "buildAll": null,
-    "total": 64330
+    "total": 41950
   },
   "runtimePerformance": {
-    "conditions": "production-turbopack-ppr-fixture-warm-local",
+    "conditions": "not-measured-static-path-algorithm-slice",
     "devStartupMs": null,
-    "productionStartupMs": 73,
+    "productionStartupMs": null,
     "pprShellFirstByteMs": null,
     "pprCompleteMs": null,
     "partialNavigationMs": null,

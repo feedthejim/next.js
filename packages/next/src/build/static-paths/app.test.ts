@@ -1612,7 +1612,7 @@ describe('generateRouteStaticParams', () => {
       )
     })
 
-    it('should throw error when generateStaticParams returns empty array with isRoutePPREnabled=true', async () => {
+    it('should throw when a partial-param route returns an empty nested result', async () => {
       const segments: TestAppSegment[] = [
         createMockSegment(async () => [{ lang: 'en' }]),
         createMockSegment(async () => [], undefined, createEmptyParamsError), // Empty result
@@ -1632,7 +1632,7 @@ describe('generateRouteStaticParams', () => {
       )
     })
 
-    it('should throw error when first segment returns empty array with isRoutePPREnabled=true', async () => {
+    it('should throw when a partial-param route returns an empty first result', async () => {
       const segments: TestAppSegment[] = [
         createMockSegment(async () => [], undefined, createEmptyParamsError), // Empty result at root level
       ]
@@ -1651,7 +1651,7 @@ describe('generateRouteStaticParams', () => {
       )
     })
 
-    it('should NOT throw error when generateStaticParams returns empty array with isRoutePPREnabled=false', async () => {
+    it('should preserve parent params when partial params are unsupported', async () => {
       const segments: TestAppSegment[] = [
         createMockSegment(async () => [{ lang: 'en' }]),
         createMockSegment(async () => []), // Empty result
@@ -1668,7 +1668,7 @@ describe('generateRouteStaticParams', () => {
       expect(result).toEqual([{ lang: 'en' }])
     })
 
-    it('should NOT throw error when first segment returns empty array with isRoutePPREnabled=false', async () => {
+    it('should allow an empty first result when partial params are unsupported', async () => {
       const segments: TestAppSegment[] = [
         createMockSegment(async () => []), // Empty result at root level
       ]

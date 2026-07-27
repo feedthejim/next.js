@@ -453,29 +453,6 @@ function getPprAppPageClassification(
   }
 }
 
-function getStaticAppPageClassification(
-  route: string,
-  result: { htmlSize?: number } | undefined
-): Required<
-  Pick<
-    PrerenderManifestClassification,
-    'routeType' | 'response' | 'compute' | 'htmlSize'
-  >
-> {
-  if (typeof result?.htmlSize !== 'number') {
-    throw new InvariantError(
-      `Expected an HTML size for prerendered app route "${route}"`
-    )
-  }
-
-  return {
-    routeType: 'page',
-    response: 'complete',
-    compute: 'static',
-    htmlSize: result.htmlSize,
-  }
-}
-
 function getPagesFallbackClassification(
   fallback: Fallback
 ): PrerenderManifestClassification {
@@ -1661,8 +1638,6 @@ export default async function build(
       const isAuthInterruptsEnabled = Boolean(
         config.experimental.authInterrupts
       )
-      const isAppPPREnabled = true
-
       const routesManifestPath = path.join(distDir, ROUTES_MANIFEST)
 
       // Generate the routes manifest using the extracted helper
@@ -1678,7 +1653,7 @@ export default async function build(
             onMatchHeaders,
             rewrites,
             restrictedRedirectPaths,
-            isAppPPREnabled,
+            isAppPPREnabled: true,
             deploymentId: config.deploymentId,
           })
         )
@@ -2341,7 +2316,7 @@ export default async function build(
               return checkPageSpan.traceAsyncFn(async () => {
                 const actualPage = normalizePagePath(page)
 
-                let isRoutePPREnabled = false
+                let isAppPage = false
                 let isSSG = false
                 let isStatic = false
                 let isServerComponent = false
@@ -2495,6 +2470,8 @@ export default async function build(
 
                       if (pageType === 'app' && originalAppPath) {
                         appNormalizedPaths.set(originalAppPath, page)
+                        isAppPage = !isAppRouteRoute(originalAppPath)
+
                         // TODO-APP: handle prerendering with edge
                         if (isEdgeRuntime(pageRuntime)) {
                           isStatic = false
@@ -2506,16 +2483,10 @@ export default async function build(
                         } else {
                           const isDynamic = isDynamicRoute(page)
 
-                          if (
-                            typeof workerResult.isRoutePPREnabled === 'boolean'
-                          ) {
-                            isRoutePPREnabled = workerResult.isRoutePPREnabled
-                          }
-
                           // If this route can be partially pre-rendered, then
                           // mark it as such and mark that it can be
                           // generated server-side.
-                          if (workerResult.isRoutePPREnabled) {
+                          if (isAppPage) {
                             isSSG = true
                             isStatic = true
 
@@ -2574,7 +2545,6 @@ export default async function build(
                             ) {
                               staticPaths.set(originalAppPath, [])
                               isStatic = true
-                              isRoutePPREnabled = false
                             }
                           }
 
@@ -2698,7 +2668,7 @@ export default async function build(
                   originalAppPath,
                   isStatic,
                   isSSG,
-                  isRoutePPREnabled,
+                  isAppPage,
                   ssgPageRoutes,
                   initialCacheControl: undefined,
                   runtime: pageRuntime,
@@ -3098,8 +3068,6 @@ export default async function build(
                 const appConfig = appDefaultConfigs.get(originalAppPath)
                 const isDynamicError = appConfig?.dynamic === 'error'
 
-                const isRoutePPREnabled = Boolean(appConfig)
-
                 routes.forEach((route) => {
                   // If the route has any dynamic root segments, we need to skip
                   // rendering the route. This is because we don't support
@@ -3124,7 +3092,6 @@ export default async function build(
                     _fallbackRouteParams: route.fallbackRouteParams,
                     _isDynamicError: isDynamicError,
                     _isAppDir: true,
-                    _isRoutePPREnabled: isRoutePPREnabled,
                     _allowEmptyStaticShell: !route.throwOnEmptyStaticShell,
                     // A fallback shell can only be upgraded if at least one of
                     // its fallback params is a `generateStaticParams` candidate.
@@ -3294,9 +3261,7 @@ export default async function build(
 
             // When this is an app page and PPR is enabled, the route supports
             // partial pre-rendering.
-            const isRoutePPREnabled: true | undefined = !isAppRouteHandler
-              ? true
-              : undefined
+            const isAppPage = !isAppRouteHandler
 
             const htmlBotsRegexString =
               // The htmlLimitedBots has been converted to a string during loadConfig
@@ -3313,7 +3278,7 @@ export default async function build(
               },
               // If it's PPR rendered non-static page, bypass the PPR cache when streaming metadata is enabled.
               // This will skip the postpone data for those bots requests and instead produce a dynamic render.
-              ...(isRoutePPREnabled
+              ...(isAppPage
                 ? [
                     {
                       type: 'header' as const,
@@ -3392,7 +3357,7 @@ export default async function build(
 
             for (const prerenderedRoute of prerenderedRoutes) {
               if (
-                isRoutePPREnabled &&
+                isAppPage &&
                 prerenderedRoute.fallbackRouteParams &&
                 prerenderedRoute.fallbackRouteParams.length > 0
               ) {
@@ -3464,9 +3429,7 @@ export default async function build(
                   dataRoute = path.posix.join(`${normalizedRoute}${RSC_SUFFIX}`)
                 }
                 const prefetchDataRoute =
-                  isRoutePPREnabled && dataRoute && hasStaticRsc
-                    ? dataRoute
-                    : undefined
+                  isAppPage && dataRoute && hasStaticRsc ? dataRoute : undefined
 
                 const meta = collectMeta(metadata)
                 const status =
@@ -3483,7 +3446,7 @@ export default async function build(
                       response: 'complete',
                       compute: 'static',
                     }
-                  } else if (isRoutePPREnabled) {
+                  } else {
                     classification = {
                       routeType: 'page',
                       ...getPprAppPageClassification(
@@ -3491,24 +3454,17 @@ export default async function build(
                         routeResult
                       ),
                     }
-                  } else {
-                    classification = getStaticAppPageClassification(
-                      route.pathname,
-                      routeResult
-                    )
                   }
                 }
 
                 prerenderManifest.routes[route.pathname] = {
                   initialStatus: status,
                   initialHeaders: meta.headers,
-                  renderingMode: isAppPPREnabled
-                    ? isRoutePPREnabled
-                      ? RenderingMode.PARTIALLY_STATIC
-                      : RenderingMode.STATIC
-                    : undefined,
+                  renderingMode: isAppPage
+                    ? RenderingMode.PARTIALLY_STATIC
+                    : RenderingMode.STATIC,
                   ...classification,
-                  experimentalPPR: isRoutePPREnabled,
+                  experimentalPPR: isAppPage,
                   experimentalBypassFor: bypassFor,
                   initialRevalidateSeconds: cacheControl.revalidate,
                   initialExpireSeconds: cacheControl.expire,
@@ -3558,7 +3514,7 @@ export default async function build(
               // When PPR fallbacks aren't used, we need to include it here. If
               // they are enabled, then it'll already be included in the
               // prerendered routes.
-              if (!isRoutePPREnabled) {
+              if (!isAppPage) {
                 dynamicPrerenderedRoutes.push({
                   params: {},
                   pathname: page,
@@ -3600,7 +3556,7 @@ export default async function build(
                 let dynamicRoute = routesManifest.dynamicRoutes.find(
                   (r) => r.page === route.pathname
                 )
-                if (!isAppRouteHandler && isAppPPREnabled) {
+                if (!isAppRouteHandler) {
                   // If the dynamic route wasn't found, then we need to create
                   // it. This ensures that for each fallback shell there's an
                   // entry in the app routes manifest which enables routing for
@@ -3687,7 +3643,7 @@ export default async function build(
                     isDynamicAppRoute: true,
                     // if PPR is turned on and the route contains a dynamic segment,
                     // we assume it'll be partially prerendered
-                    hasPostponed: isRoutePPREnabled,
+                    hasPostponed: isAppPage,
                   })
                 } else {
                   // Concrete generated paths inherit the parent route's base
@@ -3704,7 +3660,7 @@ export default async function build(
                     isDynamicAppRoute: true,
                     // if PPR is turned on and the route contains a dynamic segment,
                     // we assume it'll be partially prerendered
-                    hasPostponed: isRoutePPREnabled,
+                    hasPostponed: isAppPage,
                   })
                 }
 
@@ -3715,7 +3671,7 @@ export default async function build(
                 // found, mark that we should keep the shell forever
                 // (revalidate: `false` via `getCacheControl()`).
                 const fallbackCacheControl =
-                  isRoutePPREnabled && fallbackMode === FallbackMode.PRERENDER
+                  isAppPage && fallbackMode === FallbackMode.PRERENDER
                     ? cacheControl
                     : undefined
 
@@ -3726,13 +3682,13 @@ export default async function build(
 
                 const meta =
                   metadata &&
-                  isRoutePPREnabled &&
+                  isAppPage &&
                   fallbackMode === FallbackMode.PRERENDER
                     ? collectMeta(metadata)
                     : {}
                 let classification: PrerenderManifestClassification = {}
                 if (!isAppRouteHandler) {
-                  if (typeof fallback === 'string' && isRoutePPREnabled) {
+                  if (typeof fallback === 'string' && isAppPage) {
                     classification = {
                       routeType:
                         (route.remainingPrerenderableParams?.length ?? 0) > 0
@@ -3753,14 +3709,12 @@ export default async function build(
                 }
 
                 prerenderManifest.dynamicRoutes[route.pathname] = {
-                  experimentalPPR: isRoutePPREnabled,
+                  experimentalPPR: isAppPage,
                   remainingPrerenderableParams:
                     route.remainingPrerenderableParams,
-                  renderingMode: isAppPPREnabled
-                    ? isRoutePPREnabled
-                      ? RenderingMode.PARTIALLY_STATIC
-                      : RenderingMode.STATIC
-                    : undefined,
+                  renderingMode: isAppPage
+                    ? RenderingMode.PARTIALLY_STATIC
+                    : RenderingMode.STATIC,
                   ...classification,
                   experimentalBypassFor: bypassFor,
                   routeRegex: normalizeRouteRegex(

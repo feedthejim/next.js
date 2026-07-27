@@ -38,6 +38,7 @@ import {
 } from '../../server/app-render/work-unit-async-storage.external'
 import type { ImplicitTags } from '../../server/lib/implicit-tags'
 import { getImplicitTags } from '../../server/lib/implicit-tags'
+import { isAppPageRouteModule } from '../../server/route-modules/checks'
 
 /**
  * Filters out duplicate parameters from a list of parameters.
@@ -311,7 +312,7 @@ export function calculateFallbackMode(
  *
  * @param page - The page to validate.
  * @param regex - The route regex.
- * @param isRoutePPREnabled - Whether the route has partial prerendering enabled.
+ * @param supportsPartialParams - Whether missing params produce PPR shells.
  * @param pathnameSegments - The keys of the parameters.
  * @param rootParamKeys - The keys of the root params.
  * @param routeParams - The list of parameters to validate.
@@ -319,7 +320,7 @@ export function calculateFallbackMode(
  */
 function validateParams(
   page: string,
-  isRoutePPREnabled: boolean,
+  supportsPartialParams: boolean,
   pathnameSegments: ReadonlyArray<{
     readonly paramName: string
     readonly paramType: DynamicParamTypes
@@ -331,7 +332,7 @@ function validateParams(
 
   // Validate that if there are any root params, that the user has provided at
   // least one value for them only if we're using partial prerendering.
-  if (isRoutePPREnabled && rootParamKeys.length > 0) {
+  if (supportsPartialParams && rootParamKeys.length > 0) {
     if (
       routeParams.length === 0 ||
       rootParamKeys.some((key) =>
@@ -372,7 +373,7 @@ function validateParams(
       // We only support this when the route has partial prerendering enabled.
       // This will make it so that the remaining params are marked as missing so
       // we can generate a fallback route for them.
-      if (!paramValue && isRoutePPREnabled) {
+      if (!paramValue && supportsPartialParams) {
         break
       }
 
@@ -668,7 +669,7 @@ async function callGenerateStaticParams(
  *
  * @param segments - Array of app directory segments to process
  * @param store - Work store for tracking fetch cache configuration
- * @param isRoutePPREnabled - Whether PPR is enabled for this route
+ * @param supportsPartialParams - Whether missing params produce PPR shells.
  * @param rootParamKeys - The keys identifying which params are root params
  * @param isStaticExport - Whether the route is built with output: export
  * @returns Promise that resolves to an array of all parameter combinations
@@ -683,7 +684,7 @@ export async function generateRouteStaticParams(
     >
   >,
   store: Pick<WorkStore, 'fetchCache' | 'page'>,
-  isRoutePPREnabled: boolean,
+  supportsPartialParams: boolean,
   rootParamKeys: readonly string[],
   isStaticExport: boolean
 ): Promise<Params[]> {
@@ -743,7 +744,7 @@ export async function generateRouteStaticParams(
           for (const item of result) {
             nextParams.push({ ...parentParams, ...item })
           }
-        } else if (isRoutePPREnabled) {
+        } else if (supportsPartialParams) {
           throwEmptyGenerateStaticParamsError(current.createEmptyParamsError)
         } else {
           // No results, just pass through parent params
@@ -760,7 +761,7 @@ export async function generateRouteStaticParams(
         implicitTags,
         isStaticExport
       )
-      if (result.length === 0 && isRoutePPREnabled) {
+      if (result.length === 0 && supportsPartialParams) {
         throwEmptyGenerateStaticParamsError(current.createEmptyParamsError)
       }
 
@@ -833,7 +834,6 @@ export async function buildAppStaticPaths({
   fetchCacheKeyPrefix,
   nextConfigOutput,
   ComponentMod,
-  isRoutePPREnabled = false,
   buildId,
   deploymentId,
   rootParamKeys,
@@ -856,11 +856,12 @@ export async function buildAppStaticPaths({
   requestHeaders: IncrementalCache['requestHeaders']
   nextConfigOutput: 'standalone' | 'export' | undefined
   ComponentMod: AppPageModule | AppRouteModule
-  isRoutePPREnabled: boolean
   buildId: string
   deploymentId: string
   rootParamKeys: readonly string[]
 }): Promise<StaticPathsResult> {
+  const supportsPartialParams = isAppPageRouteModule(ComponentMod.routeModule)
+
   if (
     segments.some((generate) => generate.config?.dynamicParams === true) &&
     nextConfigOutput === 'export'
@@ -925,7 +926,7 @@ export async function buildAppStaticPaths({
     generateRouteStaticParams,
     segments,
     store,
-    isRoutePPREnabled,
+    supportsPartialParams,
     rootParamKeys,
     nextConfigOutput === 'export'
   )
@@ -1013,7 +1014,7 @@ export async function buildAppStaticPaths({
 
   const fallbackMode = dynamicParams
     ? supportsRoutePreGeneration
-      ? isRoutePPREnabled
+      ? supportsPartialParams
         ? FallbackMode.PRERENDER
         : FallbackMode.BLOCKING_STATIC_RENDER
       : undefined
@@ -1024,10 +1025,10 @@ export async function buildAppStaticPaths({
   // Convert rootParamKeys to Set for O(1) lookup.
   const rootParamSet = new Set(rootParamKeys)
 
-  if (hadAllParamsGenerated || isRoutePPREnabled) {
+  if (hadAllParamsGenerated || supportsPartialParams) {
     let paramsToProcess = routeParams
 
-    if (isRoutePPREnabled) {
+    if (supportsPartialParams) {
       // Discover all unique combinations of the routeParams so we can generate
       // routes that won't throw on empty static shell for each of them if
       // they're available.
@@ -1068,7 +1069,7 @@ export async function buildAppStaticPaths({
       pathnameRouteParamSegments,
       validateParams(
         page,
-        isRoutePPREnabled,
+        supportsPartialParams,
         pathnameRouteParamSegments,
         rootParamKeys,
         paramsToProcess
@@ -1083,7 +1084,7 @@ export async function buildAppStaticPaths({
         const paramValue = params[paramName]
 
         if (!paramValue) {
-          if (isRoutePPREnabled) {
+          if (supportsPartialParams) {
             // Mark remaining params as fallback params.
             fallbackRouteParams.push({ paramName, paramType })
             for (

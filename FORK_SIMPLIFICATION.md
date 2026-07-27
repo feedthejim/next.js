@@ -22,6 +22,8 @@
   resume-data capture as unconditional. The response-cache boundary derives
   PPR behavior from the canonical route kind instead of a second boolean, and
   the renderer and incremental cache no longer accept a route-PPR toggle.
+  Static-path generation and build manifests likewise derive App Page behavior
+  from route identity rather than worker-provided PPR state.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -36,9 +38,8 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Remove remaining App Page `isRoutePPREnabled` booleans from
-  build and static-path protocols, then collapse the client to one segment-cache
-  prefetch protocol.
+- **Next action:** Remove the final manifest-selected PPR branch from
+  `BaseServer`, then collapse the client to one segment-cache prefetch protocol.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -50,6 +51,22 @@
   assertions, and the Partial Prefetching navigation journey passed.
 
 ## History
+
+### 2026-07-27: Route-kind-derived static paths and build output
+
+Removed route-PPR state from static-path inputs, worker results, export-map
+configuration, page summaries, and build-manifest assembly. Static-path
+generation now derives partial-param behavior from the route module, and the
+build uses App Page identity as its canonical discriminator. Authored framework
+source fell by 26 lines and 1,045 bytes, while route-PPR references fell from
+57 to two. The warm built distribution fell by 2,790 bytes, including 1,014
+JavaScript bytes. All 84 static-path algorithm assertions passed in 3.46
+seconds, the 19-test fast contract passed in 1.91 seconds, types passed in
+14.65 seconds, and the core build passed in 21.93 seconds. No browser or
+runtime metric was collected because this slice changed the static-path
+decision and build protocol, both covered directly below the browser boundary.
+The 22.38-second reduction in recorded validation time is therefore a test
+selection difference, not a framework performance claim.
 
 ### 2026-07-27: Canonical App Page render and cache semantics
 

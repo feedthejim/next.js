@@ -206,10 +206,7 @@ export interface PageInfo {
   originalAppPath: string | undefined
   isStatic: boolean
   isSSG: boolean
-  /**
-   * If true, it means that the route has partial prerendering enabled.
-   */
-  isRoutePPREnabled: boolean
+  isAppPage: boolean
   ssgPageRoutes: string[] | null
   initialCacheControl: CacheControl | undefined
   pageDuration: number | undefined
@@ -234,7 +231,7 @@ function getTreeViewSymbol(
     return 'ƒ'
   }
 
-  if (pageInfo?.isRoutePPREnabled) {
+  if (pageInfo?.isAppPage) {
     if (
       // If the page has an empty static shell, then it's equivalent to a
       // dynamic page
@@ -667,7 +664,6 @@ export function printCustomRoutes({
 }
 
 type PageIsStaticResult = {
-  isRoutePPREnabled?: boolean
   isStatic?: boolean
   hasServerProps?: boolean
   hasStaticProps?: boolean
@@ -739,7 +735,6 @@ export async function isPageStatic({
   if (page === UNDERSCORE_GLOBAL_ERROR_ROUTE) {
     return {
       isStatic: true,
-      isRoutePPREnabled: false,
       prerenderFallbackMode: undefined,
       prerenderedRoutes: undefined,
       rootParamKeys: undefined,
@@ -824,7 +819,7 @@ export async function isPageStatic({
 
       const Comp = Component as NextComponentType | undefined
 
-      let isRoutePPREnabled: boolean = false
+      let isAppPage = false
 
       if (pageType === 'app') {
         // @ts-expect-error pageType is app, so we can assume AppPageModule | AppRouteModule
@@ -857,7 +852,7 @@ export async function isPageStatic({
 
         rootParamKeys = collectRootParamKeys(routeModule)
 
-        isRoutePPREnabled = routeModule.definition.kind === RouteKind.APP_PAGE
+        isAppPage = routeModule.definition.kind === RouteKind.APP_PAGE
 
         const route = parseNormalizedAppRoute(page)
 
@@ -895,7 +890,6 @@ export async function isPageStatic({
                 cacheLifeProfiles,
                 ComponentMod,
                 nextConfigOutput,
-                isRoutePPREnabled,
                 buildId,
                 deploymentId,
                 rootParamKeys,
@@ -963,13 +957,12 @@ export async function isPageStatic({
 
       // When PPR is enabled, any route may be completely static, so
       // mark this route as static.
-      if (isRoutePPREnabled) {
+      if (isAppPage) {
         isStatic = true
       }
 
       return {
         isStatic,
-        isRoutePPREnabled,
         prerenderFallbackMode,
         prerenderedRoutes,
         rootParamKeys,

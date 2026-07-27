@@ -16,7 +16,6 @@ import type { StaticPathsResult } from '../../build/static-paths/types'
 import { loadComponents } from '../load-components'
 import { setHttpClientAndAgentOptions } from '../setup-http-agent-env'
 import type { IncrementalCache } from '../lib/incremental-cache'
-import { isAppPageRouteModule } from '../route-modules/checks'
 import { InvariantError } from '../../shared/lib/invariant-error'
 import { collectRootParamKeys } from '../../build/segment-config/app/collect-root-param-keys'
 import { buildAppStaticPaths } from '../../build/static-paths/app'
@@ -124,8 +123,6 @@ export async function loadStaticPaths({
       )
     }
 
-    const isRoutePPREnabled = isAppPageRouteModule(routeModule)
-
     const rootParamKeys = collectRootParamKeys(routeModule)
 
     return buildAppStaticPaths({
@@ -143,7 +140,6 @@ export async function loadStaticPaths({
       cacheMaxMemorySize,
       ComponentMod: components.ComponentMod,
       nextConfigOutput,
-      isRoutePPREnabled,
       buildId,
       deploymentId,
       authInterrupts,
