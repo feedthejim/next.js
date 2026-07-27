@@ -192,10 +192,7 @@ import { traceMemoryUsage } from '../lib/memory/trace'
 import { generateEncryptionKeyBase64 } from '../server/app-render/encryption-utils-server'
 import type { DeepReadonly } from '../shared/lib/deep-readonly'
 import uploadTrace from '../trace/upload-trace'
-import {
-  checkIsAppPPREnabled,
-  checkIsRoutePPREnabled,
-} from '../server/lib/experimental/ppr'
+import { checkIsRoutePPREnabled } from '../server/lib/experimental/ppr'
 import { FallbackMode, fallbackModeToFallbackField } from '../lib/fallback'
 import { RenderingMode } from './rendering-mode'
 import { InvariantError } from '../shared/lib/invariant-error'
@@ -1665,7 +1662,7 @@ export default async function build(
       const isAuthInterruptsEnabled = Boolean(
         config.experimental.authInterrupts
       )
-      const isAppPPREnabled = checkIsAppPPREnabled(config.experimental.ppr)
+      const isAppPPREnabled = true
 
       const routesManifestPath = path.join(distDir, ROUTES_MANIFEST)
 

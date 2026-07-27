@@ -14,12 +14,12 @@
   prefetch setup, render-option types, and the normal static-generation
   pipeline now use one Cache Components, Partial Prefetching, and cached
   navigation model. Dynamic RSC requests now use only the staged development
-  and production renderers, and validation has one Partial Prefetching mode.
-  Runtime-prefetch resume-cache installation is a directly testable renderer
-  seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
-  Router contract allowlist. `fork-metrics.json` is the current scorecard,
-  including static complexity, validation cost, and relevant runtime
-  performance guardrails.
+  and production renderers, validation has one Partial Prefetching mode, and
+  application-level PPR is unconditional. Runtime-prefetch resume-cache
+  installation is a directly testable renderer seam. `pnpm fork-test` and
+  `pnpm fork-test-browser` define the early App Router contract allowlist.
+  `fork-metrics.json` is the current scorecard, including static complexity,
+  validation cost, and relevant runtime performance guardrails.
 - **Constraints:** Backward compatibility is out of scope. Do not add migration
   layers or special removed-feature errors. Preserve only behavior in the fork
   contract. Keep each independently verified slice committed before starting
@@ -29,9 +29,9 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Delete the remaining legacy PPR and Cache Components gates
-  in the App Router renderer, then collapse the client to one segment-cache
-  prefetch protocol.
+- **Next action:** Delete route-level incremental and disabled PPR
+  configuration, then collapse the client to one segment-cache prefetch
+  protocol.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -43,6 +43,22 @@
   assertions passed.
 
 ## History
+
+### 2026-07-27: Application PPR is unconditional
+
+Removed the application-level PPR configuration checker and made its build,
+runtime-template, environment, route-analysis, and server consumers explicit.
+Also removed renderer gates that only existed for a non-PPR application.
+Authored framework source fell by 78 lines and 3,051 bytes, App Router renderer
+source fell by 36 lines and 1,226 bytes, route-PPR references fell by seven,
+and the application-PPR proxy fell by one. Under matching warm core-build
+conditions, the distribution fell by 36,742 bytes, including 10,091 JavaScript
+bytes. The 16-test fast allowlist passed in 1.74 seconds, four focused static
+path assertions passed, types passed in 14.42 seconds, the core build passed in
+23.07 seconds, and all 12 production PPR partial-hydration assertions passed in
+27.68 seconds including package preparation. The fixture's production server
+reported ready in 79 milliseconds and the first browser load took 199
+milliseconds. Other runtime metrics were not measured for this slice.
 
 ### 2026-07-27: Per-slice metrics discipline
 

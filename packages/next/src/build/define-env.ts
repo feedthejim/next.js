@@ -7,7 +7,6 @@ import type { ProxyMatcher } from './analysis/get-page-static-info'
 import type { Rewrite } from '../lib/load-custom-routes'
 import path from 'node:path'
 import { needsExperimentalReact } from '../lib/needs-experimental-react'
-import { checkIsAppPPREnabled } from '../server/lib/experimental/ppr'
 import {
   getNextConfigEnv,
   getNextPublicEnvironmentVariables,
@@ -122,7 +121,7 @@ export function getDefineEnv({
   const nextPublicEnv = getNextPublicEnvironmentVariables()
   const nextConfigEnv = getNextConfigEnv(config)
 
-  const isPPREnabled = checkIsAppPPREnabled(config.experimental.ppr)
+  const isPPREnabled = true
   const isCacheComponentsEnabled = true
   const isUseCacheEnabled = !!config.experimental.useCache
 

@@ -399,7 +399,6 @@ function maybeAppendBuildIdToRSCPayload<T extends RSCPayload>(
 }
 
 interface ParseRequestHeadersOptions {
-  readonly isRoutePPREnabled: boolean
   readonly previewModeId: string | undefined
 }
 
@@ -460,8 +459,7 @@ function parseRequestHeaders(
 
   const isHmrRefresh = headers[NEXT_HMR_REFRESH_HEADER] !== undefined
 
-  const shouldProvideFlightRouterState =
-    isRSCRequest && (!isPrefetchRequest || !options.isRoutePPREnabled)
+  const shouldProvideFlightRouterState = isRSCRequest && !isPrefetchRequest
 
   const flightRouterState = shouldProvideFlightRouterState
     ? parseAndValidateFlightRouterState(headers[NEXT_ROUTER_STATE_TREE_HEADER])
@@ -2145,15 +2143,13 @@ async function getRSCPayload(
     ctx
   )
 
-  // Assume the head we're rendering contains only partial data if PPR is
-  // enabled and this is a statically generated response. This is used by the
-  // client Segment Cache after a prefetch to determine if it can skip the
-  // second request to fill in the dynamic data.
+  // Assume the head we're rendering contains only partial data for a statically
+  // generated response. This is used by the client Segment Cache after a
+  // prefetch to determine if it can skip the second request to fill in the
+  // dynamic data.
   //
   // See similar comment in create-component-tree.tsx for more context.
-  const isPossiblyPartialHead =
-    workStore.isStaticGeneration &&
-    ctx.renderOpts.experimental.isRoutePPREnabled === true
+  const isPossiblyPartialHead = workStore.isStaticGeneration
 
   return maybeAppendBuildIdToRSCPayload(ctx, {
     // See the comment above the `Preloads` component (below) for why this is part of the payload
@@ -2307,9 +2303,7 @@ async function getErrorRSCPayload(
     ctx
   )
 
-  const isPossiblyPartialHead =
-    workStore.isStaticGeneration &&
-    ctx.renderOpts.experimental.isRoutePPREnabled === true
+  const isPossiblyPartialHead = workStore.isStaticGeneration
 
   return maybeAppendBuildIdToRSCPayload(ctx, {
     c: prepareInitialCanonicalUrl(url),
@@ -2744,7 +2738,6 @@ async function renderToHTMLOrFlightImpl(
     )
 
     const response = await prerenderToStreamWithTracing(
-      req,
       res,
       ctx,
       metadata,
@@ -2816,7 +2809,6 @@ async function renderToHTMLOrFlightImpl(
     // Run build-time instant validation if the page has instant configs
     // TODO(instant-validation-build): This is not a great place to wire this in.
     if (
-      workStore.cacheComponentsEnabled &&
       workStore.isBuildTimePrerendering &&
       renderOpts.runInstantValidation &&
       (await anySegmentNeedsInstantValidationInBuild(loaderTree))
@@ -3017,7 +3009,6 @@ export const renderToHTMLOrFlight: AppPageRender = (
   // We read these values from the request object as, in certain cases,
   // base-server will strip them to opt into different rendering behavior.
   const parsedRequestHeaders = parseRequestHeaders(req.headers, {
-    isRoutePPREnabled: renderOpts.experimental.isRoutePPREnabled === true,
     previewModeId: renderOpts.previewProps?.previewModeId,
   })
 
@@ -7585,7 +7576,7 @@ async function validateInstantConfigInBuildWithSample(
       onTaskError() {},
     }),
 
-    cacheComponentsEnabled: outerWorkStore.cacheComponentsEnabled,
+    cacheComponentsEnabled: true,
     validationLevel: outerWorkStore.validationLevel,
     previouslyRevalidatedTags: [],
     refreshTagsByCacheKind: new Map(),
@@ -7866,7 +7857,6 @@ async function continueStaticPrerenderWithInlinedData(
 }
 
 async function prerenderToStream(
-  req: BaseNextRequest,
   res: BaseNextResponse,
   ctx: AppRenderContext,
   metadata: AppPageRenderResultMetadata,
@@ -7896,7 +7886,6 @@ async function prerenderToStream(
     experimental,
     isDebugDynamicAccesses,
     isBuildTimePrerendering = false,
-    onInstrumentationRequestError,
     page,
     reactMaxHeadersLength,
     subresourceIntegrityManifest,
@@ -7986,44 +7975,19 @@ async function prerenderToStream(
 
   const { reactServerErrorsByDigest } = workStore
   // We don't report errors during prerendering through our instrumentation hooks
-  const reportErrors = !experimental.isRoutePPREnabled
-  function onHTMLRenderRSCError(err: DigestedError, silenceLog: boolean) {
-    if (reportErrors) {
-      return onInstrumentationRequestError?.(
-        err,
-        req,
-        createErrorContext(ctx, 'react-server-components'),
-        silenceLog
-      )
-    }
-  }
   const serverComponentsErrorHandler = createReactServerErrorHandler(
     process.env.NODE_ENV === 'development',
     isBuildTimePrerendering,
     reactServerErrorsByDigest,
-    onHTMLRenderRSCError
+    () => {}
   )
-
-  function onHTMLRenderSSRError(err: DigestedError) {
-    if (reportErrors) {
-      // We don't need to silence logs here. onHTMLRenderSSRError won't be
-      // called at all if the error was logged before in the RSC error handler.
-      const silenceLog = false
-      return onInstrumentationRequestError?.(
-        err,
-        req,
-        createErrorContext(ctx, 'server-rendering'),
-        silenceLog
-      )
-    }
-  }
   const allCapturedErrors: Array<unknown> = []
   const htmlRendererErrorHandler = createHTMLErrorHandler(
     process.env.NODE_ENV === 'development',
     isBuildTimePrerendering,
     reactServerErrorsByDigest,
     allCapturedErrors,
-    onHTMLRenderSSRError
+    () => {}
   )
 
   let reactServerPrerenderResult: null | ReactServerPrerenderResult = null
