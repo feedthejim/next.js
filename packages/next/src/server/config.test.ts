@@ -73,53 +73,6 @@ describe('loadConfig', () => {
     })
   })
 
-  describe('canary-only features', () => {
-    beforeAll(() => {
-      process.env.__NEXT_VERSION = '14.2.0'
-    })
-
-    afterAll(() => {
-      delete process.env.__NEXT_VERSION
-    })
-
-    it('errors when using PPR if not in canary', async () => {
-      await expect(
-        loadConfig(PHASE_PRODUCTION_BUILD, __dirname, {
-          customConfig: {
-            experimental: {
-              ppr: true,
-            },
-          },
-        })
-      ).rejects.toThrow(
-        /`experimental\.ppr` has been merged into `cacheComponents`/
-      )
-    })
-  })
-  describe('with a canary version', () => {
-    beforeAll(() => {
-      process.env.__NEXT_VERSION = '15.4.0-canary.35'
-    })
-
-    afterAll(() => {
-      delete process.env.__NEXT_VERSION
-    })
-
-    it('errors when ppr is set to incremental', async () => {
-      await expect(
-        loadConfig(PHASE_PRODUCTION_BUILD, __dirname, {
-          customConfig: {
-            experimental: {
-              ppr: 'incremental',
-            },
-          },
-        })
-      ).rejects.toThrow(
-        /`experimental\.ppr` has been merged into `cacheComponents`/
-      )
-    })
-  })
-
   describe('middleware to proxy config key rename backward/forward compatibility', () => {
     it('should copy `skipMiddlewareUrlNormalize value` to `skipProxyUrlNormalize`', async () => {
       const result = await loadConfig(PHASE_PRODUCTION_BUILD, __dirname, {

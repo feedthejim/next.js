@@ -2,6 +2,280 @@
 
 > **Note:** `CLAUDE.md` is a symlink to `AGENTS.md`. They are the same file.
 
+## Fork Charter
+
+This repository is an opinionated personal fork of Next.js. The goal is not to
+preserve the complete upstream Next.js product surface. The goal is to build a
+smaller framework around the latest App Router model that is easier to
+understand, faster to change, cheaper to test, and straightforward to deploy on
+different platforms.
+
+This charter takes precedence over later upstream-oriented guidance in this
+file when the two conflict. Existing code, commands, and tests may continue to
+describe upstream modes until the corresponding checklist item is completed.
+Their current presence does not make those modes part of the fork's intended
+product contract.
+
+### Product Contract
+
+The intended framework should work without feature flags or migration
+configuration:
+
+- `app/` is the only router.
+- Cache Components is always enabled.
+- Partial Prefetching is the only prefetch model.
+- Partial Prerendering is the normal rendering model, not an optional mode.
+- Turbopack is the only application compiler and bundler.
+- Server Components, Server Actions, Route Handlers, metadata, streaming,
+  `use cache`, cache tags, and cache lifetimes are core features.
+- A local Node.js adapter works by default.
+- Other deployment platforms integrate through explicit build and runtime
+  adapter contracts.
+
+Backward compatibility with removed Next.js features is not a goal. Do not add
+deprecation periods, compatibility flags, codemods, bespoke unsupported-feature
+errors, or fallback implementations. Removed APIs should be absent. Ordinary
+module resolution, type checking, configuration validation, and application
+errors are sufficient.
+
+### Features Outside the Intended Contract
+
+Unless an open question below is resolved otherwise, the landing architecture
+does not include:
+
+- Pages Router or Pages API Routes
+- webpack, Rspack, custom webpack configuration, or webpack loader
+  compatibility
+- custom Babel configuration or a Babel compilation fallback
+- rendering without Cache Components
+- legacy experimental PPR
+- legacy full-dynamic and loading-boundary prefetch models
+- route segment configuration from the previous caching model, including
+  `dynamic`, `fetchCache`, and route-level `revalidate`
+- application-selected `runtime = 'edge'`
+- custom servers, minimal mode, standalone output, or separate serverless
+  execution modes
+- a special `next export` pipeline
+- framework telemetry or the development MCP server
+
+Do not preserve an out-of-contract feature merely because deleting it causes
+existing upstream tests to fail. First confirm that the failing test does not
+protect an in-contract behavior, then delete or replace it.
+
+### Architecture Principles
+
+- Prefer one explicit execution path over a configurable matrix of modes.
+- Organize the framework as a modular monolith with cohesive vertical
+  pipelines: compilation, development, request rendering, navigation,
+  caching/revalidation, Server Actions, and deployment.
+- Keep tightly coupled producers and consumers together. Add an interface only
+  at a real environment, ownership, deployment, runtime, or test-substitution
+  boundary.
+- Separate decisions from effects: normalize input, compute an explicit plan,
+  execute it through capabilities, then translate the result.
+- Use canonical immutable data at important seams. Avoid mutable option bags
+  shared across unrelated systems.
+- Treat compiler output as a typed deployment graph. Adapters should not
+  reconstruct framework semantics by scanning `.next` or interpreting a group
+  of loosely related manifests.
+- Treat a PPR artifact as one versioned atomic revision containing the HTML
+  shell, static RSC and segment data, opaque postponed state, headers, status,
+  cache policy, tags, and build identity.
+- Keep the renderer's resume operation typed. HTTP headers may be an adapter
+  encoding, but they must not define the internal rendering protocol.
+- Use one cache coordinator with distinct namespaces and value contracts for
+  rendered responses, `use cache` values, and request-local deduplication.
+- Platform adapters declare capabilities such as streaming, atomic writes, tag
+  invalidation, background work, and distributed coordination. Missing
+  required capabilities should fail at the platform boundary.
+
+### Testing and CI Philosophy
+
+CI budget is an architectural constraint. The fork should test the one product
+it ships, not the upstream combination of routers, bundlers, runtimes, flags,
+operating systems, and deployment modes.
+
+- Preserve end-to-end tests for a small number of complete browser behaviors.
+- Move behavioral combinations below the expensive process and browser
+  boundary.
+- Build one dense conformance application once and reuse its compiled output,
+  server process, and browser across scenarios.
+- Prefer real compiled route entrypoints invoked directly with `Request`,
+  `Response`, and an in-memory platform context for renderer, cache, PPR,
+  Server Action, and adapter integration tests.
+- Keep browser coverage for hydration, Partial Prefetching navigation,
+  back/forward restoration, visible Server Action revalidation, and development
+  HMR.
+- Test PPR streaming by observing stream chunks and timing, without requiring a
+  browser when browser behavior is not material.
+- Run an inexpensive in-memory adapter conformance suite on pull requests. Run
+  real provider deployment tests only for relevant adapter changes, the main
+  branch, or upstream synchronization.
+- Build an artifact once per relevant configuration and analyze captured output
+  instead of rebuilding or rerunning to apply different filters.
+- Select tests from an explicit subsystem impact map. Compiler and shared
+  protocol changes may fan out broadly; isolated algorithms should not.
+- Treat flaky retries as an infrastructure exception, not as evidence that a
+  product regression is acceptable.
+
+The intended test shape is:
+
+```text
+many fast algorithm and state-machine tests
+  + compiled producer-consumer integration tests
+  + a few persistent-browser journeys
+  + occasional real-platform conformance tests
+```
+
+Before changing the test strategy, measure build, server startup, browser
+startup, and test-body time separately. Optimize the measured dominant cost.
+
+### Supported Behavior Verification Map
+
+This is the fork's behavior manifest. The existing tests are temporary upstream
+evidence, not a commitment to retain their current fixtures or harness costs.
+Replace them with the target form as the conformance application and direct
+compiled-handler harness become available.
+
+| Supported behavior                                                             | Existing evidence                                                                                                                          | Cheapest trustworthy target                                                                                           | Browser required                                                 |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| App compilation, static rendering, dynamic rendering, and nested layouts       | `test/e2e/app-dir/cache-components-prerender-matrix/`, `test/e2e/app-dir/rsc-basic/`                                                       | Compile the conformance application once, then invoke page entrypoints directly and inspect HTML and RSC streams      | One initial hydration journey only                               |
+| Cache Components, `use cache`, cache lifetimes, tags, and revalidation         | `test/e2e/app-dir/use-cache/`, `test/e2e/app-dir/resume-data-cache/`                                                                       | Direct compiled-handler tests with a deterministic in-memory cache and clock                                          | No                                                               |
+| PPR shell generation, postponed state, resume, and regeneration                | `test/e2e/app-dir/ppr-partial-hydration/`, `test/e2e/app-dir/resume-data-cache/`                                                           | Observe real compiled render streams, assert shell-first chunking, and resume through the typed runtime contract      | One partial-hydration journey                                    |
+| Partial Prefetching, segment-cache navigation, and back/forward restoration    | `test/e2e/app-dir/segment-cache/cached-navigations/cached-navigations-partial-prefetching.test.ts`, `test/e2e/app-dir/back-forward-cache/` | Reuse real Flight and segment responses for scheduler state tests, plus one persistent-browser navigation journey     | Yes, for the final producer-consumer journey                     |
+| Server Actions, streamed results, mutation, and visible revalidation           | `test/e2e/app-dir/cache-components/cache-components.server-action.test.ts`, `test/e2e/app-dir/actions-streaming/`                          | Invoke compiled action entrypoints directly for protocol and cache behavior, then retain one browser mutation journey | One mutation journey                                             |
+| Route Handlers and HTTP method semantics                                       | `test/e2e/app-dir/app-routes/app-custom-routes.test.ts`                                                                                    | Invoke compiled Route Handler entrypoints with standard `Request` objects and inspect `Response` values and streams   | No                                                               |
+| Redirect, not-found, and error-boundary rendering                              | `test/e2e/app-dir/error-boundary-navigation/`, `test/e2e/app-dir/rsc-redirect/`                                                            | Direct render tests for status and payload semantics, plus one browser recovery and navigation journey                | One recovery journey                                             |
+| Static, dynamic, streamed, and navigated metadata                              | `test/e2e/app-dir/metadata/`, `test/e2e/app-dir/metadata-soft-nav-cache-components/`                                                       | Direct render tests for initial metadata and one browser navigation that replaces a prefetched head                   | One metadata navigation journey                                  |
+| Turbopack development compilation, HMR, and state preservation                 | `test/development/acceptance-app/app-hmr-changes.test.ts`, `test/development/app-dir/hmr-rsc-cancellation/`                                | One persistent development server and browser that applies a sequence of edits to the conformance application         | Yes                                                              |
+| Turbopack production CSS, assets, source maps, and Server Component boundaries | `test/e2e/app-dir/app-css/`, `test/development/app-dir/source-mapping/`, `test/development/acceptance-app/server-components.test.ts`       | Inspect one compiled production graph and run focused source-map and boundary tests without separate applications     | Only for CSS application and hydration                           |
+| Build and runtime adapter outputs, caching, streaming, and lifecycle work      | `test/production/app-dir/adapter-cache-handlers/` and current adapter production tests                                                     | Run every adapter against one in-memory conformance suite using real compiled entrypoints                             | No for the common suite; real platform smoke tests are scheduled |
+
+When a supported behavior changes, update its contract and cheapest trustworthy
+test here. Do not add a browser test when a direct producer-consumer test can
+observe the same property.
+
+### Working Method
+
+- Make changes as small vertical slices with an independently observable
+  outcome.
+- Establish or identify the supported behavior before deleting the old
+  implementation that currently carries it.
+- Do not build temporary compatibility layers for code already outside the
+  product contract.
+- Prefer deletion after a replacement path is verified. Avoid large
+  directory-only deletions that leave mode checks and manifest assumptions
+  embedded elsewhere.
+- Use characterization and producer-consumer tests at compiler, renderer,
+  navigation, cache, and adapter seams.
+- For upstream synchronization, compare only the supported contract. An
+  upstream test for an intentionally removed feature is not a fork regression.
+- Keep an untouched upstream reference branch and bring changes into the fork
+  through bounded synchronization work.
+- Update this checklist when a task is completed or an open question is
+  resolved. Do not record transient debugging steps here.
+
+### Open Questions
+
+- Should the first production runtime be Node.js-only behind portable
+  capabilities, or must the initial runtime also execute in Workers, Deno, and
+  Bun?
+- Does Proxy remain a core application API, become an adapter-owned pre-route
+  hook, or get removed?
+- Are image optimization and `next/font` core features or optional packages?
+- Which instrumentation surface remains after framework telemetry is removed?
+- What exact Partial Prefetching behavior should explicit `prefetch={true}` and
+  runtime-data prefetching have?
+- Does the fork retain the current development overlay, or replace it with a
+  smaller diagnostics surface?
+- How frequently should the fork synchronize React, Turbopack, and App Router
+  behavior from upstream canary?
+- Which deployment adapter should be the first non-Node conformance target?
+- Should static output be a standard deployment adapter or be omitted
+  initially?
+- What package and CLI names should the fork eventually publish under?
+
+### Fork Checklist
+
+Each checkbox should be completed as a bounded, verified change. Do not combine
+phases merely to reduce the number of commits.
+
+#### Phase 0: Contract and Cost Baseline
+
+- [x] Record the fork philosophy, intended product contract, architecture
+      direction, testing strategy, and open questions in `AGENTS.md`.
+- [x] Create an explicit supported-behavior manifest that maps each contract
+      behavior to its cheapest trustworthy test.
+- [ ] Measure representative build, server-start, browser-start, and test-body
+      costs and set local, pull-request, and main-branch budgets.
+- [ ] Identify a small upstream App Router test allowlist that protects the
+      supported contract during early deletions.
+- [ ] Design the dense conformance application and determine which scenarios
+      can invoke compiled handlers without a browser.
+
+#### Phase 1: One Rendering and Navigation Model
+
+- [x] Make Cache Components unconditional and remove its public feature flag.
+- [x] Make Partial Prefetching unconditional and remove its public feature
+      flag.
+- [x] Remove `experimental.ppr` and legacy PPR configuration.
+- [ ] Delete non-Cache-Components and legacy PPR rendering branches.
+- [ ] Delete legacy client prefetch paths and retain one segment-cache
+      navigation protocol.
+- [ ] Remove previous-model route segment caching configuration.
+- [ ] Verify static, dynamic, cached, PPR, navigation, action, and revalidation
+      behavior through the supported contract.
+
+#### Phase 2: One Router and Compiler
+
+- [ ] Remove Pages Router and Pages API route discovery, compilation, runtime,
+      public exports, and tests.
+- [ ] Remove webpack production compilation and its plugins and loaders.
+- [ ] Remove webpack development compilation and HMR.
+- [ ] Remove Rspack compatibility.
+- [ ] Remove custom Babel compilation.
+- [ ] Remove webpack loader compatibility from Turbopack configuration.
+- [ ] Remove bundler and router matrices from the test harness and CI.
+- [ ] Verify Turbopack development, production, Server Components, Server
+      Actions, CSS, assets, and source maps.
+
+#### Phase 3: Adapter-Native Build and Runtime
+
+- [ ] Define a canonical typed deployment graph emitted by the compiler.
+- [ ] Define portable runtime request, response, lifecycle, asset, cache, and
+      observability capabilities.
+- [ ] Implement the local Node.js adapter as the default platform.
+- [ ] Replace post-build `.next` interpretation with direct deployment-graph
+      consumption.
+- [ ] Define an atomic versioned PPR artifact and typed resume operation.
+- [ ] Move platform routing, PPR storage, invalidation, and background work out
+      of `BaseServer`.
+- [ ] Add the in-memory adapter conformance suite.
+- [ ] Implement and verify the first non-Node platform adapter.
+
+#### Phase 4: Remove Deployment and Product Variants
+
+- [ ] Remove application-selected Edge Runtime and the legacy edge sandbox.
+- [ ] Remove minimal mode and private deployment request metadata.
+- [ ] Remove the custom server API.
+- [ ] Remove standalone and separate serverless output modes.
+- [ ] Replace static export with an adapter or remove it.
+- [ ] Move image optimization and fonts according to the resolved product
+      decision.
+- [ ] Remove telemetry and the development MCP server.
+
+#### Phase 5: Consolidate and Enforce
+
+- [ ] Split large orchestration files by cohesive pipeline after legacy
+      branches are gone.
+- [ ] Replace remaining mutable cross-system option bags with canonical plans
+      and results.
+- [ ] Remove obsolete manifests, generated types, dependencies, scripts, and
+      test utilities.
+- [ ] Enforce performance budgets for installation, build, development
+      startup, rebuilds, runtime startup, memory, prefetch bytes, and shell TTFB.
+- [ ] Document the final application API and platform adapter contract.
+
 ## Codebase structure
 
 ### Monorepo Overview

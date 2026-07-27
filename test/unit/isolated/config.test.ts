@@ -224,31 +224,17 @@ describe('config', () => {
     })
   })
 
-  describe('partialPrefetching config', () => {
-    it('Should throw when `partialPrefetching` is set without `cacheComponents`', async () => {
-      await expect(async () => {
-        await loadConfig(PHASE_DEVELOPMENT_SERVER, '<rootDir>-no-cc', {
-          customConfig: {
-            partialPrefetching: true,
-          },
-        })
-      }).rejects.toThrow(
-        /`partialPrefetching` requires `cacheComponents` to be enabled/
-      )
-    })
+  describe('fork rendering model', () => {
+    it('enables Cache Components and Partial Prefetching by default', async () => {
+      const config = await loadConfig(PHASE_DEVELOPMENT_SERVER, '<rootDir>', {
+        customConfig: {},
+      })
 
-    it('Should accept `partialPrefetching: true` when `cacheComponents` is enabled', async () => {
-      const config = await loadConfig(
-        PHASE_DEVELOPMENT_SERVER,
-        '<rootDir>-cc',
-        {
-          customConfig: {
-            cacheComponents: true,
-            partialPrefetching: true,
-          },
-        }
-      )
+      expect(config.cacheComponents).toBe(true)
       expect(config.partialPrefetching).toBe(true)
+      expect(config.experimental.ppr).toBe(true)
+      expect(config.experimental.useCache).toBe(true)
+      expect(config.experimental.cachedNavigations).toBe(true)
     })
   })
 })

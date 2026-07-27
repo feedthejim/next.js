@@ -11,7 +11,6 @@ import type { WEB_VITALS } from '../shared/lib/utils'
 import type { NextParsedUrlQuery } from './request-meta'
 import type { SizeLimit } from '../types'
 import type { SupportedTestRunners } from '../cli/next-test'
-import type { ExperimentalPPRConfig } from './lib/experimental/ppr'
 import { INFINITE_CACHE } from '../lib/constants'
 import type { FallbackRouteParam } from '../build/static-paths/types'
 import type { MemoryEvictionMode } from '../build/swc/types'
@@ -40,8 +39,13 @@ export type PrefetchInliningConfig =
   | { maxSize: number; maxBundleSize: number }
 
 export type NextConfigComplete = Required<
-  Omit<NextConfig, 'configFile' | 'cacheLife'>
+  Omit<
+    NextConfig,
+    'configFile' | 'cacheLife' | 'cacheComponents' | 'partialPrefetching'
+  >
 > & {
+  cacheComponents: true
+  partialPrefetching: true
   images: Required<ImageConfigComplete>
   typescript: TypeScriptConfig
   configFile: string | undefined
@@ -54,6 +58,8 @@ export type NextConfigComplete = Required<
   // because it's not defined in NextConfigComplete.experimental
   htmlLimitedBots: string | undefined
   experimental: ExperimentalConfig & {
+    ppr: true
+    cachedNavigations: true
     // Normalized by config.ts: true and partial objects become resolved objects
     prefetchInlining?: PrefetchInliningConfig
     // Normalized by config.ts: defaulted to 90% of staticPageGenerationTimeout
@@ -493,15 +499,6 @@ export interface ExperimentalConfig {
    * rewrites will get the rewrite headers.
    */
   clientParamParsingOrigins?: string[]
-  /**
-   * Caches subsets of a route, seeded from actual navigations, so subsequent
-   * navigations to the same or similar pages can be served instantly. Requires
-   * Cache Components. `true` caches the static stage only (the runtime stage is
-   * opted into per segment via `export const prefetch = 'allow-runtime'`).
-   * `'allow-runtime'` additionally treats every segment as runtime-cached,
-   * regardless of its per-segment `prefetch` config.
-   */
-  cachedNavigations?: boolean | 'allow-runtime'
   dynamicOnHover?: boolean
   useOffline?: boolean
   optimisticRouting?: boolean
@@ -1034,12 +1031,6 @@ export interface ExperimentalConfig {
   clientTraceMetadata?: string[]
 
   /**
-   * @deprecated This configuration option has been merged into `cacheComponents`.
-   * The Partial Prerendering feature is still available via `cacheComponents`.
-   */
-  ppr?: ExperimentalPPRConfig
-
-  /**
    * Enables experimental taint APIs in React.
    * Using this feature will enable the `react@experimental` for the `app` directory.
    */
@@ -1164,11 +1155,6 @@ export interface ExperimentalConfig {
    * WebSocket connection, instead of including it in the main RSC payload.
    */
   reactDebugChannel?: boolean
-
-  /**
-   * @deprecated use top-level `cacheComponents` instead
-   */
-  cacheComponents?: boolean
 
   /**
    * Configuration for instant navigation validation.
@@ -1891,33 +1877,6 @@ export interface NextConfig {
    */
   enablePrerenderSourceMaps?: boolean
 
-  /**
-   * When enabled, routes can combine a prerendered shell with dynamic content
-   * streamed into it, rather than being either fully static or fully dynamic. You can mark data and parts of your UI as cacheable using the
-   * `use cache` directive, which includes them in the pre-render pass alongside
-   * static parts of the page. Also enables `cacheLife` and `cacheTag` APIs, and
-   * includes Partial Prerendering support.
-   *
-   * @see [Cache Components documentation](https://nextjs.org/docs/app/api-reference/config/next-config-js/cacheComponents)
-   */
-  cacheComponents?: boolean
-
-  /**
-   * Opts the whole app into Partial Prefetching: `<Link prefetch={true}>`
-   * prefetches only the static parts of a route, never its dynamic data.
-   * When `true`, the default segment-level `prefetch` becomes
-   * `'partial'`; per-segment `prefetch` exports still win. Requires
-   * `cacheComponents: true`.
-   *
-   * When `false` or omitted, this does nothing (the legacy behavior, where
-   * dynamic data is included in the prefetch).
-   *
-   * `'unstable_eager'` is like `true`, except the default becomes
-   * `'unstable_eager'` instead of `'partial'`: every Link has an implied
-   * prefetch={true}. Internal migration aid; not part of the public API.
-   */
-  partialPrefetching?: boolean | 'unstable_eager'
-
   cacheLife?: {
     [profile: string]: {
       // How long the client can cache a value without checking with the server.
@@ -2083,7 +2042,8 @@ export const defaultConfig = Object.freeze({
   outputFileTracingRoot: '',
   allowedDevOrigins: undefined,
   enablePrerenderSourceMaps: true,
-  cacheComponents: false,
+  cacheComponents: true,
+  partialPrefetching: true,
   cacheLife: {
     default: {
       stale: undefined, // defaults to staleTimes.static
@@ -2140,7 +2100,6 @@ export const defaultConfig = Object.freeze({
     linkNoTouchStart: false,
     caseSensitiveRoutes: false,
     clientParamParsingOrigins: undefined,
-    cachedNavigations: false,
     dynamicOnHover: false,
     useOffline: false,
     varyParams: true,
@@ -2188,7 +2147,6 @@ export const defaultConfig = Object.freeze({
     clientTraceMetadata: undefined,
     parallelServerCompiles: false,
     parallelServerBuildTraces: false,
-    ppr: false,
     authInterrupts: false,
     webpackBuildWorker: undefined,
     webpackMemoryOptimizations: false,
@@ -2226,7 +2184,10 @@ export const defaultConfig = Object.freeze({
   },
   htmlLimitedBots: undefined,
   bundlePagesRouterDependencies: false,
-} satisfies NextConfig)
+} satisfies NextConfig & {
+  cacheComponents: true
+  partialPrefetching: true
+})
 
 function turbopackFileSystemCacheForBuildDefault() {
   if (isStableBuild()) return false

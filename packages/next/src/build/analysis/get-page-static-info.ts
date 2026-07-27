@@ -706,22 +706,10 @@ export async function getAppPageStaticInfo({
     )
   }
 
-  if ('instant' in config && !nextConfig.cacheComponents) {
-    throw new Error(
-      `Route "${page}" cannot use \`export const instant = ...\` without enabling \`cacheComponents\`.`
-    )
-  }
-
   // Prevent use client and prefetch in the same file.
   if (directives?.has('client') && 'prefetch' in config) {
     throw new Error(
       `"prefetch" is a route segment config and can only be used when the segment is a Server Component module. Remove the "use client" directive from "${pageFilePath}" to use this API.`
-    )
-  }
-
-  if ('prefetch' in config && !nextConfig.cacheComponents) {
-    throw new Error(
-      `Route "${page}" cannot use \`export const prefetch = ...\` without enabling \`cacheComponents\`.`
     )
   }
 

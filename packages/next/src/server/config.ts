@@ -51,7 +51,6 @@ import { resolveCacheHandlerPathToFilesystem } from '../lib/format-dynamic-impor
 import { interopDefault } from '../lib/interop-default'
 import { djb2Hash } from '../shared/lib/hash'
 import type { NextAdapter } from '../build/adapter/build-complete'
-import { HardDeprecatedConfigError } from '../shared/lib/errors/hard-deprecated-config-error'
 import { NextInstanceErrorState } from './mcp/tools/next-instance-error-state'
 import { Bundler } from '../lib/bundler'
 import type { MemoryEvictionMode } from '../build/swc/types'
@@ -556,24 +555,6 @@ function assignDefaultsAndValidate(
           `Please add \`reactCompiler: true\` in ${configFileName}.`
       )
     }
-  }
-
-  if (result.experimental.cachedNavigations && !result.cacheComponents) {
-    throw new Error(
-      `\`experimental.cachedNavigations\` requires \`cacheComponents\` to be enabled. Please update your ${configFileName} accordingly.`
-    )
-  }
-
-  if (result.partialPrefetching && !result.cacheComponents) {
-    throw new Error(
-      `\`partialPrefetching\` requires \`cacheComponents\` to be enabled. Please update your ${configFileName} accordingly.`
-    )
-  }
-
-  if (result.experimental.ppr) {
-    throw new HardDeprecatedConfigError(
-      `\`experimental.ppr\` has been merged into \`cacheComponents\`. The Partial Prerendering feature is still available, but is now enabled via \`cacheComponents\`. Please update your ${configFileName} accordingly.`
-    )
   }
 
   if (result.output === 'export') {
@@ -1597,17 +1578,13 @@ function assignDefaultsAndValidate(
     result.experimental.mcpServer = true
   }
 
-  if (result.cacheComponents) {
-    // TODO: remove once we've finished migrating internally to cacheComponents.
-    result.experimental.ppr = true
-  }
-
-  // "use cache" was originally implicitly enabled with the cacheComponents flag, so
-  // we transfer the value for cacheComponents to the explicit useCache flag to ensure
-  // backwards compatibility.
-  if (result.experimental.useCache === undefined) {
-    result.experimental.useCache = result.cacheComponents
-  }
+  result.cacheComponents = true
+  result.partialPrefetching = true
+  ;(result.experimental as ExperimentalConfig & { ppr: true }).ppr = true
+  result.experimental.useCache = true
+  ;(
+    result.experimental as ExperimentalConfig & { cachedNavigations: true }
+  ).cachedNavigations = true
 
   // Store the distDirRoot in the config before it is modified for development mode
   ;(result as NextConfigComplete).distDirRoot = result.distDir
@@ -2263,42 +2240,6 @@ function enforceExperimentalFeatures(
     )
   }
 
-  // TODO: Remove this once we've made Cache Components the default.
-  if (
-    process.env.__NEXT_CACHE_COMPONENTS === 'true' &&
-    // We do respect an explicit value in the user config.
-    (config.cacheComponents === undefined ||
-      (isDefaultConfig && !config.cacheComponents))
-  ) {
-    config.cacheComponents = true
-  }
-
-  if (process.env.__NEXT_PARTIAL_PREFETCHING === 'true') {
-    config.partialPrefetching = true
-  }
-
-  // TODO: Remove this once cachedNavigations is the default. Note:
-  // cachedNavigations may be the string 'allow-runtime'. These guards treat it
-  // as truthy, so an explicit 'allow-runtime' is respected here and in the
-  // cacheComponents-tied default below rather than being downgraded to `true`.
-  if (
-    process.env.__NEXT_EXPERIMENTAL_CACHED_NAVIGATIONS === 'true' &&
-    // We do respect an explicit value in the user config.
-    (config.experimental.cachedNavigations === undefined ||
-      (isDefaultConfig && !config.experimental.cachedNavigations))
-  ) {
-    config.experimental.cachedNavigations = true
-
-    if (configuredExperimentalFeatures) {
-      addConfiguredExperimentalFeature(
-        configuredExperimentalFeatures,
-        'cachedNavigations',
-        true,
-        'enabled by `__NEXT_EXPERIMENTAL_CACHED_NAVIGATIONS`'
-      )
-    }
-  }
-
   // TODO: Remove this once serverComponentsHmrCancellation is the default.
   if (
     process.env.__NEXT_EXPERIMENTAL_SERVER_COMPONENTS_HMR_CANCELLATION ===
@@ -2317,23 +2258,6 @@ function enforceExperimentalFeatures(
         'enabled by `__NEXT_EXPERIMENTAL_SERVER_COMPONENTS_HMR_CANCELLATION`'
       )
     }
-  }
-
-  // Enable cachedNavigations by default when cacheComponents is enabled.
-  // cachedNavigations relies on Cache Components rendering to do anything
-  // useful, so the two features are tied together: we only flip the default
-  // for projects that are already using Cache Components. Done silently —
-  // we don't report this through `configuredExperimentalFeatures` because
-  // (a) the existing `cacheComponents` env-var auto-enable above is also
-  // silent, and (b) reporting it would force every snapshot test that has
-  // `cacheComponents: true` to take on a new line.
-  // TODO: Remove this once cachedNavigations is unconditionally the default.
-  if (
-    config.cacheComponents &&
-    (config.experimental.cachedNavigations === undefined ||
-      (isDefaultConfig && !config.experimental.cachedNavigations))
-  ) {
-    config.experimental.cachedNavigations = true
   }
 
   // appNewScrollHandler defaults to `true`. The env var lets us opt back out to

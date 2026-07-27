@@ -222,9 +222,6 @@ export const experimentalSchema = {
   craCompat: z.boolean().optional(),
   caseSensitiveRoutes: z.boolean().optional(),
   clientParamParsingOrigins: z.array(z.string()).optional(),
-  cachedNavigations: z
-    .union([z.boolean(), z.literal('allow-runtime')])
-    .optional(),
   dynamicOnHover: z.boolean().optional(),
   useOffline: z.boolean().optional(),
   optimisticRouting: z.boolean().optional(),
@@ -241,7 +238,6 @@ export const experimentalSchema = {
     .optional(),
   disableOptimizedLoading: z.boolean().optional(),
   disablePostcssPresetEnv: z.boolean().optional(),
-  cacheComponents: z.boolean().optional(),
   inlineCss: z.boolean().optional(),
   esmExternals: z.union([z.boolean(), z.literal('loose')]).optional(),
   serverActions: z
@@ -298,10 +294,6 @@ export const experimentalSchema = {
   optimisticClientCache: z.boolean().optional(),
   parallelServerCompiles: z.boolean().optional(),
   parallelServerBuildTraces: z.boolean().optional(),
-  ppr: z
-    .union([z.boolean(), z.literal('incremental')])
-    .readonly()
-    .optional(),
   taint: z.boolean().optional(),
   blockingSSR: z.boolean().optional(),
   prerenderEarlyExit: z.boolean().optional(),
@@ -483,7 +475,6 @@ export const configSchema: zod.ZodType<NextConfig> = z.lazy(() =>
     assetPrefix: z.string().optional(),
     basePath: z.string().optional(),
     bundlePagesRouterDependencies: z.boolean().optional(),
-    cacheComponents: z.boolean().optional(),
     cacheHandler: z.string().min(1).optional(),
     cacheHandlers: z.record(z.string(), z.string().optional()).optional(),
     cacheLife: z
@@ -786,9 +777,6 @@ export const configSchema: zod.ZodType<NextConfig> = z.lazy(() =>
       .optional(),
     pageExtensions: z.array(z.string()).min(1).optional(),
     instrumentationClientInject: z.array(z.string()).optional(),
-    partialPrefetching: z
-      .union([z.boolean(), z.literal('unstable_eager')])
-      .optional(),
     poweredByHeader: z.boolean().optional(),
     productionBrowserSourceMaps: z.boolean().optional(),
     reactCompiler: z.union([
