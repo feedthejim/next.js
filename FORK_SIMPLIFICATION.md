@@ -71,8 +71,11 @@
   remaining webpack HMR client classification consume the invariant directly.
   `"use cache"`, `cacheLife()`, and `cacheTag()` likewise have no enable flag:
   JavaScript and Turbopack compiler options, resolver conditions, and runtime
-  APIs all consume the product invariant directly. The Rust config model no
-  longer accepts Cache Components or use-cache booleans.
+  APIs all consume the product invariant directly. The JavaScript-to-Rust
+  compiler contract no longer carries Cache Components or use-cache booleans.
+  The RSC transform has one route-config policy, Server Actions always compile
+  `"use cache"`, and the remaining supported `instant` export is accepted
+  without a feature gate.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -87,10 +90,10 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Remove legacy route-segment configuration modes and their
-  compatibility diagnostics from the App Router compiler, beginning with
-  errors that still describe `cacheComponents` or `experimental.useCache` as
-  selectable options.
+- **Next action:** Delete the now-unreachable `runtime`, `dynamicParams`,
+  `dynamic`, `fetchCache`, `revalidate`, and `experimental_ppr` App Router
+  schema and runtime plumbing in bounded vertical slices, converting any
+  retained browser-only contract to a direct compiler or render test first.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -107,9 +110,52 @@
   assertion passed without the removed Cache Components config key. All 20
   isolated config assertions also passed with no selectable Cache Components
   or use-cache field in normalized config. The five-assertion production
-  resume-cache journey passed against the rebuilt local Turbopack binding.
+  resume-cache journey passed against the rebuilt local Turbopack binding. The
+  cleaned Rust transform contracts passed 30 RSC diagnostics and six transform
+  fixtures, and `next-core` passed a focused Cargo check with no compiler mode
+  fields.
 
 ## History
+
+### 2026-07-27: One compiler feature model
+
+Removed Cache Components and use-cache booleans from the JavaScript SWC
+options, Rust transform options, Turbopack transform rules, and Server Action
+configuration. The RSC transform now directly rejects route-segment modes that
+are outside the fork contract, accepts `instant` without an enable flag, and
+always runs the App Router empty-`generateStaticParams` transform. Deleted the
+mode-specific compiler fixtures and replaced them with one unsupported-route
+contract plus one positive `instant` fixture.
+
+The scorecard now tracks the Rust compiler pipeline and obsolete mode fields so
+future compiler simplification is visible alongside TypeScript source.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** The compiler seam has zero
+  `cache_components_enabled` or `use_cache_enabled` fields. Two feature
+  switches and their four transform owners are gone, and route-config policy
+  has one diagnostic instead of branching between two removed configuration
+  properties.
+- **Leanness:** The implementation, fixture, and scorecard-tooling diff is 288
+  net lines smaller: 35 additions and 323 deletions, excluding this history
+  entry and the generated snapshot.
+  Authored framework source fell by 9 lines and 275 bytes. The comparable warm
+  distribution fell by 1,556 bytes overall and 440 JavaScript bytes. Test-file
+  and package dependency counts were unchanged.
+- **Runtime performance:** No framework runtime path changed, so no runtime
+  benchmark was relevant. The production compiler emits the same supported
+  `"use cache"` and App Router transforms without serializing or testing
+  enable bits.
+- **Iteration efficiency:** The cleaned 30-case RSC diagnostic fixture passed
+  in 6.09 seconds, the six-case transform fixture in 2.25 seconds, and
+  `next-core` checked in 7.91 seconds. Types passed in 14.07 seconds, the
+  56-test fast contract in 1.78 seconds, and the final core build in 23.86
+  seconds, for 55.96 seconds of productive validation. No browser run was
+  added because the direct transform fixtures observe the compiler-only
+  change; the retained browser pack continues to own navigation, PPR, and
+  visible Server Action behavior. A cold Rust dependency compile and one stale
+  fixture-cache failure were investigation overhead, not productive timing.
 
 ### 2026-07-27: No use-cache configuration mode
 

@@ -150,7 +150,6 @@ async function loaderTransform(
     development:
       this.mode === 'development' ||
       !!nextConfig.experimental?.allowDevelopmentBuild,
-    isCacheComponents: true,
     hasReactRefresh,
     configDir: rootDir,
     modularizeImports: nextConfig?.modularizeImports,

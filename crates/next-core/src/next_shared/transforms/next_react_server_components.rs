@@ -34,8 +34,6 @@ pub async fn get_next_react_server_components_transform_rule(
     app_dir: Option<FileSystemPath>,
 ) -> Result<ModuleRule> {
     let enable_mdx_rs = next_config.mdx_rs().await?.is_some();
-    let cache_components_enabled = true;
-    let use_cache_enabled = true;
     let taint_enabled = *next_config.enable_taint().await?;
     let page_extensions = next_config
         .page_extensions()
@@ -46,8 +44,6 @@ pub async fn get_next_react_server_components_transform_rule(
     Ok(get_ecma_transform_rule(
         next_react_server_components_transform_plugin(
             is_react_server_layer,
-            cache_components_enabled,
-            use_cache_enabled,
             taint_enabled,
             app_dir,
             page_extensions,
@@ -62,16 +58,12 @@ pub async fn get_next_react_server_components_transform_rule(
 #[turbo_tasks::function]
 fn next_react_server_components_transform_plugin(
     is_react_server_layer: bool,
-    cache_components_enabled: bool,
-    use_cache_enabled: bool,
     taint_enabled: bool,
     app_dir: Option<FileSystemPath>,
     page_extensions: Vec<String>,
 ) -> Vc<TransformPlugin> {
     Vc::cell(Box::new(NextJsReactServerComponents {
         is_react_server_layer,
-        cache_components_enabled,
-        use_cache_enabled,
         taint_enabled,
         app_dir,
         page_extensions,
@@ -81,8 +73,6 @@ fn next_react_server_components_transform_plugin(
 #[derive(Debug)]
 struct NextJsReactServerComponents {
     is_react_server_layer: bool,
-    cache_components_enabled: bool,
-    use_cache_enabled: bool,
     taint_enabled: bool,
     app_dir: Option<FileSystemPath>,
     page_extensions: Vec<String>,
@@ -102,8 +92,6 @@ impl CustomTransformer for NextJsReactServerComponents {
             file_name,
             Config::WithOptions(Options {
                 is_react_server_layer: self.is_react_server_layer,
-                cache_components_enabled: self.cache_components_enabled,
-                use_cache_enabled: self.use_cache_enabled,
                 taint_enabled: self.taint_enabled,
                 page_extensions: self.page_extensions.clone(),
             }),

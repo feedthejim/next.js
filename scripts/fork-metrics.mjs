@@ -32,6 +32,7 @@ const sourceExtensions = new Set([
   '.ts',
   '.tsx',
 ])
+const compilerSourceExtensions = new Set([...sourceExtensions, '.rs'])
 
 function git(...gitArgs) {
   return execFileSync('git', gitArgs, { encoding: 'utf8' }).trim()
@@ -153,6 +154,10 @@ const clientRuntimeFiles = frameworkSourceFiles.filter(
     file.startsWith('packages/next/src/client/') ||
     file.startsWith('packages/next/src/next-devtools/')
 )
+const compilerRustFiles = [
+  ...worktreeFiles('crates/next-core'),
+  ...worktreeFiles('crates/next-custom-transforms'),
+].filter((file) => compilerSourceExtensions.has(extname(file)))
 const webpackFiles = frameworkSourceFiles.filter(
   (file) =>
     file.includes('/webpack/') || /(^|[/.-])webpack([/.-]|$)/i.test(file)
@@ -185,6 +190,7 @@ const metrics = {
     vendoredCompiled: summarize(vendoredCompiledSourceFiles),
     appRender: summarize(appRenderFiles),
     clientRouter: summarize(clientRouterFiles),
+    compilerRust: summarize(compilerRustFiles),
     webpackPathProxy: summarize(webpackFiles),
     pagesRouterPathProxy: summarize(pagesRouterFiles),
   },
@@ -221,6 +227,10 @@ const metrics = {
     clientRenderingModeEnv: countMatches(
       clientRuntimeFiles,
       /__NEXT_CACHE_COMPONENTS|__NEXT_EXPERIMENTAL_CACHED_NAVIGATIONS|__NEXT_PPR/g
+    ),
+    compilerCacheModeFields: countMatches(
+      compilerRustFiles,
+      /\bcache_components_enabled\b|\buse_cache_enabled\b/g
     ),
   },
   packageDependencies: {

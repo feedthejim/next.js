@@ -74,7 +74,6 @@ pub async fn get_next_client_transforms_rules(
         rules.push(get_debug_fn_name_rule(enable_mdx_rs).await?);
     }
 
-    let use_cache_enabled = true;
     let cache_kinds = next_config.cache_kinds().to_resolved().await?;
     let mut is_app_dir = false;
 
@@ -105,7 +104,6 @@ pub async fn get_next_client_transforms_rules(
                     ActionsTransform::Client,
                     encryption_key,
                     enable_mdx_rs,
-                    use_cache_enabled,
                     cache_kinds,
                 )
                 .await?,

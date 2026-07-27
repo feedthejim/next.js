@@ -1,5 +1,4 @@
 use std::{
-    fmt::{self, Display},
     iter::FromIterator,
     path::PathBuf,
     rc::Rc,
@@ -62,8 +61,6 @@ impl Config {
 #[serde(rename_all = "camelCase")]
 pub struct Options {
     pub is_react_server_layer: bool,
-    pub cache_components_enabled: bool,
-    pub use_cache_enabled: bool,
     #[serde(default)]
     pub taint_enabled: bool,
     #[serde(default)]
@@ -76,8 +73,6 @@ pub struct Options {
 /// same purpose, so does not run this transform.
 struct ReactServerComponents<C: Comments> {
     is_react_server_layer: bool,
-    cache_components_enabled: bool,
-    use_cache_enabled: bool,
     taint_enabled: bool,
     filepath: String,
     app_dir: Option<PathBuf>,
@@ -112,31 +107,14 @@ enum RSCErrorKind {
     NextRscErrInvalidApi((String, Span)),
     NextRscErrDeprecatedApi((String, String, Span)),
     NextSsrDynamicFalseNotAllowed(Span),
-    NextRscErrIncompatibleRouteSegmentConfig(Span, String, NextConfigProperty),
-    NextRscErrRequiresRouteSegmentConfig(Span, String, NextConfigProperty),
+    NextRscErrIncompatibleRouteSegmentConfig(Span, String),
     NextRscErrTaintWithoutConfig((String, Span)),
-}
-
-#[derive(Clone, Debug, Copy)]
-enum NextConfigProperty {
-    CacheComponents,
-    UseCache,
-}
-
-impl Display for NextConfigProperty {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            NextConfigProperty::CacheComponents => write!(f, "cacheComponents"),
-            NextConfigProperty::UseCache => write!(f, "experimental.useCache"),
-        }
-    }
 }
 
 enum InvalidExportKind {
     General,
     Metadata,
-    RouteSegmentConfig(NextConfigProperty),
-    RequiresRouteSegmentConfig(NextConfigProperty),
+    RouteSegmentConfig,
 }
 
 impl<C: Comments> VisitMut for ReactServerComponents<C> {
@@ -146,8 +124,6 @@ impl<C: Comments> VisitMut for ReactServerComponents<C> {
         // Run the validator first to assert, collect directives and imports.
         let mut validator = ReactServerComponentValidator::new(
             self.is_react_server_layer,
-            self.cache_components_enabled,
-            self.use_cache_enabled,
             self.taint_enabled,
             self.filepath.clone(),
             self.app_dir.clone(),
@@ -372,12 +348,10 @@ fn report_error(app_dir: &Option<PathBuf>, filepath: &str, error_kind: RSCErrorK
                 .to_string(),
             vec![span],
         ),
-        RSCErrorKind::NextRscErrIncompatibleRouteSegmentConfig(span, segment, property) => (
-            format!("Route segment config \"{segment}\" is not compatible with `nextConfig.{property}`. Please remove it."),
-            vec![span],
-        ),
-        RSCErrorKind::NextRscErrRequiresRouteSegmentConfig(span, segment, property) => (
-            format!("Route segment config \"{segment}\" requires `nextConfig.{property}` to be enabled."),
+        RSCErrorKind::NextRscErrIncompatibleRouteSegmentConfig(span, segment) => (
+            format!(
+                "Route segment config \"{segment}\" is not supported by the App Router. Please remove it."
+            ),
             vec![span],
         ),
         RSCErrorKind::NextRscErrTaintWithoutConfig((api_name, span)) => (
@@ -598,8 +572,6 @@ fn collect_module_info(
 /// A visitor to assert given module file is a valid React server component.
 struct ReactServerComponentValidator {
     is_react_server_layer: bool,
-    cache_components_enabled: bool,
-    use_cache_enabled: bool,
     taint_enabled: bool,
     filepath: String,
     app_dir: Option<PathBuf>,
@@ -619,8 +591,6 @@ struct ReactServerComponentValidator {
 impl ReactServerComponentValidator {
     pub fn new(
         is_react_server_layer: bool,
-        cache_components_enabled: bool,
-        use_cache_enabled: bool,
         taint_enabled: bool,
         filename: String,
         app_dir: Option<PathBuf>,
@@ -628,8 +598,6 @@ impl ReactServerComponentValidator {
     ) -> Self {
         Self {
             is_react_server_layer,
-            cache_components_enabled,
-            use_cache_enabled,
             taint_enabled,
             filepath: filename,
             app_dir,
@@ -904,8 +872,8 @@ impl ReactServerComponentValidator {
         let ext_pattern = build_page_extensions_regex(&self.page_extensions);
         // Metadata convention files (e.g. `icon`, `opengraph-image`, `sitemap`)
         // compile to route handlers and accept the same route segment configs,
-        // so they're subject to the same `cacheComponents`/`useCache`
-        // restrictions as `page`/`layout`/`route` entries.
+        // so they're subject to the same restrictions as
+        // `page`/`layout`/`route` entries.
         let re = Regex::new(&format!(
             r"[\\/](page|layout|route|icon\d?|apple-icon\d?|opengraph-image\d?|twitter-image\d?|sitemap|robots|manifest)\.{ext_pattern}$",
         ))
@@ -926,52 +894,11 @@ impl ReactServerComponentValidator {
                         possibly_invalid_exports
                             .insert(export_name.clone(), (InvalidExportKind::Metadata, *span));
                     }
-                    "runtime" => {
-                        if self.cache_components_enabled {
-                            possibly_invalid_exports.insert(
-                                export_name.clone(),
-                                (
-                                    InvalidExportKind::RouteSegmentConfig(
-                                        NextConfigProperty::CacheComponents,
-                                    ),
-                                    *span,
-                                ),
-                            );
-                        } else if self.use_cache_enabled {
-                            possibly_invalid_exports.insert(
-                                export_name.clone(),
-                                (
-                                    InvalidExportKind::RouteSegmentConfig(
-                                        NextConfigProperty::UseCache,
-                                    ),
-                                    *span,
-                                ),
-                            );
-                        }
-                    }
-                    "dynamicParams" | "dynamic" | "fetchCache" | "revalidate"
-                    | "experimental_ppr"
-                        if self.cache_components_enabled =>
-                    {
+                    "runtime" | "dynamicParams" | "dynamic" | "fetchCache" | "revalidate"
+                    | "experimental_ppr" => {
                         possibly_invalid_exports.insert(
                             export_name.clone(),
-                            (
-                                InvalidExportKind::RouteSegmentConfig(
-                                    NextConfigProperty::CacheComponents,
-                                ),
-                                *span,
-                            ),
-                        );
-                    }
-                    "instant" if !self.cache_components_enabled => {
-                        possibly_invalid_exports.insert(
-                            export_name.clone(),
-                            (
-                                InvalidExportKind::RequiresRouteSegmentConfig(
-                                    NextConfigProperty::CacheComponents,
-                                ),
-                                *span,
-                            ),
+                            (InvalidExportKind::RouteSegmentConfig, *span),
                         );
                     }
                     _ => (),
@@ -1005,25 +932,13 @@ impl ReactServerComponentValidator {
 
             for (export_name, (kind, span)) in &possibly_invalid_exports {
                 match kind {
-                    InvalidExportKind::RouteSegmentConfig(property) => {
+                    InvalidExportKind::RouteSegmentConfig => {
                         report_error(
                             &self.app_dir,
                             &self.filepath,
                             RSCErrorKind::NextRscErrIncompatibleRouteSegmentConfig(
                                 *span,
                                 export_name.to_string(),
-                                *property,
-                            ),
-                        );
-                    }
-                    InvalidExportKind::RequiresRouteSegmentConfig(property) => {
-                        report_error(
-                            &self.app_dir,
-                            &self.filepath,
-                            RSCErrorKind::NextRscErrRequiresRouteSegmentConfig(
-                                *span,
-                                export_name.to_string(),
-                                *property,
                             ),
                         );
                     }
@@ -1177,14 +1092,6 @@ pub fn server_components_assert(
         Config::WithOptions(x) => x.is_react_server_layer,
         _ => false,
     };
-    let cache_components_enabled: bool = match &config {
-        Config::WithOptions(x) => x.cache_components_enabled,
-        _ => false,
-    };
-    let use_cache_enabled: bool = match &config {
-        Config::WithOptions(x) => x.use_cache_enabled,
-        _ => false,
-    };
     let taint_enabled: bool = match &config {
         Config::WithOptions(x) => x.taint_enabled,
         _ => false,
@@ -1199,8 +1106,6 @@ pub fn server_components_assert(
     };
     ReactServerComponentValidator::new(
         is_react_server_layer,
-        cache_components_enabled,
-        use_cache_enabled,
         taint_enabled,
         filename,
         app_dir,
@@ -1220,14 +1125,6 @@ pub fn server_components<C: Comments>(
         Config::WithOptions(x) => x.is_react_server_layer,
         _ => false,
     };
-    let cache_components_enabled: bool = match &config {
-        Config::WithOptions(x) => x.cache_components_enabled,
-        _ => false,
-    };
-    let use_cache_enabled: bool = match &config {
-        Config::WithOptions(x) => x.use_cache_enabled,
-        _ => false,
-    };
     let taint_enabled: bool = match &config {
         Config::WithOptions(x) => x.taint_enabled,
         _ => false,
@@ -1238,8 +1135,6 @@ pub fn server_components<C: Comments>(
     };
     visit_mut_pass(ReactServerComponents {
         is_react_server_layer,
-        cache_components_enabled,
-        use_cache_enabled,
         taint_enabled,
         comments,
         filepath: match &*filename {

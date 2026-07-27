@@ -28,18 +28,12 @@ pub async fn get_server_actions_transform_rule(
     transform: ActionsTransform,
     encryption_key: ResolvedVc<RcStr>,
     enable_mdx_rs: bool,
-    use_cache_enabled: bool,
     cache_kinds: ResolvedVc<CacheKinds>,
 ) -> Result<ModuleRule> {
-    let transformer = next_server_actions_transform_plugin(
-        mode,
-        transform,
-        *encryption_key,
-        use_cache_enabled,
-        *cache_kinds,
-    )
-    .to_resolved()
-    .await?;
+    let transformer =
+        next_server_actions_transform_plugin(mode, transform, *encryption_key, *cache_kinds)
+            .to_resolved()
+            .await?;
     Ok(get_ecma_transform_rule(
         transformer,
         enable_mdx_rs,
@@ -52,14 +46,12 @@ async fn next_server_actions_transform_plugin(
     mode: Vc<NextMode>,
     transform: ActionsTransform,
     encryption_key: ResolvedVc<RcStr>,
-    use_cache_enabled: bool,
     cache_kinds: ResolvedVc<CacheKinds>,
 ) -> Result<Vc<TransformPlugin>> {
     Ok(Vc::cell(Box::new(NextServerActions {
         mode: *mode.await?,
         is_react_server_layer: matches!(transform, ActionsTransform::Server),
         encryption_key,
-        use_cache_enabled,
         cache_kinds,
     }) as Box<dyn CustomTransformer + Send + Sync>))
 }
@@ -68,7 +60,6 @@ async fn next_server_actions_transform_plugin(
 struct NextServerActions {
     is_react_server_layer: bool,
     encryption_key: ResolvedVc<RcStr>,
-    use_cache_enabled: bool,
     cache_kinds: ResolvedVc<CacheKinds>,
     mode: NextMode,
 }
@@ -83,7 +74,6 @@ impl CustomTransformer for NextServerActions {
             Config {
                 is_react_server_layer: self.is_react_server_layer,
                 is_development: self.mode.is_development(),
-                use_cache_enabled: self.use_cache_enabled,
                 hash_salt: self.encryption_key.await?.to_string(),
                 cache_kinds: self.cache_kinds.owned().await?,
             },

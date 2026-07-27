@@ -453,8 +453,6 @@ fn react_server_components_typescript(input: PathBuf) {
                 FileName::Real(PathBuf::from("/some-project/src/some-file.js")).into(),
                 Config::WithOptions(Options {
                     is_react_server_layer: true,
-                    cache_components_enabled: false,
-                    use_cache_enabled: false,
                     taint_enabled: true,
                     page_extensions: vec![],
                 }),
@@ -488,8 +486,6 @@ fn react_server_components_fixture(input: PathBuf) {
                     filename.clone().into(),
                     Config::WithOptions(Options {
                         is_react_server_layer,
-                        cache_components_enabled: false,
-                        use_cache_enabled: false,
                         taint_enabled: true,
                         page_extensions: vec![],
                     }),
@@ -502,7 +498,6 @@ fn react_server_components_fixture(input: PathBuf) {
                     server_actions::Config {
                         is_react_server_layer,
                         is_development: true,
-                        use_cache_enabled: true,
                         hash_salt: "".into(),
                         cache_kinds: FxHashSet::default(),
                     },
@@ -576,7 +571,6 @@ fn server_actions_fixture(input: PathBuf) {
                     server_actions::Config {
                         is_react_server_layer,
                         is_development,
-                        use_cache_enabled: true,
                         hash_salt: "".into(),
                         cache_kinds: FxHashSet::from_iter(["x".into()]),
                     },
@@ -616,7 +610,6 @@ fn next_font_with_directive_fixture(input: PathBuf) {
                     server_actions::Config {
                         is_react_server_layer: true,
                         is_development: true,
-                        use_cache_enabled: true,
                         hash_salt: "".into(),
                         cache_kinds: FxHashSet::default(),
                     },
@@ -966,7 +959,6 @@ fn test_source_maps(input: PathBuf) {
                     server_actions::Config {
                         is_react_server_layer,
                         is_development,
-                        use_cache_enabled: true,
                         hash_salt: "".into(),
                         cache_kinds: FxHashSet::from_iter([]),
                     },

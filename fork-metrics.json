@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
-  "label": "no-use-cache-configuration-mode",
-  "capturedAt": "2026-07-27T20:49:10.757Z",
+  "label": "compiler-invariants",
+  "capturedAt": "2026-07-27T21:02:11.660Z",
   "git": {
-    "baseHead": "df27c8eab9"
+    "baseHead": "46bf3724ae"
   },
   "source": {
     "frameworkTracked": {
       "files": 2458,
-      "lines": 1093977,
-      "bytes": 51400271
+      "lines": 1093968,
+      "bytes": 51399996
     },
     "frameworkAuthored": {
       "files": 1753,
-      "lines": 299646,
-      "bytes": 9657822
+      "lines": 299637,
+      "bytes": 9657547
     },
     "vendoredCompiled": {
       "files": 705,
@@ -31,10 +31,15 @@
       "lines": 14904,
       "bytes": 526771
     },
+    "compilerRust": {
+      "files": 977,
+      "lines": 52372,
+      "bytes": 1827826
+    },
     "webpackPathProxy": {
       "files": 267,
-      "lines": 138144,
-      "bytes": 7396194
+      "lines": 138143,
+      "bytes": 7396165
     },
     "pagesRouterPathProxy": {
       "files": 30,
@@ -57,7 +62,8 @@
     "fullPrefetchStrategy": 0,
     "loadingBoundaryStrategy": 0,
     "perSegmentPrefetchCapability": 0,
-    "clientRenderingModeEnv": 0
+    "clientRenderingModeEnv": 0,
+    "compilerCacheModeFields": 0
   },
   "packageDependencies": {
     "dependencies": 6,
@@ -73,29 +79,29 @@
   },
   "builtArtifacts": {
     "conditions": "warm local after final core release build; comparable to prior warm core-build snapshot",
-    "nextDistBytes": 180650509,
-    "nextDistJavaScriptBytes": 76317618
+    "nextDistBytes": 180648953,
+    "nextDistJavaScriptBytes": 76317178
   },
-  "validationTimingConditions": "warm local after native rebuild; directTests is normalized config contract; focusedTests is 56-assertion fork fast allowlist; browserTests is five-assertion production resume-cache journey using the rebuilt local native binding; testSelectionOverhead includes sandbox failures, pre-Rust core build, and two runs against the published native binding",
+  "validationTimingConditions": "warm local; directTests combines cleaned RSC error fixtures, RSC transform fixtures, and next-core cargo check; focusedTests is 56-assertion fork fast allowlist; no browser run because direct transform fixtures observe this compiler-only option removal",
   "validationTimingsMs": {
-    "types": 13640,
-    "directTests": 1470,
-    "focusedTests": 1820,
-    "testSelectionOverhead": 138400,
+    "types": 14070,
+    "directTests": 16250,
+    "focusedTests": 1780,
+    "testSelectionOverhead": null,
     "httpTests": null,
     "httpTestBody": null,
     "browserStartup": null,
-    "browserTestBody": 15238,
-    "browserTests": 24890,
+    "browserTestBody": null,
+    "browserTests": null,
     "edgeDceBuild": null,
-    "nextBuild": 22020,
-    "buildAll": 241260,
-    "total": 547110
+    "nextBuild": 23860,
+    "buildAll": null,
+    "total": 55960
   },
   "runtimePerformance": {
-    "conditions": "production Turbopack resume-cache fixture using rebuilt local native binding",
+    "conditions": null,
     "devStartupMs": null,
-    "productionStartupMs": 76,
+    "productionStartupMs": null,
     "routeHandlerRequestMs": null,
     "routeHandlerRevalidationMs": null,
     "edgeMiddlewareStartupMs": null,

@@ -71,7 +71,6 @@ function getBaseSWCOptions({
   serverComponents,
   serverReferenceHashSalt,
   bundleLayer,
-  isCacheComponents,
   cacheHandlers,
   taintEnabled,
   trackDynamicImports,
@@ -94,7 +93,6 @@ function getBaseSWCOptions({
   serverComponents?: boolean
   serverReferenceHashSalt: string
   bundleLayer?: WebpackLayerName
-  isCacheComponents?: boolean
   cacheHandlers?: NextConfig['cacheHandlers']
   taintEnabled?: boolean
   trackDynamicImports?: boolean
@@ -222,8 +220,6 @@ function getBaseSWCOptions({
       serverComponents && !jest
         ? {
             isReactServerLayer,
-            cacheComponentsEnabled: isCacheComponents,
-            useCacheEnabled: true,
             taintEnabled,
             pageExtensions: pageExtensions || [],
           }
@@ -233,7 +229,6 @@ function getBaseSWCOptions({
         ? {
             isReactServerLayer,
             isDevelopment: development,
-            useCacheEnabled: true,
             hashSalt: serverReferenceHashSalt,
             cacheKinds: ['default', 'remote', 'private'].concat(
               cacheHandlers ? Object.keys(cacheHandlers) : []
@@ -397,7 +392,6 @@ export function getLoaderSWCOptions({
   pagesDir,
   appDir,
   isPageFile,
-  isCacheComponents,
   hasReactRefresh,
   // The folder containing the next.config.js, used for resolving relative config paths.
   configDir,
@@ -430,7 +424,6 @@ export function getLoaderSWCOptions({
   configDir: string
   optimizeServerReact?: boolean
   modularizeImports: NextConfig['modularizeImports']
-  isCacheComponents?: boolean
   optimizePackageImports?: NonNullable<
     NextConfig['experimental']
   >['optimizePackageImports']
@@ -467,7 +460,6 @@ export function getLoaderSWCOptions({
     serverComponents,
     serverReferenceHashSalt,
     esm: !!esm,
-    isCacheComponents,
     cacheHandlers,
     taintEnabled,
     trackDynamicImports,

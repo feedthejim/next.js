@@ -47,7 +47,6 @@ pub enum ServerActionsMode {
 pub struct Config {
     pub is_react_server_layer: bool,
     pub is_development: bool,
-    pub use_cache_enabled: bool,
     pub hash_salt: String,
     pub cache_kinds: FxHashSet<RcStr>,
 }
@@ -133,10 +132,6 @@ enum ServerActionsErrorKind {
     UnknownCacheKind {
         span: Span,
         cache_kind: RcStr,
-    },
-    UseCacheWithoutCacheComponents {
-        span: Span,
-        directive: String,
     },
     WrappedDirective {
         span: Span,
@@ -3488,13 +3483,6 @@ impl DirectiveVisitor<'_> {
                             location: self.location.clone(),
                         });
                     } else if self.is_allowed_position {
-                        if !self.config.use_cache_enabled {
-                            emit_error(ServerActionsErrorKind::UseCacheWithoutCacheComponents {
-                                span: *span,
-                                directive: value.to_string_lossy().into_owned(),
-                            });
-                        }
-
                         if rest.is_empty() {
                             self.directive = Some(Directive::UseCache {
                                 cache_kind: rcstr!("default"),
@@ -3933,16 +3921,6 @@ fn emit_error(error_kind: ServerActionsErrorKind) {
             formatdoc! {
                 r#"
                     Unknown cache kind "{cache_kind}". Please configure a cache handler for this kind in the `cacheHandlers` object in your Next.js config.
-                "#
-            },
-        ),
-        ServerActionsErrorKind::UseCacheWithoutCacheComponents { span, directive } => (
-            span,
-            formatdoc! {
-                r#"
-                    To use "{directive}", please enable the feature flag `cacheComponents` in your Next.js config.
-
-                    Read more: https://nextjs.org/docs/app/api-reference/directives/use-cache#usage
                 "#
             },
         ),

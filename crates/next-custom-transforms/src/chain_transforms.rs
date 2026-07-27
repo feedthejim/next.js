@@ -371,8 +371,7 @@ where
                     .get_pass(file_path_for_empty_gsp),
                     matches!(
                         &opts.server_components,
-                        Some(react_server_components::Config::WithOptions(options))
-                            if options.cache_components_enabled
+                        Some(react_server_components::Config::WithOptions(_))
                     ),
                 ),
             ),

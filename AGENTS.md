@@ -182,6 +182,8 @@ Track at least:
 
 - framework, App Router renderer, and client router source files, lines, and
   bytes
+- Rust compiler pipeline source files, lines, and bytes, plus obsolete
+  Cache Components and `use cache` mode fields at the JavaScript/Rust seam
 - public `NextConfig` and `ExperimentalConfig` member counts
 - legacy rendering-mode and feature-gate references
 - webpack-path and Pages Router-path source proxies until those systems are
