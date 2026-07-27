@@ -56,6 +56,17 @@
 
 ## History
 
+### 2026-07-27: Four-dimensional slice scorecard
+
+Strengthened the repository metrics gate so every committed slice reports
+maintainability, leanness, runtime performance, and iteration efficiency.
+Unchanged, unaffected, and unmeasured dimensions must now be explicit, which
+prevents source deletion alone from standing in for a framework improvement.
+This governance-only slice does not change framework source, built output, or
+runtime behavior. Performance and validation timings were not rerun. The
+existing, unreconstructed `dist` tree differed by six bytes, so that artifact
+measurement is non-comparable.
+
 ### 2026-07-27: One imperative prefetch protocol
 
 Removed the public `PrefetchKind` mode and made `router.prefetch()` always use

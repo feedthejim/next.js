@@ -152,6 +152,21 @@ editing a simplification slice:
 2. state the slice hypothesis and the primary metric it should improve
 3. name the supported-behavior and performance guardrails that must not regress
 
+Every committed slice must report the same four outcome dimensions:
+
+- maintainability: modes, branches, public options, concepts, and ownership
+  boundaries removed or clarified
+- leanness: authored source, dependencies, tests, and built artifact weight
+- runtime performance: startup, latency, response size, and memory on affected
+  paths
+- iteration efficiency: type check, focused test, browser test, build, and
+  total validation cost
+
+Record an explicit unchanged, not affected, or not measured result when a
+dimension has no meaningful measurement for the slice. Do not omit a dimension
+and do not claim improvement from a proxy that moved while a more direct
+outcome regressed.
+
 Regenerate `fork-metrics.json` after verification. The committed snapshot is
 the current scorecard; Git history is the baseline and delta ledger. Never copy
 an old timing into a new snapshot. Use `null` when a measurement was not run or

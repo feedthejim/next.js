@@ -1,9 +1,9 @@
 {
   "schemaVersion": 2,
-  "label": "single-router-prefetch-api",
-  "capturedAt": "2026-07-27T18:43:04.563Z",
+  "label": "four-dimensional-slice-scorecard",
+  "capturedAt": "2026-07-27T18:46:19.618Z",
   "git": {
-    "baseHead": "31725306f5"
+    "baseHead": "51d22a2fda"
   },
   "source": {
     "frameworkTracked": {
@@ -69,25 +69,25 @@
     "unitFiles": 108
   },
   "builtArtifacts": {
-    "conditions": "warm-local-after-core-build",
-    "nextDistBytes": 186836009,
-    "nextDistJavaScriptBytes": 80412040
+    "conditions": "existing dist not rebuilt; artifact delta non-comparable",
+    "nextDistBytes": 186769318,
+    "nextDistJavaScriptBytes": 80393495
   },
-  "validationTimingConditions": "warm-local-watcher-stopped-navigation-browser-journey",
+  "validationTimingConditions": "not run for governance-only instruction change",
   "validationTimingsMs": {
-    "types": 14410,
-    "focusedTests": 1640,
-    "browserStartup": 93,
+    "types": null,
+    "focusedTests": null,
+    "browserStartup": null,
     "browserTestBody": null,
-    "browserTests": 14760,
-    "nextBuild": 22660,
+    "browserTests": null,
+    "nextBuild": null,
     "buildAll": null,
-    "total": 53470
+    "total": null
   },
   "runtimePerformance": {
-    "conditions": "production-turbopack-navigation-fixture-warm-local",
+    "conditions": null,
     "devStartupMs": null,
-    "productionStartupMs": 79,
+    "productionStartupMs": null,
     "pprShellFirstByteMs": null,
     "pprCompleteMs": null,
     "partialNavigationMs": null,
