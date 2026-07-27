@@ -1,9 +1,9 @@
 {
   "schemaVersion": 2,
   "label": "no-rendering-mode-env-switches",
-  "capturedAt": "2026-07-27T19:30:55.785Z",
+  "capturedAt": "2026-07-27T19:31:15.143Z",
   "git": {
-    "baseHead": "00210a8e53"
+    "baseHead": "f34f270e23"
   },
   "source": {
     "frameworkTracked": {
@@ -76,21 +76,25 @@
     "nextDistBytes": 180711253,
     "nextDistJavaScriptBytes": 76341049
   },
-  "validationTimingConditions": "warm local; focusedTests is fork fast allowlist; browserTests combines navigation and PPR journeys; total includes focused units and an out-of-contract webpack edge fixture attempt",
+  "validationTimingConditions": "warm local; focusedTests is fork fast allowlist; browserTests combines navigation and PPR journeys; edgeDceBuild is an isolated supported Edge middleware webpack build; total includes focused units, runtime verification, and an out-of-contract webpack edge fixture attempt",
   "validationTimingsMs": {
     "types": 14310,
     "focusedTests": 1800,
     "browserStartup": 89,
     "browserTestBody": null,
     "browserTests": 33570,
+    "edgeDceBuild": 3450,
     "nextBuild": 22160,
     "buildAll": null,
-    "total": 81290
+    "total": 84932
   },
   "runtimePerformance": {
-    "conditions": "production Turbopack navigation fixture, warm local",
+    "conditions": "production Turbopack navigation fixture plus isolated production webpack Edge middleware, warm local",
     "devStartupMs": null,
     "productionStartupMs": 144,
+    "edgeMiddlewareStartupMs": 76,
+    "edgeImageResponseMs": 116,
+    "edgeImageResponseBytes": 4712,
     "pprShellFirstByteMs": null,
     "pprCompleteMs": null,
     "partialNavigationMs": null,
