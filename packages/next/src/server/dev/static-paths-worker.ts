@@ -23,11 +23,6 @@ import { buildPagesStaticPaths } from '../../build/static-paths/pages'
 import { createIncrementalCache } from '../../export/helpers/create-incremental-cache'
 import { parseNormalizedAppRoute } from '../../shared/lib/router/routes/app'
 
-type RuntimeConfig = {
-  configFileName: string
-  cacheComponents: boolean
-}
-
 // we call getStaticPaths in a separate process to ensure
 // side-effects aren't relied on in dev that will break
 // during a production build
@@ -35,7 +30,7 @@ export async function loadStaticPaths({
   dir,
   distDir,
   pathname,
-  config,
+  configFileName,
   httpAgentOptions,
   locales,
   defaultLocale,
@@ -59,7 +54,7 @@ export async function loadStaticPaths({
   dir: string
   distDir: string
   pathname: string
-  config: RuntimeConfig
+  configFileName: string
   httpAgentOptions: NextConfigComplete['httpAgentOptions']
   locales?: readonly string[]
   defaultLocale?: string
@@ -129,7 +124,6 @@ export async function loadStaticPaths({
       dir,
       page: pathname,
       route,
-      cacheComponents: config.cacheComponents,
       segments,
       distDir,
       requestHeaders,
@@ -158,7 +152,7 @@ export async function loadStaticPaths({
   return buildPagesStaticPaths({
     page: pathname,
     getStaticPaths: components.getStaticPaths,
-    configFileName: config.configFileName,
+    configFileName,
     locales,
     defaultLocale,
   })

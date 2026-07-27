@@ -688,7 +688,6 @@ export async function isPageStatic({
   pageRuntime,
   edgeInfo,
   pageType,
-  cacheComponents,
   authInterrupts,
   useCacheTimeout,
   staticPageGenerationTimeout,
@@ -707,7 +706,6 @@ export async function isPageStatic({
   dir: string
   page: string
   distDir: string
-  cacheComponents: boolean
   authInterrupts: boolean
   useCacheTimeout: number
   staticPageGenerationTimeout: number
@@ -877,7 +875,6 @@ export async function isPageStatic({
                 dir,
                 page,
                 route,
-                cacheComponents,
                 authInterrupts,
                 useCacheTimeout,
                 staticPageGenerationTimeout,

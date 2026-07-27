@@ -837,10 +837,7 @@ export default class DevServer extends Server {
           dir: this.dir,
           distDir: this.distDir,
           pathname,
-          config: {
-            configFileName,
-            cacheComponents: Boolean(this.nextConfig.cacheComponents),
-          },
+          configFileName,
           httpAgentOptions,
           locales,
           defaultLocale,
@@ -980,7 +977,6 @@ export default class DevServer extends Server {
         // statically known).
         if (
           isAppPath &&
-          this.nextConfig.cacheComponents &&
           // Ensure this is not the first invocation.
           result &&
           // Comparing lengths rather than the whole objects, which is too

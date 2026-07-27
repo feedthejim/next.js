@@ -820,7 +820,6 @@ export async function buildAppStaticPaths({
   page,
   route,
   distDir,
-  cacheComponents,
   authInterrupts,
   useCacheTimeout,
   staticPageGenerationTimeout,
@@ -841,7 +840,6 @@ export async function buildAppStaticPaths({
   dir: string
   page: string
   route: NormalizedAppRoute
-  cacheComponents: boolean
   authInterrupts: boolean
   useCacheTimeout: number
   staticPageGenerationTimeout: number
@@ -903,7 +901,7 @@ export async function buildAppStaticPaths({
       cacheLifeProfiles,
       staticPageGenerationTimeout,
       supportsDynamicResponse: true,
-      cacheComponents,
+      cacheComponents: true,
       // generateStaticParams evaluation doesn't render pages, so instant
       // validation never runs here. The level value is irrelevant.
       // TODO: remove validationLevel and other global config out of renderOpts
@@ -1173,7 +1171,7 @@ export async function buildAppStaticPaths({
       : undefined
 
   // Now we have to set the throwOnEmptyStaticShell for each of the routes.
-  if (prerenderedRoutes && cacheComponents) {
+  if (prerenderedRoutes) {
     assignStaticShellMetadata(prerenderedRoutes, prerenderablePathSegments)
   }
 

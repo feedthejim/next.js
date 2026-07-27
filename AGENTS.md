@@ -142,6 +142,10 @@ the relevant retained production-browser journey after stopping the watch
 build. Running `pnpm fork-test-browser` without a selection runs the complete
 retained browser allowlist.
 
+For one unit test file, use `pnpm jest <path>`. The `pnpm test-unit` script
+hardcodes the full unit-test roots, so adding a trailing path does not narrow
+the suite.
+
 Before changing the test strategy, measure build, server startup, browser
 startup, and test-body time separately. Optimize the measured dominant cost.
 

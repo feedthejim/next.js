@@ -251,7 +251,9 @@ const metrics = {
   validationTimingConditions: args.get('timing-conditions') ?? null,
   validationTimingsMs: {
     types: optionalNumber('types-ms'),
+    directTests: optionalNumber('direct-tests-ms'),
     focusedTests: optionalNumber('focused-tests-ms'),
+    testSelectionOverhead: optionalNumber('test-selection-overhead-ms'),
     browserStartup: optionalNumber('browser-startup-ms'),
     browserTestBody: optionalNumber('browser-test-body-ms'),
     browserTests: optionalNumber('browser-tests-ms'),

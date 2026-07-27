@@ -45,7 +45,10 @@
   are selected through explicit runtime capabilities. The retained navigation
   journey covers both imperative prefetch and the default
   declarative Link path. Routes-manifest generation now emits one PPR and RSC
-  contract across the build, analyze, and adapter-completion entry points.
+  contract across the build, analyze, and adapter-completion entry points. App
+  static-path generation no longer receives a Cache Components mode from
+  production or development workers, and always computes static-shell
+  metadata.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -60,8 +63,8 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Remove obsolete configuration-derived Cache Components
-  plumbing that can no longer affect App Page rendering.
+- **Next action:** Remove Cache Components mode plumbing from the App Route
+  build, export, and request execution pipeline.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -75,6 +78,36 @@
   passed.
 
 ## History
+
+### 2026-07-27: One App static-path mode
+
+Removed the Cache Components boolean from production static analysis,
+development static-path workers, and `buildAppStaticPaths`. App static-path
+generation now creates one work-store shape and always assigns PPR shell
+metadata. The obsolete false-mode fallback omission and Cache Components
+feature-usage telemetry entry are gone.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** Cache Components references fell from 148 to 128. One
+  mode value and its production and development transport paths were removed
+  from the static-path producer-consumer seam.
+- **Leanness:** Authored framework source fell by 42 lines and 1,763 bytes. The
+  warm built distribution fell by 8,829 bytes overall and 3,556 JavaScript
+  bytes. Test and dependency counts were unchanged.
+- **Runtime performance:** All 12 retained PPR partial-hydration assertions
+  passed. The production server was ready in 76 milliseconds and the first
+  browser load took 131 milliseconds. The comparable prior run reported 73
+  and 61 milliseconds respectively, so this single local observation is
+  directional and not a performance claim.
+- **Iteration efficiency:** Types passed in 13.94 seconds, 84 direct
+  static-path assertions in 3.41 seconds, the 19-test fast allowlist in 1.79
+  seconds, the core build in 22.03 seconds, and the PPR browser journey in
+  26.00 seconds with an 18.41-second test body. Productive validation took
+  67.17 seconds. A mistakenly broad `pnpm test-unit <path>` attempt was stopped
+  after 61.86 seconds because that script ignores trailing path filters. Total
+  measured iteration cost was therefore 129.03 seconds, and `AGENTS.md` now
+  records the direct `pnpm jest <path>` command.
 
 ### 2026-07-27: One routes-manifest rendering contract
 

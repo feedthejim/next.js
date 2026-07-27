@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
-  "label": "one-routes-manifest-rendering-contract",
-  "capturedAt": "2026-07-27T19:35:28.415Z",
+  "label": "one-app-static-path-mode",
+  "capturedAt": "2026-07-27T19:42:39.399Z",
   "git": {
-    "baseHead": "a458681fb3"
+    "baseHead": "6d0df14aa9"
   },
   "source": {
     "frameworkTracked": {
       "files": 2458,
-      "lines": 1094147,
-      "bytes": 51407984
+      "lines": 1094105,
+      "bytes": 51406221
     },
     "frameworkAuthored": {
       "files": 1753,
-      "lines": 299816,
-      "bytes": 9665535
+      "lines": 299774,
+      "bytes": 9663772
     },
     "vendoredCompiled": {
       "files": 705,
@@ -47,7 +47,7 @@
     "experimentalConfig": 149
   },
   "legacyModeReferences": {
-    "cacheComponents": 148,
+    "cacheComponents": 128,
     "routePPR": 0,
     "appPPR": 0,
     "cacheComponentsEnv": 0,
@@ -72,26 +72,28 @@
     "unitFiles": 108
   },
   "builtArtifacts": {
-    "conditions": "warm local after core build and focused browser fixture pack; comparable to prior warm core-build snapshot",
-    "nextDistBytes": 180709600,
-    "nextDistJavaScriptBytes": 76340525
+    "conditions": "warm local after core build and focused PPR browser fixture pack; comparable to prior warm core-build snapshot",
+    "nextDistBytes": 180700771,
+    "nextDistJavaScriptBytes": 76336969
   },
-  "validationTimingConditions": "warm local; focusedTests is fork fast allowlist; browserTests combines navigation and PPR journeys",
+  "validationTimingConditions": "warm local; directTests is the static-path algorithm suite; focusedTests is the fork fast allowlist; browserTests is the retained PPR journey; testSelectionOverhead is a stopped broad unit-suite attempt; total includes all measured work",
   "validationTimingsMs": {
-    "types": 14109,
-    "focusedTests": 2456,
-    "browserStartup": 88,
-    "browserTestBody": null,
-    "browserTests": 32078,
+    "types": 13942,
+    "directTests": 3410,
+    "focusedTests": 1792,
+    "testSelectionOverhead": 61860,
+    "browserStartup": 131,
+    "browserTestBody": 18408,
+    "browserTests": 26000,
     "edgeDceBuild": null,
-    "nextBuild": 26780,
+    "nextBuild": 22030,
     "buildAll": null,
-    "total": 75423
+    "total": 129034
   },
   "runtimePerformance": {
-    "conditions": "production Turbopack navigation fixture, warm local",
+    "conditions": "production Turbopack PPR partial-hydration fixture, warm local",
     "devStartupMs": null,
-    "productionStartupMs": 151,
+    "productionStartupMs": 76,
     "edgeMiddlewareStartupMs": null,
     "edgeImageResponseMs": null,
     "edgeImageResponseBytes": null,

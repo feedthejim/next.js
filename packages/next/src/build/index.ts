@@ -553,10 +553,7 @@ export type RoutesManifest = {
     prefetchSegmentDirSuffix: typeof RSC_SEGMENTS_DIR_SUFFIX
     prefetchSegmentSuffix: typeof RSC_SEGMENT_SUFFIX
 
-    /**
-     * Whether the client param parsing is enabled. This is automatically enabled when
-     * cacheComponents is enabled.
-     */
+    /** Whether client parameter parsing is enabled. */
     clientParamParsing: boolean
 
     /**
@@ -1313,7 +1310,7 @@ export default async function build(
 
       logExperimentalInfo({
         experimentalFeatures,
-        cacheComponents: !!config.cacheComponents,
+        cacheComponents: true,
         partialPrefetching: config.partialPrefetching,
       })
 
@@ -1634,7 +1631,6 @@ export default async function build(
         config.basePath ? `${config.basePath}${p}` : p
       )
 
-      const isAppCacheComponentsEnabled = Boolean(config.cacheComponents)
       const isAuthInterruptsEnabled = Boolean(
         config.experimental.authInterrupts
       )
@@ -2216,7 +2212,6 @@ export default async function build(
               page: '/_error',
               distDir,
               configFileName,
-              cacheComponents: isAppCacheComponentsEnabled,
               authInterrupts: isAuthInterruptsEnabled,
               useCacheTimeout: config.experimental.useCacheTimeout,
               staticPageGenerationTimeout: config.staticPageGenerationTimeout,
@@ -2443,7 +2438,6 @@ export default async function build(
                             pageRuntime,
                             edgeInfo,
                             pageType,
-                            cacheComponents: isAppCacheComponentsEnabled,
                             authInterrupts: isAuthInterruptsEnabled,
                             useCacheTimeout:
                               config.experimental.useCacheTimeout,
@@ -2863,10 +2857,6 @@ export default async function build(
 
       const features: EventBuildFeatureUsage[] = [
         {
-          featureName: 'experimental/cacheComponents',
-          invocationCount: config.cacheComponents ? 1 : 0,
-        },
-        {
           featureName: 'experimental/optimizeCss',
           invocationCount: config.experimental.optimizeCss ? 1 : 0,
         },
@@ -3068,23 +3058,6 @@ export default async function build(
                 const isDynamicError = appConfig?.dynamic === 'error'
 
                 routes.forEach((route) => {
-                  // If the route has any dynamic root segments, we need to skip
-                  // rendering the route. This is because we don't support
-                  // revalidating the shells without the parameters present.
-                  // Note that we only have fallback root params if we also have
-                  // PPR enabled for this route/app already.
-                  if (
-                    route.fallbackRootParams &&
-                    route.fallbackRootParams.length > 0 &&
-                    // We don't skip rendering the route if we have the
-                    // following enabled. This is because the flight data now
-                    // does not contain any of the route params and is instead
-                    // completely static.
-                    !config.cacheComponents
-                  ) {
-                    return
-                  }
-
                   defaultMap[route.pathname] = {
                     page: originalAppPath,
                     _ssgPath: route.encodedPathname,
