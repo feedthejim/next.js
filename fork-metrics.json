@@ -1,9 +1,9 @@
 {
   "schemaVersion": 2,
-  "label": "direct-fallback-route-selection",
-  "capturedAt": "2026-07-27T20:22:30.842Z",
+  "label": "remove-stale-fallback-validation-browser-suite",
+  "capturedAt": "2026-07-27T20:30:06.264Z",
   "git": {
-    "baseHead": "9bfd28f8e4"
+    "baseHead": "c01d4520f3"
   },
   "source": {
     "frameworkTracked": {
@@ -65,9 +65,9 @@
     "peerDependencies": 6
   },
   "tests": {
-    "totalFiles": 1859,
+    "totalFiles": 1858,
     "e2eFiles": 1109,
-    "developmentFiles": 292,
+    "developmentFiles": 291,
     "productionFiles": 348,
     "unitFiles": 108
   },
@@ -76,25 +76,25 @@
     "nextDistBytes": 180661866,
     "nextDistJavaScriptBytes": 76321792
   },
-  "validationTimingConditions": "warm local; directTests is fallback-param request contract; focusedTests is 56-assertion fork fast allowlist; browserTests is two retained Turbopack warmup entry points with one fully covered cache assertion each",
+  "validationTimingConditions": "warm local; focusedTests is 56-assertion fork fast allowlist; browserTests is one retained generic Turbopack Blocking Route assertion; testSelectionOverhead includes stale-suite reproduction, two sandbox network retry failures, and the pre-cleanup retained assertion",
   "validationTimingsMs": {
-    "types": 14410,
-    "directTests": 1410,
-    "focusedTests": 1820,
-    "testSelectionOverhead": null,
+    "types": null,
+    "directTests": null,
+    "focusedTests": 1810,
+    "testSelectionOverhead": 199160,
     "httpTests": null,
     "httpTestBody": null,
     "browserStartup": null,
-    "browserTestBody": 21072,
-    "browserTests": 22180,
+    "browserTestBody": 6626,
+    "browserTests": 7630,
     "edgeDceBuild": null,
-    "nextBuild": 21820,
+    "nextBuild": 22110,
     "buildAll": null,
-    "total": 61640
+    "total": 230710
   },
   "runtimePerformance": {
-    "conditions": "isolated Turbopack development warmup fixtures for retained initial-load and navigation entry points",
-    "devStartupMs": 280,
+    "conditions": "isolated Turbopack development generic Blocking Route fixture after obsolete config removal",
+    "devStartupMs": 285,
     "productionStartupMs": null,
     "routeHandlerRequestMs": null,
     "routeHandlerRevalidationMs": null,

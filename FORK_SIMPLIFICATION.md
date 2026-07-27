@@ -63,7 +63,10 @@
   suite now has one Partial Prefetching model across four fixture and load-mode
   entry points instead of an eight-file on/off matrix, and no longer provisions
   mixed-param routes to retest the request-layer selection algorithm in a
-  browser.
+  browser. The separate 19-file fallback-validation browser application is
+  gone; fallback specificity lives in the fast request contract, while the
+  retained generic development error suite owns the user-visible Blocking
+  Route diagnostic.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
   Router contract allowlist. `fork-metrics.json` is the current scorecard,
@@ -78,9 +81,10 @@
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
-- **Next action:** Resolve the stale development fallback-validation browser
-  suite against the always-on diagnostics contract, then resume removing Cache
-  Components configuration plumbing at compiler and route-analysis boundaries.
+- **Next action:** Remove the obsolete Cache Components configuration field
+  from compiler and route-analysis plumbing, and rewrite route-segment
+  incompatibility diagnostics around the product invariant rather than the
+  deleted option.
 - **Done Means:** Every `AGENTS.md` fork checklist item is completed or
   explicitly resolved out of scope; supported behaviors have proportionate
   tests; the core package builds; every slice records its simplification and
@@ -93,9 +97,44 @@
   PPR partial-hydration assertions, the transition-instrumentation journey, and
   two focused Turbopack Fast Refresh assertions passed. The focused Turbopack
   development startup fixture also passed all three cache, deduplication, and
-  revalidation assertions.
+  revalidation assertions. The retained generic Blocking Route redbox
+  assertion passed without the removed Cache Components config key.
 
 ## History
+
+### 2026-07-27: No fallback-validation browser matrix
+
+Deleted the stale 19-file development application that combined complete,
+partial, and absent static params with wrapped and unwrapped layouts. Its old
+partial-param case was reproduced against the current fork: the request
+completed successfully and the expected fallback-specific Blocking Route
+redbox did not open. The matrix's unique route-precedence responsibility now
+lives in the fast fallback-param contract, while the existing generic
+development error suite retains the actual Blocking Route user experience.
+That retained fixture also stopped declaring the removed Cache Components
+option.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** One duplicate ownership boundary is gone. Fallback-param
+  selection belongs to the request unit, and generic development diagnostics
+  belong to the development error suite instead of being multiplied across
+  static-param combinations.
+- **Leanness:** Deleted 532 lines of test and fixture source, one 15,086-byte
+  binary asset, and one development test file. Total tests fell from 1,859 to
+  1,858 and development tests from 292 to 291. Authored framework source,
+  dependencies, and the comparable built distribution were unchanged.
+- **Runtime performance:** No framework runtime code changed. The retained
+  generic Turbopack Blocking Route fixture reached ready state in 285
+  milliseconds and passed its redbox assertion.
+- **Iteration efficiency:** The 56-test fast contract passed in 1.81 seconds,
+  the retained browser assertion in 7.63 seconds with a 6.63-second Jest body,
+  and the core build in 22.11 seconds. Final productive validation cost 31.55
+  seconds. Reproducing the stale case, two sandboxed isolated-install network
+  failures, and a pre-cleanup retained run added 199.16 seconds, for 230.71
+  seconds of measured iteration. A separate type command was not run because
+  framework source was unchanged; the build's type-generation phase passed in
+  14.04 seconds.
 
 ### 2026-07-27: Direct fallback-route selection contract
 
