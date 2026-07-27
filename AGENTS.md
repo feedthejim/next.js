@@ -145,10 +145,17 @@ startup, and test-body time separately. Optimize the measured dominant cost.
 
 ### Simplification Metrics Gate
 
-Every simplification slice must make its effect visible. Run
-`pnpm fork-metrics` before deciding what to remove and regenerate
-`fork-metrics.json` after verification. The committed snapshot is the current
-scorecard; Git history is the ledger.
+Metrics are part of the definition of done, not an occasional audit. Before
+editing a simplification slice:
+
+1. read the previous committed `fork-metrics.json`
+2. state the slice hypothesis and the primary metric it should improve
+3. name the supported-behavior and performance guardrails that must not regress
+
+Regenerate `fork-metrics.json` after verification. The committed snapshot is
+the current scorecard; Git history is the baseline and delta ledger. Never copy
+an old timing into a new snapshot. Use `null` when a measurement was not run or
+is irrelevant to the slice.
 
 Track at least:
 
@@ -161,13 +168,19 @@ Track at least:
 - direct, optional, and peer dependency counts for `next`
 - end-to-end, development, production, and unit test file counts
 - built `packages/next/dist` total and JavaScript bytes
-- wall time for type checking, focused tests, focused browser tests, the core
-  package build, and the bootstrap build when run
+- iteration and CI cost: wall time for type checking, focused tests, browser
+  startup and test body, focused browser tests, the core package build, the
+  bootstrap build, and the complete validation slice when run
+- runtime performance when the changed path can affect it: development and
+  production startup, PPR shell first byte and completion, Partial Prefetching
+  navigation latency, response bytes, and peak resident memory
 
 Record performance timings with the corresponding `fork-metrics` CLI options.
 Use the same warm or cold conditions when comparing timings and label the
 snapshot accordingly. A timing change from one local run is directional, not a
 regression claim; investigate material changes with repeated measurements.
+Only compare values whose fixture, machine, build mode, cache state, and
+measurement boundary match. Otherwise label them non-comparable.
 
 Do not treat raw line deletion as success by itself. Each slice must report:
 
@@ -176,7 +189,12 @@ Do not treat raw line deletion as success by itself. Each slice must report:
 3. which supported behavior was retained or intentionally removed
 4. any metric that worsened and why the tradeoff is acceptable
 
-Do not commit a simplification slice without updating `fork-metrics.json`.
+Prefer metrics that express user or maintainer outcomes: fewer modes and public
+options, less code and artifact weight, lower memory and latency, and less CI
+wall time. Counts are proxies, so pair them with the retained-behavior
+verification. Do not commit a simplification slice without updating
+`fork-metrics.json` and the current/history sections of
+`FORK_SIMPLIFICATION.md`.
 
 ### Supported Behavior Verification Map
 

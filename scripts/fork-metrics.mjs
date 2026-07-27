@@ -168,7 +168,7 @@ const nextPackage = JSON.parse(
 const configFile = 'packages/next/src/server/config-shared.ts'
 
 const metrics = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   label: args.get('label') ?? null,
   capturedAt: new Date().toISOString(),
   git: {
@@ -230,9 +230,24 @@ const metrics = {
   validationTimingsMs: {
     types: optionalNumber('types-ms'),
     focusedTests: optionalNumber('focused-tests-ms'),
+    browserStartup: optionalNumber('browser-startup-ms'),
+    browserTestBody: optionalNumber('browser-test-body-ms'),
     browserTests: optionalNumber('browser-tests-ms'),
     nextBuild: optionalNumber('next-build-ms'),
     buildAll: optionalNumber('build-all-ms'),
+    total: optionalNumber('validation-total-ms'),
+  },
+  runtimePerformance: {
+    conditions: args.get('runtime-conditions') ?? null,
+    devStartupMs: optionalNumber('dev-startup-ms'),
+    productionStartupMs: optionalNumber('production-startup-ms'),
+    pprShellFirstByteMs: optionalNumber('ppr-shell-first-byte-ms'),
+    pprCompleteMs: optionalNumber('ppr-complete-ms'),
+    partialNavigationMs: optionalNumber('partial-navigation-ms'),
+    partialNavigationResponseBytes: optionalNumber(
+      'partial-navigation-response-bytes'
+    ),
+    peakRssBytes: optionalNumber('peak-rss-bytes'),
   },
 }
 

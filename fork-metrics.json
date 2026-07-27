@@ -1,9 +1,9 @@
 {
-  "schemaVersion": 1,
-  "label": "partial-prefetching-only-renderer",
-  "capturedAt": "2026-07-27T17:57:25.934Z",
+  "schemaVersion": 2,
+  "label": "per-slice-metric-discipline",
+  "capturedAt": "2026-07-27T17:58:48.110Z",
   "git": {
-    "baseHead": "521b406217"
+    "baseHead": "a1fa5efbe3"
   },
   "source": {
     "frameworkTracked": {
@@ -67,16 +67,29 @@
     "unitFiles": 108
   },
   "builtArtifacts": {
-    "conditions": "warm-local-after-core-build",
+    "conditions": "unchanged-package-from-a1fa5efbe3",
     "nextDistBytes": 181894970,
     "nextDistJavaScriptBytes": 76614059
   },
-  "validationTimingConditions": "warm-local-watcher-stopped",
+  "validationTimingConditions": "not-run-tooling-only",
   "validationTimingsMs": {
-    "types": 18446,
-    "focusedTests": 2312,
-    "browserTests": 31743,
-    "nextBuild": 26243,
-    "buildAll": null
+    "types": null,
+    "focusedTests": null,
+    "browserStartup": null,
+    "browserTestBody": null,
+    "browserTests": null,
+    "nextBuild": null,
+    "buildAll": null,
+    "total": null
+  },
+  "runtimePerformance": {
+    "conditions": "not-run-tooling-only",
+    "devStartupMs": null,
+    "productionStartupMs": null,
+    "pprShellFirstByteMs": null,
+    "pprCompleteMs": null,
+    "partialNavigationMs": null,
+    "partialNavigationResponseBytes": null,
+    "peakRssBytes": null
   }
 }

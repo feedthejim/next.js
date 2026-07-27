@@ -17,12 +17,15 @@
   and production renderers, and validation has one Partial Prefetching mode.
   Runtime-prefetch resume-cache installation is a directly testable renderer
   seam. `pnpm fork-test` and `pnpm fork-test-browser` define the early App
-  Router contract allowlist. `fork-metrics.json` is the current scorecard.
+  Router contract allowlist. `fork-metrics.json` is the current scorecard,
+  including static complexity, validation cost, and relevant runtime
+  performance guardrails.
 - **Constraints:** Backward compatibility is out of scope. Do not add migration
   layers or special removed-feature errors. Preserve only behavior in the fork
   contract. Keep each independently verified slice committed before starting
-  the next one. Regenerate `fork-metrics.json` and review its delta for every
-  slice.
+  the next one. Declare the primary improvement metric and behavior/performance
+  guardrails before each slice, then regenerate `fork-metrics.json` and review
+  its delta. Never reuse a stale measurement.
 - **Product invariants:** App Router only, Cache Components always on, PPR as
   the rendering model, Partial Prefetching as the navigation model, Turbopack
   as the application compiler, and explicit platform adapter boundaries.
@@ -40,6 +43,16 @@
   assertions passed.
 
 ## History
+
+### 2026-07-27: Per-slice metrics discipline
+
+Made the scorecard an explicit before-and-after gate for every simplification
+slice. Each slice now declares a primary improvement metric plus behavior and
+performance guardrails, records `null` instead of carrying stale observations,
+and distinguishes comparable measurements from directional data. The collector
+now has fields for CI-cost decomposition, runtime startup, PPR streaming,
+Partial Prefetching navigation, response weight, and peak memory. This tooling
+slice does not change framework source or runtime behavior.
 
 ### 2026-07-27: One Partial Prefetching renderer mode
 
