@@ -602,6 +602,7 @@ pub enum RemotePatternProtocol {
 )]
 #[serde(rename_all = "camelCase")]
 pub struct TurbopackConfig {
+    pub client_runtime: Option<ClientRuntimeConfig>,
     #[serde(default)]
     #[bincode(with = "turbo_bincode::indexmap")]
     pub rules: FxIndexMap<RcStr, RuleConfigCollection>,
@@ -613,6 +614,52 @@ pub struct TurbopackConfig {
     /// Issue patterns to ignore (suppress) from Turbopack output.
     #[serde(default)]
     pub ignore_issue: Option<Vec<TurbopackIgnoreIssueRule>>,
+}
+
+#[derive(
+    Clone,
+    Debug,
+    Default,
+    PartialEq,
+    Eq,
+    Deserialize,
+    TraceRawVcs,
+    NonLocalValue,
+    OperationValue,
+    Encode,
+    Decode,
+)]
+#[serde(rename_all = "camelCase")]
+pub struct ClientRuntimeConfig {
+    pub entry: RcStr,
+    pub react: Option<RcStr>,
+    pub react_dom: Option<RcStr>,
+}
+
+#[turbo_tasks::value(transparent)]
+pub struct OptionClientRuntimeConfig(Option<ClientRuntimeConfig>);
+
+#[test]
+fn test_client_runtime_config_deserialization() {
+    let config: NextConfig = serde_json::from_value(serde_json::json!({
+        "turbopack": {
+            "clientRuntime": {
+                "entry": "@octanejs/next/native-runtime",
+                "reactDom": "@octanejs/next/react-dom"
+            }
+        }
+    }))
+    .unwrap();
+    let runtime = config
+        .turbopack
+        .and_then(|turbopack| turbopack.client_runtime)
+        .unwrap();
+    assert_eq!(runtime.entry, "@octanejs/next/native-runtime");
+    assert_eq!(runtime.react, None);
+    assert_eq!(
+        runtime.react_dom.as_deref(),
+        Some("@octanejs/next/react-dom")
+    );
 }
 
 #[derive(
@@ -2070,6 +2117,15 @@ impl NextConfig {
             return Vc::cell(None);
         };
         Vc::cell(Some(resolve_extensions.clone()))
+    }
+
+    #[turbo_tasks::function]
+    pub fn client_runtime(&self) -> Vc<OptionClientRuntimeConfig> {
+        Vc::cell(
+            self.turbopack
+                .as_ref()
+                .and_then(|turbopack| turbopack.client_runtime.clone()),
+        )
     }
 
     #[turbo_tasks::function]

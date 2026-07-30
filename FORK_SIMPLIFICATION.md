@@ -154,6 +154,49 @@
 
 ## History
 
+### 2026-07-30: Pluggable Turbopack client renderer
+
+Added one low-level Turbopack renderer seam: an application can select its App
+Router browser entry and override the client-side `react` and `react-dom`
+package mappings. The default remains `app-next-turbopack.js` with Next's
+compiled React packages, so existing applications keep the same graph.
+
+The hypothesis was that renderer replacement does not require forking Next's
+server renderer, Flight protocol, Cache Components, or PPR implementation. The
+guardrails were unchanged default resolution, successful configuration
+deserialization, a complete Next package build, and a real Cache Components
+application using the alternate entry.
+
+Across the four scorecard dimensions:
+
+- **Maintainability:** The seam adds 21 authored TypeScript lines and 76 Rust
+  lines across configuration, runtime-entry selection, and client import-map
+  construction. It replaces a hard-coded renderer choice with one explicit
+  contract without changing the default path.
+- **Leanness:** The comparable built Next distribution grows by 3,148 bytes,
+  including 388 JavaScript bytes. In the Jimmy Lai production-site fixture,
+  the Octane-native renderer reduces loaded home-route JavaScript from 168,018
+  to 122,169 transferred bytes and from 526,148 to 397,182 decoded bytes. The
+  complete generated static JavaScript and CSS set falls from 342,578 to
+  326,745 bytes gzip.
+- **Runtime performance:** Across 12 cold Chromium samples after three warmups
+  at 4x CPU slowdown, median FCP remains 84 milliseconds. The existing theme
+  interaction becomes ready in 121.7 milliseconds instead of 205.1
+  milliseconds, the load event moves from 142.8 to 120.2 milliseconds, and
+  median long-task time falls from 70 milliseconds to zero. Three Octane
+  boundaries hydrate, theme state changes, document navigation reaches
+  `/about`, and the browser reports no console or page errors.
+- **Iteration efficiency:** Generated package types passed in 12.88 seconds,
+  the focused Rust configuration test passed after a 19.92-second cold build,
+  the full JavaScript bootstrap build passed in 27.24 seconds, and the native
+  compiler build passed in 102 seconds. Total measured validation was 162.04
+  seconds.
+
+This slice proves renderer replacement, not full App Router parity. The native
+prototype intentionally uses document navigation and does not implement Server
+Actions, client router state, prefetching, connected View Transitions, or
+React-owned effects.
+
 ### 2026-07-27: One Node-only Turbopack Proxy endpoint
 
 Collapsed Turbopack's Proxy discovery and endpoint graph to one Node.js

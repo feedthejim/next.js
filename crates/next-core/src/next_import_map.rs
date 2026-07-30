@@ -101,27 +101,38 @@ pub async fn get_next_client_import_map(
                 } else {
                     ""
                 };
+            let client_runtime = next_config.client_runtime().await?;
+            let react_package = client_runtime
+                .as_ref()
+                .and_then(|runtime| runtime.react.clone());
+            let react_dom_package = client_runtime
+                .as_ref()
+                .and_then(|runtime| runtime.react_dom.clone());
+            let react_request = react_package
+                .clone()
+                .unwrap_or_else(|| format!("next/dist/compiled/react{react_channel}").into());
+            let react_wildcard_request = react_package
+                .map(|request| format!("{request}/*").into())
+                .unwrap_or_else(|| format!("next/dist/compiled/react{react_channel}/*").into());
+            let react_dom_request = react_dom_package
+                .clone()
+                .unwrap_or_else(|| format!("next/dist/compiled/react-dom{react_channel}").into());
+            let react_dom_wildcard_request = react_dom_package
+                .clone()
+                .map(|request| format!("{request}/*").into())
+                .unwrap_or_else(|| format!("next/dist/compiled/react-dom{react_channel}/*").into());
 
             import_map.insert_exact_alias(
                 rcstr!("react"),
-                request_to_import_mapping(
-                    app_dir.clone(),
-                    format!("next/dist/compiled/react{react_channel}").into(),
-                ),
+                request_to_import_mapping(app_dir.clone(), react_request),
             );
             import_map.insert_wildcard_alias(
                 rcstr!("react/"),
-                request_to_import_mapping(
-                    app_dir.clone(),
-                    format!("next/dist/compiled/react{react_channel}/*").into(),
-                ),
+                request_to_import_mapping(app_dir.clone(), react_wildcard_request),
             );
             import_map.insert_exact_alias(
                 rcstr!("react-dom"),
-                request_to_import_mapping(
-                    app_dir.clone(),
-                    format!("next/dist/compiled/react-dom{react_channel}").into(),
-                ),
+                request_to_import_mapping(app_dir.clone(), react_dom_request),
             );
             import_map.insert_exact_alias(
                 rcstr!("react-dom/static"),
@@ -149,16 +160,21 @@ pub async fn get_next_client_import_map(
                 rcstr!("react-dom/client"),
                 request_to_import_mapping(
                     app_dir.clone(),
-                    format!("next/dist/compiled/react-dom{react_channel}/{react_client_package}")
-                        .into(),
+                    react_dom_package
+                        .clone()
+                        .map(|request| format!("{request}/client").into())
+                        .unwrap_or_else(|| {
+                            format!(
+                                "next/dist/compiled/react-dom{react_channel}/\
+                                 {react_client_package}"
+                            )
+                            .into()
+                        }),
                 ),
             );
             import_map.insert_wildcard_alias(
                 rcstr!("react-dom/"),
-                request_to_import_mapping(
-                    app_dir.clone(),
-                    format!("next/dist/compiled/react-dom{react_channel}/*").into(),
-                ),
+                request_to_import_mapping(app_dir.clone(), react_dom_wildcard_request),
             );
             import_map.insert_wildcard_alias(
                 rcstr!("react-server-dom-webpack/"),

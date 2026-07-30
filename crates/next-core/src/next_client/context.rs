@@ -725,13 +725,17 @@ pub async fn get_client_runtime_entries(
     }
 
     if matches!(ty, ClientContextType::App { .. },) {
+        let client_runtime_entry = next_config
+            .client_runtime()
+            .await?
+            .as_ref()
+            .map(|runtime| runtime.entry.clone())
+            .unwrap_or_else(|| rcstr!("next/dist/client/app-next-turbopack.js"));
         runtime_entries.push(
             RuntimeEntry::Request(
-                Request::parse(Pattern::Constant(rcstr!(
-                    "next/dist/client/app-next-turbopack.js"
-                )))
-                .to_resolved()
-                .await?,
+                Request::parse(Pattern::Constant(client_runtime_entry))
+                    .to_resolved()
+                    .await?,
                 project_root.join("_")?,
             )
             .resolved_cell(),

@@ -161,6 +161,13 @@ const zTurbopackRuleConfigCollection: zod.ZodType<TurbopackRuleConfigCollection>
   ])
 
 const zTurbopackConfig: zod.ZodType<TurbopackOptions> = z.strictObject({
+  clientRuntime: z
+    .strictObject({
+      entry: z.string().min(1),
+      react: z.string().min(1).optional(),
+      reactDom: z.string().min(1).optional(),
+    })
+    .optional(),
   rules: z.record(z.string(), zTurbopackRuleConfigCollection).optional(),
   resolveAlias: z
     .record(

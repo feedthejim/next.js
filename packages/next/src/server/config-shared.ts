@@ -221,6 +221,20 @@ export type TurbopackRuleConfigCollection =
 
 export interface TurbopackOptions {
   /**
+   * (`next --turbopack` only) Replaces the App Router browser bootstrap and,
+   * optionally, its renderer packages. The entry owns client initialization
+   * and must preserve the framework's public browser contracts.
+   *
+   * This low-level integration seam is intended for renderer plugins. Ordinary
+   * applications should not set it directly.
+   */
+  clientRuntime?: {
+    entry: string
+    react?: string
+    reactDom?: string
+  }
+
+  /**
    * (`next --turbopack` only) A mapping of aliased imports to modules to load in their place.
    *
    * @see [Resolve Alias](https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#resolving-aliases)
