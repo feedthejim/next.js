@@ -585,6 +585,9 @@ export default abstract class Server<
       // `htmlLimitedBots` is passed to server as serialized config in string format
       htmlLimitedBots: this.nextConfig.htmlLimitedBots,
       partialPrefetching: true,
+      clientRuntime:
+        this.nextConfig.clientRuntime ??
+        (this.nextConfig as NextConfig).turbopack?.clientRuntime,
       validationLevel:
         this.nextConfig.experimental.instantInsights.validationLevel,
       experimental: {

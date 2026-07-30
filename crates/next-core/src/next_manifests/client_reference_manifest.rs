@@ -26,7 +26,7 @@ use crate::{
     mode::NextMode,
     next_app::ClientReferencesChunks,
     next_client_reference::{ClientReferenceGraphResult, ClientReferenceType},
-    next_config::NextConfig,
+    next_config::{ClientReferenceMode, NextConfig},
     next_manifests::{ModuleId, encode_uri_component::encode_uri_component},
     util::NextRuntime,
 };
@@ -34,7 +34,7 @@ use crate::{
 #[derive(Serialize, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SerializedClientReferenceManifest {
-    pub module_loading: ModuleLoading,
+    pub module_loading: Option<ModuleLoading>,
     /// Mapping of module path and export name to client module ID and required
     /// client chunks.
     pub client_modules: ManifestNode,
@@ -196,7 +196,19 @@ async fn build_manifest(
             rcstr!("")
         };
 
-        entry_manifest.module_loading.cross_origin = *next_config.cross_origin().await?;
+        let resume_client_references = next_config
+            .client_runtime()
+            .await?
+            .as_ref()
+            .is_some_and(|runtime| {
+                runtime.client_references == ClientReferenceMode::Resume
+            });
+        if !resume_client_references {
+            entry_manifest.module_loading = Some(ModuleLoading {
+                prefix: RcStr::default(),
+                cross_origin: *next_config.cross_origin().await?,
+            });
+        }
         let ClientReferencesChunks {
             client_component_client_chunks,
             layout_segment_client_chunks,
@@ -506,9 +518,10 @@ async fn build_manifest(
                             inlined: inlined_css,
                             content,
                         });
-                    } else if !mode.is_production()
+                    } else if !resume_client_references
+                        && (!mode.is_production()
                         || !generate_component_chunks
-                        || !client_reference_chunk_paths.contains(&path)
+                        || !client_reference_chunk_paths.contains(&path))
                     {
                         entry_js_files.insert(path);
                     }

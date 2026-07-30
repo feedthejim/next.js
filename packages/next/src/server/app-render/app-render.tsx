@@ -147,6 +147,7 @@ import {
   getClientReferenceManifest,
   getServerModuleMap,
 } from './manifests-singleton'
+import { getClientReferenceResumeBootstrapScript } from './client-reference-resume'
 import {
   DynamicState,
   type PostponedState,
@@ -3168,6 +3169,8 @@ async function renderToStream(
     subresourceIntegrityManifest,
     supportsDynamicResponse,
   } = renderOpts
+  const inlineClientData =
+    renderOpts.clientRuntime?.clientReferences !== 'resume'
 
   const { ServerInsertedHTMLProvider, renderServerInsertedHTML } =
     createServerInsertedHTML()
@@ -3178,22 +3181,23 @@ async function renderToStream(
     experimental.clientTraceMetadata
   )
 
-  const polyfills: JSX.IntrinsicElements['script'][] =
-    buildManifest.polyfillFiles
-      .filter(
-        (polyfill) =>
-          polyfill.endsWith('.js') && !polyfill.endsWith('.module.js')
-      )
-      .map((polyfill) => ({
-        src: `${assetPrefix}/_next/${polyfill}${getAssetQueryString(
-          ctx,
-          false
-        )}`,
-        integrity: subresourceIntegrityManifest?.[polyfill],
-        crossOrigin,
-        noModule: true,
-        nonce,
-      }))
+  const polyfills: JSX.IntrinsicElements['script'][] = inlineClientData
+    ? buildManifest.polyfillFiles
+        .filter(
+          (polyfill) =>
+            polyfill.endsWith('.js') && !polyfill.endsWith('.module.js')
+        )
+        .map((polyfill) => ({
+          src: `${assetPrefix}/_next/${polyfill}${getAssetQueryString(
+            ctx,
+            false
+          )}`,
+          integrity: subresourceIntegrityManifest?.[polyfill],
+          crossOrigin,
+          noModule: true,
+          nonce,
+        }))
+    : []
 
   const [preinitScripts, bootstrapScript] = getRequiredScripts(
     buildManifest,
@@ -3225,6 +3229,12 @@ async function renderToStream(
       buildManifest.chunkLoadingGlobal,
       [page]
     )
+  }
+
+  if (renderOpts.clientRuntime?.clientReferences === 'resume') {
+    bootstrapScriptContent =
+      (bootstrapScriptContent ? `${bootstrapScriptContent};` : '') +
+      getClientReferenceResumeBootstrapScript()
   }
 
   // Instant Navigation Testing API: embed the cookie-guarded bootstrap so it
@@ -3632,11 +3642,13 @@ async function renderToStream(
             return await continueDynamicHTMLResumeNode(htmlStream, {
               delayDataUntilFirstHtmlChunk:
                 preludeState === DynamicHTMLPreludeState.Empty,
-              inlinedDataStream: createNodeInlinedDataStream(
-                reactServerResult.consume(),
-                nonce,
-                formState
-              ),
+              inlinedDataStream: inlineClientData
+                ? createNodeInlinedDataStream(
+                    reactServerResult.consume(),
+                    nonce,
+                    formState
+                  )
+                : undefined,
               getServerInsertedHTML,
               getServerInsertedMetadata,
               deploymentId: ctx.sharedContext.deploymentId,
@@ -3701,11 +3713,13 @@ async function renderToStream(
         })
 
         return await continueFizzStream(htmlStream, {
-          inlinedDataStream: createNodeInlinedDataStream(
-            reactServerResult.consume(),
-            nonce,
-            formState
-          ),
+          inlinedDataStream: inlineClientData
+            ? createNodeInlinedDataStream(
+                reactServerResult.consume(),
+                nonce,
+                formState
+              )
+            : undefined,
           isStaticGeneration: generateStaticHTML,
           allReady,
           deploymentId: ctx.sharedContext.deploymentId,
@@ -3776,11 +3790,13 @@ async function renderToStream(
             return await continueDynamicHTMLResumeWeb(htmlStream, {
               delayDataUntilFirstHtmlChunk:
                 preludeState === DynamicHTMLPreludeState.Empty,
-              inlinedDataStream: createWebInlinedDataStream(
-                reactServerResult.consume(),
-                nonce,
-                formState
-              ),
+              inlinedDataStream: inlineClientData
+                ? createWebInlinedDataStream(
+                    reactServerResult.consume(),
+                    nonce,
+                    formState
+                  )
+                : undefined,
               getServerInsertedHTML,
               getServerInsertedMetadata,
               deploymentId: ctx.sharedContext.deploymentId,
@@ -3839,11 +3855,13 @@ async function renderToStream(
         })
 
         return await continueFizzStream(htmlStream, {
-          inlinedDataStream: createWebInlinedDataStream(
-            reactServerResult.consume(),
-            nonce,
-            formState
-          ),
+          inlinedDataStream: inlineClientData
+            ? createWebInlinedDataStream(
+                reactServerResult.consume(),
+                nonce,
+                formState
+              )
+            : undefined,
           isStaticGeneration: generateStaticHTML,
           allReady,
           deploymentId: ctx.sharedContext.deploymentId,
@@ -4003,14 +4021,16 @@ async function renderToStream(
           })
 
           return await continueFizzStream(errorHtmlStream, {
-            inlinedDataStream: createNodeInlinedDataStream(
-              // This is intentionally using the readable datastream from the
-              // main render rather than the flight data from the error page
-              // render
-              reactServerResult.consume(),
-              nonce,
-              formState
-            ),
+            inlinedDataStream: inlineClientData
+              ? createNodeInlinedDataStream(
+                  // This is intentionally using the readable datastream from the
+                  // main render rather than the flight data from the error page
+                  // render
+                  reactServerResult.consume(),
+                  nonce,
+                  formState
+                )
+              : undefined,
             isStaticGeneration: generateStaticHTML,
             deploymentId: ctx.sharedContext.deploymentId,
             getServerInsertedHTML: makeGetServerInsertedHTML({
@@ -4101,14 +4121,16 @@ async function renderToStream(
           })
 
           return await continueFizzStream(errorHtmlStream, {
-            inlinedDataStream: createWebInlinedDataStream(
-              // This is intentionally using the readable datastream from the
-              // main render rather than the flight data from the error page
-              // render
-              reactServerResult.consume(),
-              nonce,
-              formState
-            ),
+            inlinedDataStream: inlineClientData
+              ? createWebInlinedDataStream(
+                  // This is intentionally using the readable datastream from the
+                  // main render rather than the flight data from the error page
+                  // render
+                  reactServerResult.consume(),
+                  nonce,
+                  formState
+                )
+              : undefined,
             isStaticGeneration: generateStaticHTML,
             deploymentId: ctx.sharedContext.deploymentId,
             getServerInsertedHTML: makeGetServerInsertedHTML({
@@ -7767,6 +7789,7 @@ async function continueStaticPrerenderWithInlinedData(
   reactServerResult: ReactServerPrerenderResult,
   fallbackRouteParams: OpaqueFallbackRouteParams | null,
   createInlinedDataStream: typeof createWebInlinedDataStream,
+  inlineClientData: boolean,
   formState: unknown | null,
   nonce: string | undefined,
   getServerInsertedHTML: () => Promise<string>,
@@ -7797,18 +7820,20 @@ async function continueStaticPrerenderWithInlinedData(
     // TODO: In the future, rather than defer the entire hydration payload
     // to be fetched by the client, we should only defer the client
     // segments, since those are the only ones whose data is not complete.
-    const emptyReactServerResult =
-      await createReactServerPrerenderResultFromRender(
-        renderFlightStream(ComponentMod, [], clientModules, {
-          filterStackFrame: filterStackFrameForError,
-          onError: serverComponentsErrorHandler,
-        })
-      )
-    const inlinedDataStream = createInlinedDataStream(
-      emptyReactServerResult.consumeAsStream(),
-      nonce,
-      formState
-    )
+    const inlinedDataStream = inlineClientData
+      ? createInlinedDataStream(
+          (
+            await createReactServerPrerenderResultFromRender(
+              renderFlightStream(ComponentMod, [], clientModules, {
+                filterStackFrame: filterStackFrameForError,
+                onError: serverComponentsErrorHandler,
+              })
+            )
+          ).consumeAsStream(),
+          nonce,
+          formState
+        )
+      : undefined
     return continueStaticFallbackPrerender(htmlStream, {
       inlinedDataStream,
       getServerInsertedHTML,
@@ -7817,11 +7842,13 @@ async function continueStaticPrerenderWithInlinedData(
     })
   }
 
-  const inlinedDataStream = createInlinedDataStream(
-    reactServerResult.consumeAsStream(),
-    nonce,
-    formState
-  )
+  const inlinedDataStream = inlineClientData
+    ? createInlinedDataStream(
+        reactServerResult.consumeAsStream(),
+        nonce,
+        formState
+      )
+    : undefined
   return continueStaticPrerender(htmlStream, {
     inlinedDataStream,
     getServerInsertedHTML,
@@ -7871,6 +7898,8 @@ async function prerenderToStream(
   const createInlinedDataStream = process.env.__NEXT_USE_NODE_STREAMS
     ? createNodeInlinedDataStream
     : createWebInlinedDataStream
+  const inlineClientData =
+    renderOpts.clientRuntime?.clientReferences !== 'resume'
 
   const allowEmptyStaticShell =
     (renderOpts.allowEmptyStaticShell ?? false) ||
@@ -7887,22 +7916,23 @@ async function prerenderToStream(
     experimental.clientTraceMetadata
   )
 
-  const polyfills: JSX.IntrinsicElements['script'][] =
-    buildManifest.polyfillFiles
-      .filter(
-        (polyfill) =>
-          polyfill.endsWith('.js') && !polyfill.endsWith('.module.js')
-      )
-      .map((polyfill) => ({
-        src: `${assetPrefix}/_next/${polyfill}${getAssetQueryString(
-          ctx,
-          false
-        )}`,
-        integrity: subresourceIntegrityManifest?.[polyfill],
-        crossOrigin,
-        noModule: true,
-        nonce,
-      }))
+  const polyfills: JSX.IntrinsicElements['script'][] = inlineClientData
+    ? buildManifest.polyfillFiles
+        .filter(
+          (polyfill) =>
+            polyfill.endsWith('.js') && !polyfill.endsWith('.module.js')
+        )
+        .map((polyfill) => ({
+          src: `${assetPrefix}/_next/${polyfill}${getAssetQueryString(
+            ctx,
+            false
+          )}`,
+          integrity: subresourceIntegrityManifest?.[polyfill],
+          crossOrigin,
+          noModule: true,
+          nonce,
+        }))
+    : []
 
   const [preinitScripts, bootstrapScript] = getRequiredScripts(
     buildManifest,
@@ -7925,6 +7955,12 @@ async function prerenderToStream(
           [page]
         )
       : undefined
+
+  if (renderOpts.clientRuntime?.clientReferences === 'resume') {
+    bootstrapScriptContent =
+      (bootstrapScriptContent ? `${bootstrapScriptContent};` : '') +
+      getClientReferenceResumeBootstrapScript()
+  }
 
   // Instant Navigation Testing API: when exposed, embed the cookie-guarded
   // bootstrap into the prerendered prelude so the cached static shell carries
@@ -8833,6 +8869,7 @@ async function prerenderToStream(
       reactServerResult,
       fallbackRouteParams,
       createInlinedDataStream,
+      inlineClientData,
       formState,
       nonce,
       getServerInsertedHTML,
@@ -9244,6 +9281,7 @@ async function prerenderToStream(
         originalFlightPrerenderResult,
         fallbackRouteParams,
         createInlinedDataStream,
+        inlineClientData,
         formState,
         nonce,
         getServerInsertedHTML,

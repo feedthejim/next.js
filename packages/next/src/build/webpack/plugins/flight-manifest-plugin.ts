@@ -100,7 +100,7 @@ export interface ClientReferenceManifest extends ClientReferenceManifestForRsc {
   readonly moduleLoading: {
     prefix: string
     crossOrigin?: 'use-credentials' | ''
-  }
+  } | null
   ssrModuleMapping: {
     [moduleId: string]: ManifestNode
   }

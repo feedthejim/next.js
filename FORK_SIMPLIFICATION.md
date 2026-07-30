@@ -154,6 +154,47 @@
 
 ## History
 
+### 2026-07-30: Flight-free client resume protocol
+
+Added a renderer-neutral Turbopack client-reference mode with two values:
+`flight`, the default Next.js behavior, and `resume`, a compact manifest for
+alternate client runtimes. Resume responses retain App Router server rendering,
+Cache Components, PPR, metadata, CSS, and route HTML while omitting the browser
+Flight stream, React App Router entry chunks, and legacy nomodule polyfill.
+Alternate runtimes receive only route-local module identifiers and chunks, then
+own hydration and navigation.
+
+The Octane integration validates the seam against Jimmy Lai's production site.
+Its native runtime hydrates exact server markup, performs same-document
+navigation through HTML responses, synchronizes metadata and styles, preserves
+history, and uses typed View Transitions when the browser supports them. React
+client boundaries that are not Octane-owned remain authoritative server HTML
+with inert client facades, so they add no React browser graph.
+
+Five cold Chromium samples after one warmup, under 4x CPU slowdown and
+deterministic application data, measured:
+
+- **Transferred JavaScript:** 167,967 bytes with React and 53,979 bytes with
+  native Octane, a 67.9% reduction.
+- **Decoded JavaScript:** 526,370 bytes with React and 156,795 bytes with native
+  Octane, a 70.2% reduction.
+- **Hydration ready:** 203.5 ms with React and 102.2 ms with native Octane, a
+  49.8% improvement.
+- **First Contentful Paint:** 92 ms with React and 80 ms with native Octane, a
+  13.0% improvement.
+- **Load:** 154.7 ms with React and 97.4 ms with native Octane, a 37.0%
+  improvement.
+- **Long tasks:** one 70 ms task with React and none with native Octane.
+
+The retained behavior gates cover config deserialization, manifest filtering and
+escaping, exact hosted hydration, compiler ownership, native navigation,
+analytics, theme interaction, history, route-local media behavior, generated
+types, and the complete Next package build. The monorepo `build-all` command
+still has an unrelated native-declaration race: `build-native-auto` regenerates
+the checked-in SWC declarations without its existing worker-scheduler feature
+while the Next package type phase runs concurrently. The package build passes
+after restoring the checked-in declaration.
+
 ### 2026-07-30: Pluggable Turbopack client renderer
 
 Added one low-level Turbopack renderer seam: an application can select its App

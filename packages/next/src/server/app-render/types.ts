@@ -4,6 +4,7 @@ import type {
   ExperimentalConfig,
   NextConfigComplete,
   PrefetchInliningConfig,
+  TurbopackOptions,
   ValidationLevel,
 } from '../../server/config-shared'
 import type { NextFontManifest } from '../../build/webpack/plugins/next-font-manifest-plugin'
@@ -97,6 +98,7 @@ export interface RenderOptsPartial {
   err?: Error | null
   basePath: string
   partialPrefetching: true
+  clientRuntime?: TurbopackOptions['clientRuntime']
   validationLevel: ValidationLevel
   trailingSlash: boolean
   images: ImageConfigComplete

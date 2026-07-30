@@ -879,6 +879,7 @@ export function createAppPageEntrypoint({
                 }
               : {}),
             partialPrefetching: true,
+            clientRuntime: nextConfig.clientRuntime,
             // A fallback shell can only be upgraded to a concrete version if at
             // least one of its fallback params is a `generateStaticParams`
             // candidate (`remainingPrerenderableParams`). This gates whether the

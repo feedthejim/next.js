@@ -482,6 +482,7 @@ async function exportAppImpl(
     distDir,
     basePath: nextConfig.basePath,
     partialPrefetching: nextConfig.partialPrefetching,
+    clientRuntime: nextConfig.turbopack.clientRuntime,
     validationLevel: nextConfig.experimental.instantInsights.validationLevel,
     trailingSlash: nextConfig.trailingSlash,
     locales: i18n?.locales,

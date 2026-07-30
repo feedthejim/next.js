@@ -166,6 +166,7 @@ const zTurbopackConfig: zod.ZodType<TurbopackOptions> = z.strictObject({
       entry: z.string().min(1),
       react: z.string().min(1).optional(),
       reactDom: z.string().min(1).optional(),
+      clientReferences: z.enum(['flight', 'resume']).optional(),
     })
     .optional(),
   rules: z.record(z.string(), zTurbopackRuleConfigCollection).optional(),

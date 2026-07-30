@@ -52,11 +52,11 @@ export type ContinueFizzStreamOptions = ContinueStreamSharedOptions & {
 }
 
 export type ContinueStaticPrerenderOptions = ContinueStreamSharedOptions & {
-  inlinedDataStream: AnyStream
+  inlinedDataStream: AnyStream | undefined
 }
 
 export type ContinueDynamicHTMLResumeOptions = ContinueStreamSharedOptions & {
-  inlinedDataStream: AnyStream
+  inlinedDataStream: AnyStream | undefined
   delayDataUntilFirstHtmlChunk: boolean
 }
 

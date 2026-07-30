@@ -1006,7 +1006,7 @@ export async function continueDynamicPrerender(
 }
 
 type ContinueStaticPrerenderOptions = {
-  inlinedDataStream: ReadableStream<Uint8Array>
+  inlinedDataStream: ReadableStream<Uint8Array> | undefined
   getServerInsertedHTML: () => Promise<string>
   getServerInsertedMetadata: () => Promise<string>
   deploymentId: string | undefined
@@ -1032,7 +1032,9 @@ export async function continueStaticPrerender(
     // Transform metadata
     createMetadataTransformStream(getServerInsertedMetadata),
     // Insert the inlined data (Flight data, form state, etc.) stream into the HTML
-    createFlightDataInjectionTransformStream(inlinedDataStream, true),
+    inlinedDataStream
+      ? createFlightDataInjectionTransformStream(inlinedDataStream, true)
+      : null,
     // Close tags should always be deferred to the end
     createMoveSuffixStream(),
   ])
@@ -1058,18 +1060,22 @@ export async function continueStaticFallbackPrerender(
     // Insert generated tags to head
     createHeadInsertionTransformStream(getServerInsertedHTML),
     // Insert the client resume script into the head
-    await createClientResumeScriptInsertionTransformStream(),
+    inlinedDataStream
+      ? await createClientResumeScriptInsertionTransformStream()
+      : null,
     // Transform metadata
     createMetadataTransformStream(getServerInsertedMetadata),
     // Insert the inlined data (Flight data, form state, etc.) stream into the HTML
-    createFlightDataInjectionTransformStream(inlinedDataStream, true),
+    inlinedDataStream
+      ? createFlightDataInjectionTransformStream(inlinedDataStream, true)
+      : null,
     // Close tags should always be deferred to the end
     createMoveSuffixStream(),
   ])
 }
 
 type ContinueResumeOptions = {
-  inlinedDataStream: ReadableStream<Uint8Array>
+  inlinedDataStream: ReadableStream<Uint8Array> | undefined
   getServerInsertedHTML: () => Promise<string>
   getServerInsertedMetadata: () => Promise<string>
   delayDataUntilFirstHtmlChunk: boolean
@@ -1096,10 +1102,12 @@ export async function continueDynamicHTMLResume(
     // Transform metadata
     createMetadataTransformStream(getServerInsertedMetadata),
     // Insert the inlined data (Flight data, form state, etc.) stream into the HTML
-    createFlightDataInjectionTransformStream(
-      inlinedDataStream,
-      delayDataUntilFirstHtmlChunk
-    ),
+    inlinedDataStream
+      ? createFlightDataInjectionTransformStream(
+          inlinedDataStream,
+          delayDataUntilFirstHtmlChunk
+        )
+      : null,
     // Close tags should always be deferred to the end
     createMoveSuffixStream(),
   ])

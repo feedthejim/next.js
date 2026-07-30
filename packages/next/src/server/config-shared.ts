@@ -232,6 +232,12 @@ export interface TurbopackOptions {
     entry: string
     react?: string
     reactDom?: string
+    /**
+     * Controls how client references reach the browser. `flight` preserves the
+     * App Router's React hydration graph. `resume` leaves the server-rendered
+     * DOM authoritative and exposes a compact module map to the custom runtime.
+     */
+    clientReferences?: 'flight' | 'resume'
   }
 
   /**
@@ -2246,6 +2252,7 @@ export interface NextConfigRuntime {
   logging?: NextConfigComplete['logging']
   adapterPath?: NextConfigComplete['adapterPath']
   staticPageGenerationTimeout: NextConfigComplete['staticPageGenerationTimeout']
+  clientRuntime?: TurbopackOptions['clientRuntime']
 
   experimental: Pick<
     NextConfigComplete['experimental'],
@@ -2306,7 +2313,13 @@ export function getNextConfigRuntime(
 ): NextConfigRuntime {
   // This config filter is a breaking change, so only do it if experimental.runtimeServerDeploymentId is enabled
   if (!config.experimental.runtimeServerDeploymentId) {
-    return config
+    return {
+      ...config,
+      clientRuntime:
+        'turbopack' in config
+          ? config.turbopack.clientRuntime
+          : config.clientRuntime,
+    }
   }
 
   const ex = config.experimental
@@ -2403,6 +2416,10 @@ export function getNextConfigRuntime(
     useFileSystemPublicRoutes: config.useFileSystemPublicRoutes,
     logging: config.logging,
     staticPageGenerationTimeout: config.staticPageGenerationTimeout,
+    clientRuntime:
+      'turbopack' in config
+        ? config.turbopack.clientRuntime
+        : config.clientRuntime,
 
     experimental,
   }

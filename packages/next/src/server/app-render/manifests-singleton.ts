@@ -386,6 +386,26 @@ export function getClientReferenceManifest(): DeepReadonly<ClientReferenceManife
   return getManifestsSingleton().proxiedClientReferenceManifest
 }
 
+export function getCurrentClientReferenceManifest(): DeepReadonly<ClientReferenceManifest> {
+  const workStore = workAsyncStorage.getStore()
+  if (!workStore) {
+    throw new InvariantError(
+      'Cannot access the current client reference manifest without a work store.'
+    )
+  }
+
+  const manifest = getManifestsSingleton().clientReferenceManifestsPerRoute.get(
+    workStore.route
+  )?.clientReferenceManifest
+  if (!manifest) {
+    throw new InvariantError(
+      `The client reference manifest for route "${workStore.route}" does not exist.`
+    )
+  }
+
+  return manifest
+}
+
 export function getServerActionsManifest(): DeepReadonly<NodeActionManifest> {
   return getManifestsSingleton().serverActionsManifest
 }

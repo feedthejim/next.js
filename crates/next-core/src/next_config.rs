@@ -634,6 +634,29 @@ pub struct ClientRuntimeConfig {
     pub entry: RcStr,
     pub react: Option<RcStr>,
     pub react_dom: Option<RcStr>,
+    #[serde(default)]
+    pub client_references: ClientReferenceMode,
+}
+
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Default,
+    PartialEq,
+    Eq,
+    Deserialize,
+    TraceRawVcs,
+    NonLocalValue,
+    OperationValue,
+    Encode,
+    Decode,
+)]
+#[serde(rename_all = "camelCase")]
+pub enum ClientReferenceMode {
+    #[default]
+    Flight,
+    Resume,
 }
 
 #[turbo_tasks::value(transparent)]
@@ -645,7 +668,8 @@ fn test_client_runtime_config_deserialization() {
         "turbopack": {
             "clientRuntime": {
                 "entry": "@octanejs/next/native-runtime",
-                "reactDom": "@octanejs/next/react-dom"
+                "reactDom": "@octanejs/next/react-dom",
+                "clientReferences": "resume"
             }
         }
     }))
@@ -660,6 +684,7 @@ fn test_client_runtime_config_deserialization() {
         runtime.react_dom.as_deref(),
         Some("@octanejs/next/react-dom")
     );
+    assert_eq!(runtime.client_references, ClientReferenceMode::Resume);
 }
 
 #[derive(

@@ -780,9 +780,9 @@ export async function continueStaticPrerender(
     nodeReadableToWebReadableStream(prerenderStream),
     {
       ...opts,
-      inlinedDataStream: nodeReadableToWebReadableStream(
-        opts.inlinedDataStream
-      ),
+      inlinedDataStream: opts.inlinedDataStream
+        ? nodeReadableToWebReadableStream(opts.inlinedDataStream)
+        : undefined,
     }
   )
   return webToReadable(webResult)
@@ -811,9 +811,9 @@ export async function continueStaticFallbackPrerender(
     nodeReadableToWebReadableStream(prerenderStream),
     {
       ...opts,
-      inlinedDataStream: nodeReadableToWebReadableStream(
-        opts.inlinedDataStream
-      ),
+      inlinedDataStream: opts.inlinedDataStream
+        ? nodeReadableToWebReadableStream(opts.inlinedDataStream)
+        : undefined,
     }
   )
   return webToReadable(webResult)
@@ -850,12 +850,14 @@ export async function continueDynamicHTMLResumeNode(
   source.pipe(metadata)
   source = metadata
 
-  const flightInjection = createFlightDataInjectionTransform(
-    webToReadable(inlinedDataStream),
-    delayDataUntilFirstHtmlChunk
-  )
-  source.pipe(flightInjection)
-  source = flightInjection
+  if (inlinedDataStream) {
+    const flightInjection = createFlightDataInjectionTransform(
+      webToReadable(inlinedDataStream),
+      delayDataUntilFirstHtmlChunk
+    )
+    source.pipe(flightInjection)
+    source = flightInjection
+  }
 
   const moveSuffix = createMoveSuffixTransform()
   source.pipe(moveSuffix)
@@ -872,9 +874,9 @@ export async function continueDynamicHTMLResumeWeb(
     nodeReadableToWebReadableStream(renderStream),
     {
       ...opts,
-      inlinedDataStream: nodeReadableToWebReadableStream(
-        opts.inlinedDataStream
-      ),
+      inlinedDataStream: opts.inlinedDataStream
+        ? nodeReadableToWebReadableStream(opts.inlinedDataStream)
+        : undefined,
     }
   )
   return webToReadable(webResult)

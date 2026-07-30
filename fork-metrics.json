@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
-  "label": "Pluggable Turbopack client renderer",
-  "capturedAt": "2026-07-30T19:30:31.797Z",
+  "label": "Flight-free Octane client resume",
+  "capturedAt": "2026-07-30T20:34:18.062Z",
   "git": {
-    "baseHead": "437a9209bc"
+    "baseHead": "dec35608e8"
   },
   "source": {
     "frameworkTracked": {
-      "files": 2444,
-      "lines": 1090227,
-      "bytes": 51268900
+      "files": 2446,
+      "lines": 1090395,
+      "bytes": 51274789
     },
     "frameworkAuthored": {
-      "files": 1739,
-      "lines": 295896,
-      "bytes": 9526451
+      "files": 1741,
+      "lines": 296064,
+      "bytes": 9532340
     },
     "vendoredCompiled": {
       "files": 705,
@@ -22,9 +22,9 @@
       "bytes": 41742449
     },
     "appRender": {
-      "files": 97,
-      "lines": 27810,
-      "bytes": 948332
+      "files": 99,
+      "lines": 27947,
+      "bytes": 953104
     },
     "clientRouter": {
       "files": 39,
@@ -33,8 +33,8 @@
     },
     "compilerRust": {
       "files": 977,
-      "lines": 51926,
-      "bytes": 1812492
+      "lines": 51964,
+      "bytes": 1813450
     },
     "nextApiRust": {
       "files": 28,
@@ -49,7 +49,7 @@
     "webpackPathProxy": {
       "files": 261,
       "lines": 137411,
-      "bytes": 7371902
+      "bytes": 7371909
     },
     "pagesRouterPathProxy": {
       "files": 30,
@@ -107,31 +107,31 @@
     "unitFiles": 108
   },
   "builtArtifacts": {
-    "conditions": "Full bootstrap build; local macOS arm64; Octane client runtime seam",
-    "nextDistBytes": 179014629,
-    "nextDistJavaScriptBytes": 75958468
+    "conditions": "Complete Next package build; local macOS arm64; Flight-free resume client",
+    "nextDistBytes": 179131238,
+    "nextDistJavaScriptBytes": 75989832
   },
-  "validationTimingConditions": "Warm local macOS arm64; generated types, focused Rust config test, full bootstrap build, and native compiler build",
+  "validationTimingConditions": "Warm local macOS arm64; focused JavaScript and Rust tests, generated types, native compiler build, complete Next package build, and native browser E2E",
   "validationTimingsMs": {
-    "types": 12882,
+    "types": 11210,
     "directTests": null,
-    "focusedTests": 19922,
+    "focusedTests": 1028,
     "testSelectionOverhead": null,
     "httpTests": null,
     "httpTestBody": null,
     "browserStartup": null,
     "browserTestBody": null,
-    "browserTests": null,
+    "browserTests": 20100,
     "edgeDceBuild": null,
-    "nativeBuild": 102000,
-    "nextBuild": 27235,
-    "buildAll": 27235,
-    "total": 162039
+    "nativeBuild": 9610,
+    "nextBuild": 17680,
+    "buildAll": null,
+    "total": 59628
   },
   "runtimePerformance": {
-    "conditions": "Jimmy Lai production site; Turbopack, Cache Components, deterministic data, 12 cold Chromium samples, 3 warmups, 4x CPU slowdown",
+    "conditions": "Jimmy Lai production site; Turbopack, Cache Components, deterministic data, 5 cold Chromium samples, 1 warmup, 4x CPU slowdown; detailed JS and timing results in FORK_SIMPLIFICATION.md",
     "devStartupMs": null,
-    "productionStartupMs": 76,
+    "productionStartupMs": null,
     "routeHandlerRequestMs": null,
     "routeHandlerRevalidationMs": null,
     "proxyNavigationMs": null,
